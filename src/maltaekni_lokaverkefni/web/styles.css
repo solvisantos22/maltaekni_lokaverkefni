@@ -461,27 +461,55 @@ output {
 .welcome-panel {
   position: relative;
   z-index: 1;
-  width: min(520px, 100%);
-  height: min(620px, calc(100vh - 44px));
+  width: min(760px, calc(100vw - 44px));
+  height: min(640px, calc(100vh - 44px));
   overflow: hidden;
 }
 
 .welcome-scroll {
+  position: relative;
+  z-index: 2;
   height: 100%;
   overflow-y: auto;
-  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
-  scrollbar-color: var(--accent) rgba(255, 255, 255, 0.08);
+  scrollbar-width: none;
 }
 
-.welcome-slide {
-  display: flex;
-  min-height: 100%;
-  flex-direction: column;
-  justify-content: center;
-  padding: 32px;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+.welcome-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.welcome-track {
+  height: 420%;
+}
+
+.welcome-stage {
+  position: sticky;
+  top: 0;
+  display: grid;
+  height: min(640px, calc(100vh - 44px));
+  place-items: center;
+  padding: clamp(24px, 5vw, 54px);
+}
+
+.welcome-scene {
+  position: absolute;
+  width: min(560px, calc(100% - 48px));
+  opacity: var(--scene-opacity, 0);
+  transform:
+    translateY(var(--scene-y, 28px))
+    scale(var(--scene-scale, 0.97));
+  transition: opacity 120ms linear, transform 120ms linear, filter 120ms linear;
+  filter: blur(var(--scene-blur, 8px));
+  pointer-events: none;
+}
+
+.welcome-scene.active {
+  --scene-opacity: 1;
+  --scene-y: 0px;
+  --scene-scale: 1;
+  --scene-blur: 0px;
+  pointer-events: auto;
 }
 
 .eyebrow,
@@ -495,8 +523,14 @@ output {
 
 .welcome-panel h1 {
   margin: 0;
-  font-size: 34px;
+  font-size: clamp(34px, 6vw, 62px);
   line-height: 1.08;
+}
+
+.welcome-scene h2 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1.05;
 }
 
 .welcome-copy {
@@ -506,47 +540,18 @@ output {
   line-height: 1.5;
 }
 
-.scroll-hint {
-  margin-top: 28px;
+.welcome-scene > p:not(.eyebrow):not(.scene-number) {
+  max-width: 480px;
   color: var(--muted);
-  font-size: 13px;
-}
-
-.scroll-hint::after {
-  content: "";
-  display: block;
-  width: 1px;
-  height: 42px;
-  margin-top: 12px;
-  background: linear-gradient(transparent, var(--accent));
-  animation: scrollHint 1.5s ease-in-out infinite;
-}
-
-.welcome-step-card {
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  gap: 3px 12px;
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.welcome-step-card span {
-  grid-row: span 2;
-  color: var(--accent);
-  font-weight: 850;
-}
-
-.welcome-step-card h2 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.welcome-step-card p {
-  margin: 0;
-  color: var(--muted);
+  font-size: 17px;
   line-height: 1.5;
+}
+
+.scene-number {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 850;
 }
 
 .welcome-actions,
@@ -555,6 +560,78 @@ output {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 24px;
+}
+
+.welcome-footer {
+  position: absolute;
+  left: clamp(24px, 5vw, 54px);
+  right: clamp(24px, 5vw, 54px);
+  bottom: 22px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.welcome-progress {
+  display: flex;
+  gap: 7px;
+}
+
+.welcome-progress i {
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(237, 242, 239, 0.22);
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.welcome-progress i.active {
+  width: 46px;
+  background: var(--accent);
+}
+
+.welcome-orbit {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.welcome-orbit span {
+  position: absolute;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  border-radius: 999px;
+  opacity: 0.72;
+  animation: orbitFloat 12s ease-in-out infinite alternate;
+}
+
+.welcome-orbit span:nth-child(1) {
+  width: 360px;
+  height: 360px;
+  left: -130px;
+  top: 80px;
+}
+
+.welcome-orbit span:nth-child(2) {
+  width: 230px;
+  height: 230px;
+  right: 58px;
+  top: -70px;
+  animation-delay: -4s;
+}
+
+.welcome-orbit span:nth-child(3) {
+  width: 160px;
+  height: 160px;
+  right: -34px;
+  bottom: 66px;
+  animation-delay: -8s;
 }
 
 .tour-overlay {
@@ -627,6 +704,16 @@ output {
   50% {
     opacity: 1;
     transform: translateY(8px);
+  }
+}
+
+@keyframes orbitFloat {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+
+  to {
+    transform: translate3d(18px, -16px, 0) rotate(12deg) scale(1.08);
   }
 }
 

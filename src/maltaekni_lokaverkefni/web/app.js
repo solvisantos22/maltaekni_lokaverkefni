@@ -9,6 +9,9 @@ const topKValue = document.querySelector("#topKValue");
 const statusEl = document.querySelector("#status");
 const clearButton = document.querySelector("#clearButton");
 const welcomeOverlay = document.querySelector("#welcomeOverlay");
+const welcomeScroll = document.querySelector("#welcomeScroll");
+const welcomeScenes = Array.from(document.querySelectorAll("[data-welcome-scene]"));
+const welcomeProgress = Array.from(document.querySelectorAll(".welcome-progress i"));
 const startButton = document.querySelector("#startButton");
 const skipWelcomeButton = document.querySelector("#skipWelcomeButton");
 const tourButton = document.querySelector("#tourButton");
@@ -48,10 +51,31 @@ const tourSteps = [
 ];
 
 let activeTourIndex = 0;
+let welcomeFrame = null;
 
 topKInput.addEventListener("input", () => {
   topKValue.textContent = topKInput.value;
 });
+
+welcomeScroll.addEventListener("scroll", () => {
+  if (welcomeFrame !== null) return;
+  welcomeFrame = window.requestAnimationFrame(() => {
+    updateWelcomeIntro();
+    welcomeFrame = null;
+  });
+});
+
+welcomeOverlay.addEventListener(
+  "wheel",
+  (event) => {
+    if (welcomeOverlay.classList.contains("hidden")) return;
+    if (event.target.closest("button")) return;
+
+    event.preventDefault();
+    welcomeScroll.scrollBy({ top: event.deltaY, behavior: "auto" });
+  },
+  { passive: false },
+);
 
 clearButton.addEventListener("click", () => {
   messages.innerHTML = "";
@@ -225,6 +249,30 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function updateWelcomeIntro() {
+  const maxScroll = Math.max(1, welcomeScroll.scrollHeight - welcomeScroll.clientHeight);
+  const progress = welcomeScroll.scrollTop / maxScroll;
+  const lastIndex = Math.max(1, welcomeScenes.length - 1);
+  const exactIndex = progress * lastIndex;
+  const activeIndex = Math.round(exactIndex);
+
+  welcomeScenes.forEach((scene, index) => {
+    const distance = Math.abs(exactIndex - index);
+    const strength = Math.max(0, 1 - distance * 1.65);
+    const direction = index - exactIndex;
+
+    scene.classList.toggle("active", index === activeIndex);
+    scene.style.setProperty("--scene-opacity", strength.toFixed(3));
+    scene.style.setProperty("--scene-y", `${direction * 36}px`);
+    scene.style.setProperty("--scene-scale", String(0.96 + strength * 0.04));
+    scene.style.setProperty("--scene-blur", `${(1 - strength) * 10}px`);
+  });
+
+  welcomeProgress.forEach((item, index) => {
+    item.classList.toggle("active", index === activeIndex);
+  });
+}
+
 function closeWelcome() {
   welcomeOverlay.classList.add("hidden");
   document.body.classList.remove("onboarding-active");
@@ -294,5 +342,6 @@ function positionTourCard(rect) {
 window.addEventListener("load", () => {
   if (window.lucide) window.lucide.createIcons();
   document.body.classList.add("onboarding-active");
+  updateWelcomeIntro();
   checkStatus();
 });

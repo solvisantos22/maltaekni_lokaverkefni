@@ -11,46 +11,58 @@
   <body>
     <div id="welcomeOverlay" class="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
       <section class="welcome-panel">
-        <div class="welcome-scroll">
-          <article class="welcome-slide">
-            <div class="mark large-mark">§</div>
-            <p class="eyebrow">Íslenskur neytendaréttur</p>
-            <h1 id="welcomeTitle">Spurningar. Heimildir. Rekjanleg svör.</h1>
-            <p class="welcome-copy">RAG-kerfi sem finnur viðeigandi lagabrot og sýnir hvaðan svarið kemur.</p>
-            <p class="scroll-hint">Skrunaðu</p>
-          </article>
+        <div class="welcome-orbit" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
 
-          <article class="welcome-slide">
-            <div class="welcome-step-card">
-              <span>01</span>
-              <h2>Spyrðu á íslensku</h2>
-              <p>Settu inn hagnýta spurningu um gallaða vöru, netkaup eða endurgreiðslu.</p>
-            </div>
-          </article>
+        <div id="welcomeScroll" class="welcome-scroll">
+          <div class="welcome-track">
+            <div class="welcome-stage">
+              <article class="welcome-scene active" data-welcome-scene>
+                <div class="mark large-mark">§</div>
+                <p class="eyebrow">Íslenskur neytendaréttur</p>
+                <h1 id="welcomeTitle">Spurningar. Heimildir. Rekjanleg svör.</h1>
+                <p class="welcome-copy">RAG-kerfi sem finnur viðeigandi lagabrot og sýnir hvaðan svarið kemur.</p>
+              </article>
 
-          <article class="welcome-slide">
-            <div class="welcome-step-card">
-              <span>02</span>
-              <h2>Sækjum heimildir</h2>
-              <p>Kerfið leitar í íslenskum neytendaréttarheimildum og raðar textabrotum eftir vægi.</p>
-            </div>
-          </article>
+              <article class="welcome-scene" data-welcome-scene>
+                <p class="scene-number">01</p>
+                <h2>Spyrðu á íslensku</h2>
+                <p>Settu inn hagnýta spurningu um gallaða vöru, netkaup eða endurgreiðslu.</p>
+              </article>
 
-          <article class="welcome-slide">
-            <div class="welcome-step-card">
-              <span>03</span>
-              <h2>Svarið er rekjanlegt</h2>
-              <p>Þú sérð svarið, tilvísanirnar og textann sem var notaður til að styðja niðurstöðuna.</p>
-            </div>
+              <article class="welcome-scene" data-welcome-scene>
+                <p class="scene-number">02</p>
+                <h2>Sækjum heimildir</h2>
+                <p>Kerfið leitar í íslenskum neytendaréttarheimildum og raðar textabrotum eftir vægi.</p>
+              </article>
 
-            <div class="welcome-actions">
-              <button id="startButton" class="primary-action" type="button">
-                <span>Fá leiðsögn</span>
-                <i data-lucide="arrow-right"></i>
-              </button>
-              <button id="skipWelcomeButton" class="ghost-action" type="button">Sleppa</button>
+              <article class="welcome-scene" data-welcome-scene>
+                <p class="scene-number">03</p>
+                <h2>Svarið er rekjanlegt</h2>
+                <p>Þú sérð svarið, tilvísanirnar og textann sem var notaður til að styðja niðurstöðuna.</p>
+                <div class="welcome-actions">
+                  <button id="startButton" class="primary-action" type="button">
+                    <span>Fá leiðsögn</span>
+                    <i data-lucide="arrow-right"></i>
+                  </button>
+                  <button id="skipWelcomeButton" class="ghost-action" type="button">Sleppa</button>
+                </div>
+              </article>
             </div>
-          </article>
+          </div>
+        </div>
+
+        <div class="welcome-footer" aria-hidden="true">
+          <span>Skrunaðu</span>
+          <div class="welcome-progress">
+            <i class="active"></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </div>
         </div>
       </section>
     </div>
