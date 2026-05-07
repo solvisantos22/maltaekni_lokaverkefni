@@ -31,7 +31,7 @@ const tourSteps = [
   {
     selector: '[data-tour="settings"]',
     title: "Stillingar",
-    text: "Veldu leitaraðferð og hversu mörg heimildabrot Réttvísir á að nota.",
+    text: "Veldu leitaraðferð og hversu mörg heimildabrot Réttarvísir á að nota.",
   },
   {
     selector: '[data-tour="chat"]',

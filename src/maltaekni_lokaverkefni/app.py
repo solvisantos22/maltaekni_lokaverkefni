@@ -23,7 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CHUNKS_PATH = PROJECT_ROOT / "data" / "processed" / "chunks.json"
 WEB_DIR = Path(__file__).resolve().parent / "web"
 
-app = FastAPI(title="Réttvísir")
+app = FastAPI(title="Réttarvísir")
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
 
