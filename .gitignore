@@ -27,6 +27,7 @@ Thumbs.db
 *.pdf
 *.docx
 *.pptx
+*.zip
 
 # Data and model artifacts stay local by default
 data/raw/*
