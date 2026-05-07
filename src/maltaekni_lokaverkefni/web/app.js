@@ -25,28 +25,28 @@ const tourNextButton = document.querySelector("#tourNextButton");
 const tourSkipButton = document.querySelector("#tourSkipButton");
 
 const introText =
-  "Spurðu um gallaða vöru, netkaup, afhendingu, endurgreiðslu eða rétt til að falla frá kaupum.";
+  "Spurðu um neytendarétt. Ég svara með heimildum og sýni textabrotin sem styðja niðurstöðuna.";
 
 const tourSteps = [
   {
     selector: '[data-tour="settings"]',
     title: "Stillingar",
-    text: "Veldu leitaraðferð og fjölda heimilda áður en þú spyrð.",
+    text: "Veldu leitaraðferð og hversu mörg heimildabrot Réttvísir á að nota.",
   },
   {
     selector: '[data-tour="chat"]',
     title: "Samtal",
-    text: "Svör birtast hér og eru skrifuð út eins og í spjallviðmóti.",
+    text: "Hér birtist svarið, skrifað út í rólegu spjallflæði.",
   },
   {
     selector: '[data-tour="composer"]',
     title: "Spurning",
-    text: "Settu inn hagnýta spurningu um neytendarétt og sendu hana áfram.",
+    text: "Spurðu eins og þú myndir spyrja lögfræðing eða ráðgjafa.",
   },
   {
     selector: '[data-tour="sources"]',
     title: "Heimildir",
-    text: "Hér sérðu textabrotin sem svarið byggir á, með slóðum og retrieval-score.",
+    text: "Hér sérðu heimildabrotin sem styðja svarið, með slóðum og vægi.",
   },
 ];
 
@@ -80,7 +80,7 @@ welcomeOverlay.addEventListener(
 clearButton.addEventListener("click", () => {
   messages.innerHTML = "";
   sourceList.innerHTML =
-    '<p class="empty">Heimildir birtast hér eftir fyrstu spurningu.</p>';
+    '<p class="empty">Heimildabrot birtast hér eftir fyrstu spurningu.</p>';
   appendMessage("assistant", introText);
 });
 
@@ -174,7 +174,7 @@ function appendMessage(role, text) {
 
   const avatar = document.createElement("div");
   avatar.className = "avatar";
-  avatar.textContent = role === "user" ? "Þ" : "§";
+  avatar.textContent = role === "user" ? "Þ" : "[§]";
 
   const bubble = document.createElement("div");
   bubble.className = "bubble";
@@ -221,7 +221,7 @@ function renderSources(sources) {
       <h3>${escapeHtml(source.title)} - ${escapeHtml(source.section)}</h3>
       <p>${escapeHtml(source.text)}</p>
       <a href="${escapeAttribute(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.url)}</a>
-      <div class="score">Score: ${formatScore(source.score)} · ${escapeHtml(source.retrieval_method || "")}</div>
+      <div class="score">Vægi: ${formatScore(source.score)} · ${escapeHtml(source.retrieval_method || "")}</div>
     `;
     sourceList.append(card);
   }

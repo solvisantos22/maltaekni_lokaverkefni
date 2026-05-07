@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Neytendaréttur</title>
+    <title>Réttvísir</title>
     <link rel="stylesheet" href="/static/styles.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="/static/app.js" defer></script>
@@ -21,28 +21,28 @@
           <div class="welcome-track">
             <div class="welcome-stage">
               <article class="welcome-scene active" data-welcome-scene>
-                <div class="mark large-mark">§</div>
-                <p class="eyebrow">Íslenskur neytendaréttur</p>
-                <h1 id="welcomeTitle">Spurningar. Heimildir. Rekjanleg svör.</h1>
-                <p class="welcome-copy">RAG-kerfi sem finnur viðeigandi lagabrot og sýnir hvaðan svarið kemur.</p>
+                <div class="mark large-mark">[§]</div>
+                <p class="eyebrow">Réttvísir</p>
+                <h1 id="welcomeTitle">Neytendaréttur með rekjanlegum heimildum.</h1>
+                <p class="welcome-copy">Spurðu á íslensku og fáðu stutt svar byggt á sóttum laga- og neytendaréttarheimildum.</p>
               </article>
 
               <article class="welcome-scene" data-welcome-scene>
                 <p class="scene-number">01</p>
-                <h2>Spyrðu á íslensku</h2>
-                <p>Settu inn hagnýta spurningu um gallaða vöru, netkaup eða endurgreiðslu.</p>
+                <h2>Spyrðu um rétt þinn</h2>
+                <p>Settu inn hagnýta spurningu um gallaða vöru, netkaup, afhendingu eða endurgreiðslu.</p>
               </article>
 
               <article class="welcome-scene" data-welcome-scene>
                 <p class="scene-number">02</p>
-                <h2>Sækjum heimildir</h2>
-                <p>Kerfið leitar í íslenskum neytendaréttarheimildum og raðar textabrotum eftir vægi.</p>
+                <h2>Við finnum réttu heimildirnar</h2>
+                <p>Réttvísir leitar í íslenskum neytendaréttarheimildum og raðar textabrotum eftir vægi.</p>
               </article>
 
               <article class="welcome-scene" data-welcome-scene>
                 <p class="scene-number">03</p>
-                <h2>Svarið er rekjanlegt</h2>
-                <p>Þú sérð svarið, tilvísanirnar og textann sem var notaður til að styðja niðurstöðuna.</p>
+                <h2>Svarið er alltaf rekjanlegt</h2>
+                <p>Þú sérð niðurstöðuna, tilvísanirnar og textabrotin sem styðja svarið.</p>
                 <div class="welcome-actions">
                   <button id="startButton" class="primary-action" type="button">
                     <span>Fá leiðsögn</span>
@@ -56,7 +56,7 @@
         </div>
 
         <div class="welcome-footer" aria-hidden="true">
-          <span>Skrunaðu</span>
+          <span>Skrunaðu til að skoða</span>
           <div class="welcome-progress">
             <i class="active"></i>
             <i></i>
@@ -83,10 +83,10 @@
     <div class="shell">
       <aside class="rail" aria-label="Stillingar" data-tour="settings">
         <div class="brand">
-          <div class="mark">§</div>
+          <div class="mark">[§]</div>
           <div>
-            <h1>Neytendaréttur</h1>
-            <p>RAG · íslenskar heimildir</p>
+            <h1>Réttvísir</h1>
+            <p>Neytendaréttur · heimildir</p>
           </div>
         </div>
 
@@ -116,16 +116,16 @@
 
         <div class="caveat">
           <strong>Fyrirvari</strong>
-          <span>Svör eru byggð á sóttum heimildabrotum og koma ekki í stað lögfræðiráðgjafar.</span>
+          <span>Réttvísir er upplýsingatól, ekki lögfræðiráðgjöf.</span>
         </div>
       </aside>
 
       <main class="chat" data-tour="chat">
         <div id="messages" class="messages" aria-live="polite">
           <section class="message assistant">
-            <div class="avatar">§</div>
+            <div class="avatar">[§]</div>
             <div class="bubble">
-              <p>Spurðu um gallaða vöru, netkaup, afhendingu, endurgreiðslu eða rétt til að falla frá kaupum.</p>
+              <p>Spurðu um neytendarétt. Ég svara með heimildum og sýni textabrotin sem styðja niðurstöðuna.</p>
             </div>
           </section>
         </div>
@@ -134,7 +134,7 @@
           <textarea
             id="question"
             rows="2"
-            placeholder="Spurðu spurningu um neytendarétt..."
+            placeholder="Spurðu Réttvísi um neytendarétt..."
           >Hvað get ég gert ef vara sem ég keypti er gölluð?</textarea>
           <button id="sendButton" type="submit" aria-label="Senda">
             <i data-lucide="send"></i>
@@ -150,7 +150,7 @@
           </button>
         </div>
         <div id="sourceList" class="source-list">
-          <p class="empty">Heimildir birtast hér eftir fyrstu spurningu.</p>
+          <p class="empty">Heimildabrot birtast hér eftir fyrstu spurningu.</p>
         </div>
       </aside>
     </div>
