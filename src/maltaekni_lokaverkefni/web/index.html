@@ -9,8 +9,37 @@
     <script src="/static/app.js" defer></script>
   </head>
   <body>
+    <div id="welcomeOverlay" class="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+      <section class="welcome-panel">
+        <div class="mark large-mark">§</div>
+        <p class="eyebrow">Íslenskur neytendaréttur</p>
+        <h1 id="welcomeTitle">Spurningar. Heimildir. Rekjanleg svör.</h1>
+        <p class="welcome-copy">RAG-kerfi sem finnur viðeigandi lagabrot og sýnir hvaðan svarið kemur.</p>
+        <div class="welcome-actions">
+          <button id="startButton" class="primary-action" type="button">
+            <span>Byrja</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+          <button id="skipWelcomeButton" class="ghost-action" type="button">Fara beint inn</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="tourOverlay" class="tour-overlay hidden" aria-hidden="true">
+      <div id="tourSpotlight" class="tour-spotlight"></div>
+      <section id="tourCard" class="tour-card" role="dialog" aria-live="polite">
+        <p id="tourCount" class="tour-count"></p>
+        <h2 id="tourTitle"></h2>
+        <p id="tourText"></p>
+        <div class="tour-actions">
+          <button id="tourSkipButton" class="ghost-action" type="button">Sleppa</button>
+          <button id="tourNextButton" class="primary-action" type="button">Næst</button>
+        </div>
+      </section>
+    </div>
+
     <div class="shell">
-      <aside class="rail" aria-label="Stillingar">
+      <aside class="rail" aria-label="Stillingar" data-tour="settings">
         <div class="brand">
           <div class="mark">§</div>
           <div>
@@ -38,13 +67,18 @@
           <span>Sæki stöðu</span>
         </div>
 
+        <button id="tourButton" class="tour-button" type="button">
+          <i data-lucide="map"></i>
+          <span>Skoða viðmót</span>
+        </button>
+
         <div class="caveat">
           <strong>Fyrirvari</strong>
           <span>Svör eru byggð á sóttum heimildabrotum og koma ekki í stað lögfræðiráðgjafar.</span>
         </div>
       </aside>
 
-      <main class="chat">
+      <main class="chat" data-tour="chat">
         <div id="messages" class="messages" aria-live="polite">
           <section class="message assistant">
             <div class="avatar">§</div>
@@ -54,11 +88,11 @@
           </section>
         </div>
 
-        <form id="askForm" class="composer">
+        <form id="askForm" class="composer" data-tour="composer">
           <textarea
             id="question"
             rows="2"
-            placeholder="Skrifaðu spurningu um neytendarétt..."
+            placeholder="Spurðu spurningu um neytendarétt..."
           >Hvað get ég gert ef vara sem ég keypti er gölluð?</textarea>
           <button id="sendButton" type="submit" aria-label="Senda">
             <i data-lucide="send"></i>
@@ -66,7 +100,7 @@
         </form>
       </main>
 
-      <aside class="sources" aria-label="Heimildir">
+      <aside class="sources" aria-label="Heimildir" data-tour="sources">
         <div class="sources-head">
           <h2>Heimildir</h2>
           <button id="clearButton" class="icon-button" type="button" aria-label="Hreinsa">

@@ -8,6 +8,46 @@ const topKInput = document.querySelector("#topK");
 const topKValue = document.querySelector("#topKValue");
 const statusEl = document.querySelector("#status");
 const clearButton = document.querySelector("#clearButton");
+const welcomeOverlay = document.querySelector("#welcomeOverlay");
+const startButton = document.querySelector("#startButton");
+const skipWelcomeButton = document.querySelector("#skipWelcomeButton");
+const tourButton = document.querySelector("#tourButton");
+const tourOverlay = document.querySelector("#tourOverlay");
+const tourSpotlight = document.querySelector("#tourSpotlight");
+const tourCard = document.querySelector("#tourCard");
+const tourCount = document.querySelector("#tourCount");
+const tourTitle = document.querySelector("#tourTitle");
+const tourText = document.querySelector("#tourText");
+const tourNextButton = document.querySelector("#tourNextButton");
+const tourSkipButton = document.querySelector("#tourSkipButton");
+
+const introText =
+  "Spurðu um gallaða vöru, netkaup, afhendingu, endurgreiðslu eða rétt til að falla frá kaupum.";
+
+const tourSteps = [
+  {
+    selector: '[data-tour="settings"]',
+    title: "Stillingar",
+    text: "Veldu leitaraðferð og fjölda heimilda áður en þú spyrð.",
+  },
+  {
+    selector: '[data-tour="chat"]',
+    title: "Samtal",
+    text: "Svör birtast hér og eru skrifuð út eins og í spjallviðmóti.",
+  },
+  {
+    selector: '[data-tour="composer"]',
+    title: "Spurning",
+    text: "Settu inn hagnýta spurningu um neytendarétt og sendu hana áfram.",
+  },
+  {
+    selector: '[data-tour="sources"]',
+    title: "Heimildir",
+    text: "Hér sérðu textabrotin sem svarið byggir á, með slóðum og retrieval-score.",
+  },
+];
+
+let activeTourIndex = 0;
 
 topKInput.addEventListener("input", () => {
   topKValue.textContent = topKInput.value;
@@ -15,8 +55,39 @@ topKInput.addEventListener("input", () => {
 
 clearButton.addEventListener("click", () => {
   messages.innerHTML = "";
-  sourceList.innerHTML = '<p class="empty">Heimildir birtast hér eftir fyrstu spurningu.</p>';
-  appendMessage("assistant", "Spurðu um gallaða vöru, netkaup, afhendingu, endurgreiðslu eða rétt til að falla frá kaupum.");
+  sourceList.innerHTML =
+    '<p class="empty">Heimildir birtast hér eftir fyrstu spurningu.</p>';
+  appendMessage("assistant", introText);
+});
+
+startButton.addEventListener("click", () => {
+  closeWelcome();
+  startTour();
+});
+
+skipWelcomeButton.addEventListener("click", () => {
+  closeWelcome();
+  questionInput.focus();
+});
+
+tourButton.addEventListener("click", () => {
+  closeWelcome();
+  startTour();
+});
+
+tourNextButton.addEventListener("click", () => {
+  if (activeTourIndex >= tourSteps.length - 1) {
+    endTour();
+    return;
+  }
+
+  activeTourIndex += 1;
+  renderTourStep();
+});
+
+tourSkipButton.addEventListener("click", endTour);
+window.addEventListener("resize", () => {
+  if (!tourOverlay.classList.contains("hidden")) renderTourStep();
 });
 
 form.addEventListener("submit", async (event) => {
@@ -154,7 +225,74 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function closeWelcome() {
+  welcomeOverlay.classList.add("hidden");
+  document.body.classList.remove("onboarding-active");
+}
+
+function startTour() {
+  activeTourIndex = 0;
+  tourOverlay.classList.remove("hidden");
+  tourOverlay.setAttribute("aria-hidden", "false");
+  renderTourStep();
+}
+
+function endTour() {
+  tourOverlay.classList.add("hidden");
+  tourOverlay.setAttribute("aria-hidden", "true");
+  questionInput.focus();
+}
+
+function renderTourStep() {
+  const step = tourSteps[activeTourIndex];
+  const target = document.querySelector(step.selector);
+  if (!target) return;
+
+  const rect = target.getBoundingClientRect();
+  const padding = 8;
+  const left = Math.max(10, rect.left - padding);
+  const top = Math.max(10, rect.top - padding);
+  const width = Math.min(window.innerWidth - left - 10, rect.width + padding * 2);
+  const height = Math.min(window.innerHeight - top - 10, rect.height + padding * 2);
+
+  tourSpotlight.style.left = `${left}px`;
+  tourSpotlight.style.top = `${top}px`;
+  tourSpotlight.style.width = `${width}px`;
+  tourSpotlight.style.height = `${height}px`;
+
+  tourCount.textContent = `${activeTourIndex + 1} / ${tourSteps.length}`;
+  tourTitle.textContent = step.title;
+  tourText.textContent = step.text;
+  tourNextButton.textContent =
+    activeTourIndex === tourSteps.length - 1 ? "Ljúka" : "Næst";
+
+  positionTourCard({ left, top, width, height });
+}
+
+function positionTourCard(rect) {
+  const gap = 14;
+  const cardWidth = Math.min(330, window.innerWidth - 28);
+  const cardHeight = 190;
+  let left = rect.left + rect.width + gap;
+  let top = rect.top;
+
+  if (left + cardWidth > window.innerWidth - 14) {
+    left = rect.left;
+    top = rect.top + rect.height + gap;
+  }
+
+  if (top + cardHeight > window.innerHeight - 14) {
+    top = Math.max(14, rect.top - cardHeight - gap);
+  }
+
+  left = Math.max(14, Math.min(left, window.innerWidth - cardWidth - 14));
+  top = Math.max(14, top);
+  tourCard.style.left = `${left}px`;
+  tourCard.style.top = `${top}px`;
+}
+
 window.addEventListener("load", () => {
   if (window.lucide) window.lucide.createIcons();
+  document.body.classList.add("onboarding-active");
   checkStatus();
 });

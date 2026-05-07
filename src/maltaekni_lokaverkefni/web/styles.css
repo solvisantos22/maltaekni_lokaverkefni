@@ -1,16 +1,18 @@
 :root {
-  color-scheme: light;
-  --bg: #f6f7f9;
-  --panel: #ffffff;
-  --panel-strong: #111316;
-  --text: #15181d;
-  --muted: #667085;
-  --line: #d9dee7;
-  --accent: #0f766e;
-  --accent-strong: #0b5d57;
-  --danger: #b42318;
-  --warn: #b7791f;
-  --shadow: 0 18px 50px rgba(16, 24, 40, 0.14);
+  color-scheme: dark;
+  --bg: #0d100f;
+  --panel: #151a18;
+  --panel-soft: #1b211f;
+  --panel-strong: #f4f7f5;
+  --text: #edf2ef;
+  --muted: #a0aaa5;
+  --line: #2b3430;
+  --accent: #2dd4bf;
+  --accent-strong: #14b8a6;
+  --danger: #f97066;
+  --warn: #f4b740;
+  --shadow: 0 22px 70px rgba(0, 0, 0, 0.4);
+  --overlay: rgba(4, 7, 6, 0.78);
 }
 
 * {
@@ -24,6 +26,11 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.onboarding-active .shell {
+  filter: blur(2px);
+  pointer-events: none;
 }
 
 html {
@@ -76,8 +83,14 @@ input {
   height: 38px;
   border-radius: 8px;
   background: var(--panel-strong);
-  color: white;
+  color: #0d100f;
   font-weight: 800;
+}
+
+.large-mark {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 18px;
 }
 
 .brand h1,
@@ -109,8 +122,15 @@ textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: white;
+  background: #0f1412;
   color: var(--text);
+}
+
+select:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 select {
@@ -162,6 +182,7 @@ output {
   margin-top: auto;
   padding: 13px;
   border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
   font-size: 13px;
   line-height: 1.45;
@@ -199,13 +220,14 @@ output {
 .message.user .avatar {
   grid-column: 2;
   background: var(--accent);
+  color: #06100e;
 }
 
 .message.user .bubble {
   grid-column: 1;
   grid-row: 1;
   background: var(--panel-strong);
-  color: white;
+  color: #0d100f;
 }
 
 .bubble {
@@ -232,7 +254,7 @@ output {
   grid-template-columns: minmax(0, 1fr) 48px;
   gap: 10px;
   padding: 18px clamp(20px, 4vw, 54px) 24px;
-  background: rgba(246, 247, 249, 0.94);
+  background: rgba(13, 16, 15, 0.94);
   border-top: 1px solid var(--line);
 }
 
@@ -257,7 +279,7 @@ output {
   width: 48px;
   height: 54px;
   background: var(--accent);
-  color: white;
+  color: #06100e;
 }
 
 .composer button:hover {
@@ -289,7 +311,7 @@ output {
 .icon-button {
   width: 38px;
   height: 38px;
-  background: #eef1f5;
+  background: #202824;
   color: var(--text);
 }
 
@@ -303,7 +325,7 @@ output {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--panel-soft);
   margin-bottom: 12px;
 }
 
@@ -318,7 +340,7 @@ output {
   overflow-y: auto;
   padding-right: 6px;
   margin: 10px 0;
-  color: #333842;
+  color: #dbe3df;
   font-size: 13px;
   line-height: 1.45;
 }
@@ -336,10 +358,154 @@ output {
   min-height: 24px;
   padding: 2px 8px;
   border-radius: 8px;
-  background: #e8f5f3;
-  color: var(--accent-strong);
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
+}
+
+.tour-button,
+.primary-action,
+.ghost-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.tour-button {
+  width: 100%;
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.tour-button:hover,
+.ghost-action:hover {
+  border-color: var(--accent);
+}
+
+.primary-action {
+  min-width: 112px;
+  padding: 0 14px;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #06100e;
+  font-weight: 750;
+}
+
+.ghost-action {
+  min-width: 96px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--text);
+}
+
+.welcome-overlay,
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.welcome-overlay {
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(45, 212, 191, 0.18), transparent 34%),
+    var(--overlay);
+}
+
+.welcome-overlay.hidden,
+.tour-overlay.hidden {
+  display: none;
+}
+
+.welcome-panel,
+.tour-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(21, 26, 24, 0.96);
+  box-shadow: var(--shadow);
+}
+
+.welcome-panel {
+  width: min(520px, 100%);
+  padding: 32px;
+}
+
+.eyebrow,
+.tour-count {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.welcome-panel h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.08;
+}
+
+.welcome-copy {
+  margin: 16px 0 0;
+  max-width: 430px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.welcome-actions,
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.tour-overlay {
+  display: block;
+  pointer-events: none;
+}
+
+.tour-overlay::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+}
+
+.tour-spotlight {
+  position: fixed;
+  z-index: 31;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(4, 7, 6, 0.72), 0 0 30px rgba(45, 212, 191, 0.35);
+  transition: left 180ms ease, top 180ms ease, width 180ms ease, height 180ms ease;
+}
+
+.tour-card {
+  position: fixed;
+  z-index: 32;
+  width: min(330px, calc(100vw - 28px));
+  padding: 18px;
+  pointer-events: auto;
+}
+
+.tour-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.tour-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .empty {
