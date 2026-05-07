@@ -12,36 +12,45 @@
     <div id="welcomeOverlay" class="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
       <section class="welcome-panel">
         <div class="welcome-scroll">
-          <div class="mark large-mark">§</div>
-          <p class="eyebrow">Íslenskur neytendaréttur</p>
-          <h1 id="welcomeTitle">Spurningar. Heimildir. Rekjanleg svör.</h1>
-          <p class="welcome-copy">RAG-kerfi sem finnur viðeigandi lagabrot og sýnir hvaðan svarið kemur.</p>
+          <article class="welcome-slide">
+            <div class="mark large-mark">§</div>
+            <p class="eyebrow">Íslenskur neytendaréttur</p>
+            <h1 id="welcomeTitle">Spurningar. Heimildir. Rekjanleg svör.</h1>
+            <p class="welcome-copy">RAG-kerfi sem finnur viðeigandi lagabrot og sýnir hvaðan svarið kemur.</p>
+            <p class="scroll-hint">Skrunaðu</p>
+          </article>
 
-          <div class="welcome-steps">
-            <article>
+          <article class="welcome-slide">
+            <div class="welcome-step-card">
               <span>01</span>
               <h2>Spyrðu á íslensku</h2>
               <p>Settu inn hagnýta spurningu um gallaða vöru, netkaup eða endurgreiðslu.</p>
-            </article>
-            <article>
+            </div>
+          </article>
+
+          <article class="welcome-slide">
+            <div class="welcome-step-card">
               <span>02</span>
               <h2>Sækjum heimildir</h2>
               <p>Kerfið leitar í íslenskum neytendaréttarheimildum og raðar textabrotum eftir vægi.</p>
-            </article>
-            <article>
+            </div>
+          </article>
+
+          <article class="welcome-slide">
+            <div class="welcome-step-card">
               <span>03</span>
               <h2>Svarið er rekjanlegt</h2>
               <p>Þú sérð svarið, tilvísanirnar og textann sem var notaður til að styðja niðurstöðuna.</p>
-            </article>
-          </div>
+            </div>
 
-          <div class="welcome-actions">
-            <button id="startButton" class="primary-action" type="button">
-              <span>Fá leiðsögn</span>
-              <i data-lucide="arrow-right"></i>
-            </button>
-            <button id="skipWelcomeButton" class="ghost-action" type="button">Sleppa</button>
-          </div>
+            <div class="welcome-actions">
+              <button id="startButton" class="primary-action" type="button">
+                <span>Fá leiðsögn</span>
+                <i data-lucide="arrow-right"></i>
+              </button>
+              <button id="skipWelcomeButton" class="ghost-action" type="button">Sleppa</button>
+            </div>
+          </article>
         </div>
       </section>
     </div>
