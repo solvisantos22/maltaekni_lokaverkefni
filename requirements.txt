@@ -15,4 +15,5 @@ rank-bm25==0.2.2
 reynir==3.6.1; python_version < "3.13"
 tokenizer==3.6.2
 islenska==1.1.1
-streamlit
+fastapi
+uvicorn

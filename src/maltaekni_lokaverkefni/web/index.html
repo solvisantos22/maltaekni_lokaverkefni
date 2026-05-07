@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="is">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neytendaréttur</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail" aria-label="Stillingar">
+        <div class="brand">
+          <div class="mark">§</div>
+          <div>
+            <h1>Neytendaréttur</h1>
+            <p>RAG · íslenskar heimildir</p>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="method">Leit</label>
+          <select id="method">
+            <option value="tfidf" selected>TF-IDF</option>
+            <option value="bm25">BM25</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="topK">Heimildir</label>
+          <input id="topK" type="range" min="1" max="5" value="3" />
+          <output id="topKValue">3</output>
+        </div>
+
+        <div class="status" id="status">
+          <span class="dot"></span>
+          <span>Sæki stöðu</span>
+        </div>
+
+        <div class="caveat">
+          <strong>Fyrirvari</strong>
+          <span>Svör eru byggð á sóttum heimildabrotum og koma ekki í stað lögfræðiráðgjafar.</span>
+        </div>
+      </aside>
+
+      <main class="chat">
+        <div id="messages" class="messages" aria-live="polite">
+          <section class="message assistant">
+            <div class="avatar">§</div>
+            <div class="bubble">
+              <p>Spurðu um gallaða vöru, netkaup, afhendingu, endurgreiðslu eða rétt til að falla frá kaupum.</p>
+            </div>
+          </section>
+        </div>
+
+        <form id="askForm" class="composer">
+          <textarea
+            id="question"
+            rows="2"
+            placeholder="Skrifaðu spurningu um neytendarétt..."
+          >Hvað get ég gert ef vara sem ég keypti er gölluð?</textarea>
+          <button id="sendButton" type="submit" aria-label="Senda">
+            <i data-lucide="send"></i>
+          </button>
+        </form>
+      </main>
+
+      <aside class="sources" aria-label="Heimildir">
+        <div class="sources-head">
+          <h2>Heimildir</h2>
+          <button id="clearButton" class="icon-button" type="button" aria-label="Hreinsa">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+        <div id="sourceList" class="source-list">
+          <p class="empty">Heimildir birtast hér eftir fyrstu spurningu.</p>
+        </div>
+      </aside>
+    </div>
+  </body>
+</html>

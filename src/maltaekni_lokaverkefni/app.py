@@ -1,10 +1,15 @@
-"""Streamlit app for the Icelandic consumer-rights RAG MVP."""
+"""FastAPI app for the Icelandic consumer-rights RAG interface."""
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
-import streamlit as st
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 try:
     from .answer_generator import generate_grounded_answer
@@ -14,60 +19,84 @@ except ImportError:  # Allows direct script execution during early experiments.
     from retriever import build_retriever
 
 
-CHUNKS_PATH = Path("data/processed/chunks.json")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+CHUNKS_PATH = PROJECT_ROOT / "data" / "processed" / "chunks.json"
+WEB_DIR = Path(__file__).resolve().parent / "web"
+
+app = FastAPI(title="Neytendaréttur RAG")
+app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
 
-@st.cache_resource
+class AskRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=1000)
+    method: Literal["tfidf", "bm25"] = "tfidf"
+    top_k: int = Field(default=3, ge=1, le=5)
+
+
+class StatusResponse(BaseModel):
+    ready: bool
+    chunks_path: str
+    message: str
+
+
+@lru_cache(maxsize=4)
 def _load_retriever(method: str):
     return build_retriever(method, chunks_path=CHUNKS_PATH)
 
 
-def main():
-    st.set_page_config(page_title="Neytendaréttur", page_icon="§", layout="wide")
-    st.title("Neytendaréttur")
+@app.get("/")
+def index():
+    return FileResponse(WEB_DIR / "index.html")
 
-    if not CHUNKS_PATH.exists():
-        st.error("Vantar data/processed/chunks.json.")
-        st.code(
-            "python src\\maltaekni_lokaverkefni\\fetch_sources.py\n"
-            "python src\\maltaekni_lokaverkefni\\chunking.py",
-            language="powershell",
+
+@app.get("/api/status", response_model=StatusResponse)
+def status():
+    if CHUNKS_PATH.exists():
+        return StatusResponse(
+            ready=True,
+            chunks_path=str(CHUNKS_PATH),
+            message="ready",
         )
-        return
 
-    with st.sidebar:
-        method = st.selectbox("Leitaraðferð", ["tfidf", "bm25"], index=0)
-        top_k = st.slider("Fjöldi heimilda", min_value=1, max_value=5, value=3)
-        show_prompt = st.toggle("Sýna prompt", value=False)
-
-    question = st.text_area(
-        "Spurning",
-        value="Hvað get ég gert ef vara sem ég keypti er gölluð?",
-        height=110,
+    return StatusResponse(
+        ready=False,
+        chunks_path=str(CHUNKS_PATH),
+        message=(
+            "Run: python src\\maltaekni_lokaverkefni\\fetch_sources.py "
+            "and python src\\maltaekni_lokaverkefni\\chunking.py"
+        ),
     )
 
-    if st.button("Svara", type="primary") and question.strip():
-        retriever = _load_retriever(method)
-        retrieval_result = retriever.search(question.strip(), top_k=top_k)
-        answer_result = generate_grounded_answer(retrieval_result, max_sources=top_k)
 
-        st.subheader("Svar")
-        st.write(answer_result.answer)
-        st.caption(f"Traust: {answer_result.confidence} | Leit: {method}")
+@app.post("/api/ask")
+def ask(request: AskRequest):
+    if not CHUNKS_PATH.exists():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Missing data/processed/chunks.json. Run fetch_sources.py "
+                "and chunking.py before starting the app."
+            ),
+        )
 
-        st.subheader("Heimildir")
-        for source in answer_result.sources:
-            label = f"[{source.citation_id}] {source.title} - {source.section}"
-            with st.expander(label, expanded=source.citation_id == 1):
-                st.write(source.text)
-                st.write(source.url)
-                if source.score is not None:
-                    st.caption(f"Score: {source.score:.4f}")
+    retriever = _load_retriever(request.method)
+    retrieval_result = retriever.search(request.question.strip(), top_k=request.top_k)
+    answer_result = generate_grounded_answer(
+        retrieval_result,
+        max_sources=request.top_k,
+    )
+    return answer_result.to_dict()
 
-        if show_prompt:
-            st.subheader("Prompt")
-            st.text_area("System", value=answer_result.system_prompt, height=160)
-            st.text_area("User", value=answer_result.user_prompt, height=360)
+
+def main():
+    import uvicorn
+
+    uvicorn.run(
+        "src.maltaekni_lokaverkefni.app:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=False,
+    )
 
 
 if __name__ == "__main__":
