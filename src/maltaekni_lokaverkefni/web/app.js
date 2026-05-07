@@ -258,7 +258,7 @@ function updateWelcomeIntro() {
 
   welcomeScenes.forEach((scene, index) => {
     const distance = Math.abs(exactIndex - index);
-    const strength = Math.max(0, 1 - distance * 1.65);
+    const strength = welcomeSceneStrength(distance);
     const direction = index - exactIndex;
 
     scene.classList.toggle("active", index === activeIndex);
@@ -271,6 +271,21 @@ function updateWelcomeIntro() {
   welcomeProgress.forEach((item, index) => {
     item.classList.toggle("active", index === activeIndex);
   });
+}
+
+function welcomeSceneStrength(distance) {
+  const holdDistance = 0.22;
+  const fadeDistance = 0.62;
+
+  if (distance <= holdDistance) return 1;
+  if (distance >= fadeDistance) return 0;
+
+  const fadeProgress = (distance - holdDistance) / (fadeDistance - holdDistance);
+  return 1 - smoothStep(fadeProgress);
+}
+
+function smoothStep(value) {
+  return value * value * (3 - 2 * value);
 }
 
 function closeWelcome() {
