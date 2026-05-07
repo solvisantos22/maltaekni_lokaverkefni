@@ -25,7 +25,7 @@ const tourNextButton = document.querySelector("#tourNextButton");
 const tourSkipButton = document.querySelector("#tourSkipButton");
 
 const introText =
-  "Spurðu um neytendarétt. Ég svara með heimildum og sýni textabrotin sem styðja niðurstöðuna.";
+  "Spurðu um neytendarétt.";
 
 const tourSteps = [
   {

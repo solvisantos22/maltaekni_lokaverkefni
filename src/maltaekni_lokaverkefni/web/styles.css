@@ -245,7 +245,10 @@ output {
 }
 
 .bubble {
-  padding: 15px 17px;
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 11px 15px;
   border-radius: 8px;
   border: 1px solid rgba(215, 181, 109, 0.16);
   background:
@@ -258,6 +261,10 @@ output {
 
 .bubble p {
   margin: 0;
+}
+
+.message.assistant:first-child .bubble {
+  box-shadow: none;
 }
 
 .meta {
@@ -548,6 +555,17 @@ output {
   margin: 0;
   font-size: clamp(38px, 7vw, 78px);
   line-height: 1.08;
+}
+
+.product-title {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #f5eddc;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.hero-mark {
+  margin-inline: auto;
 }
 
 .welcome-scene h2 {
