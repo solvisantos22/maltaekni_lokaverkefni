@@ -3,13 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 import re
 from typing import Any
+
+import httpx
 
 try:
     from .prompts import SYSTEM_PROMPT, build_answer_prompt
 except ImportError:  # Allows direct script execution during early experiments.
     from prompts import SYSTEM_PROMPT, build_answer_prompt
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # dotenv is helpful locally, but environment variables are enough.
+    load_dotenv = None
 
 
 UNCERTAIN_ANSWER = (
@@ -81,7 +89,13 @@ def generate_grounded_answer(
             method=method,
         )
 
-    answer = _build_extractive_answer(question, sources)
+    llm_answer, llm_method = _build_llm_answer(SYSTEM_PROMPT, user_prompt)
+    if llm_answer:
+        answer = _ensure_source_line(llm_answer, sources)
+        method = llm_method
+    else:
+        answer = _build_extractive_answer(question, sources)
+
     confidence = _estimate_confidence(sources)
 
     return AnswerResult(
@@ -93,6 +107,180 @@ def generate_grounded_answer(
         confidence=confidence,
         method=method,
     )
+
+
+def _build_llm_answer(system_prompt: str, user_prompt: str) -> tuple[str, str]:
+    """Call the configured LLM provider for a grounded Icelandic answer."""
+    if load_dotenv is not None:
+        load_dotenv()
+
+    provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
+    if provider not in {"auto", "gemini", "openai"}:
+        provider = "auto"
+
+    if provider in {"auto", "gemini"}:
+        answer = _build_gemini_answer(system_prompt, user_prompt)
+        if answer:
+            return answer, f"gemini:{_gemini_model()}"
+
+    if provider in {"auto", "openai"}:
+        answer = _build_openai_answer(system_prompt, user_prompt)
+        if answer:
+            return answer, f"openai:{_openai_model()}"
+
+    return "", ""
+
+
+def _build_gemini_answer(system_prompt: str, user_prompt: str) -> str:
+    """Call Gemini to turn retrieved chunks into a grounded Icelandic answer."""
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return ""
+
+    payload = {
+        "systemInstruction": {
+            "parts": [{"text": system_prompt}],
+        },
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": user_prompt}],
+            },
+        ],
+        "generationConfig": {
+            "maxOutputTokens": _llm_max_output_tokens(),
+            "thinkingConfig": {
+                "thinkingLevel": os.getenv("GEMINI_THINKING_LEVEL", "low"),
+            },
+        },
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": api_key,
+    }
+    timeout = _llm_timeout_seconds()
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{_gemini_model()}:generateContent"
+    )
+
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            response_data = response.json()
+    except (httpx.HTTPError, ValueError):
+        return ""
+
+    return _extract_gemini_text(response_data).strip()
+
+
+def _build_openai_answer(system_prompt: str, user_prompt: str) -> str:
+    """Call OpenAI to turn retrieved chunks into a grounded Icelandic answer."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return ""
+
+    payload = {
+        "model": _openai_model(),
+        "instructions": system_prompt,
+        "input": user_prompt,
+        "max_output_tokens": _llm_max_output_tokens(),
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    timeout = _llm_timeout_seconds()
+
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.post(
+                "https://api.openai.com/v1/responses",
+                headers=headers,
+                json=payload,
+            )
+            response.raise_for_status()
+            response_data = response.json()
+    except (httpx.HTTPError, ValueError):
+        return ""
+
+    return _extract_openai_text(response_data).strip()
+
+
+def _gemini_model() -> str:
+    return os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+
+
+def _openai_model() -> str:
+    return os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+
+
+def _llm_max_output_tokens() -> int:
+    return _positive_int_from_env("LLM_MAX_OUTPUT_TOKENS", default=450)
+
+
+def _llm_timeout_seconds() -> float:
+    try:
+        timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
+    except ValueError:
+        return 30.0
+
+    return timeout if timeout > 0 else 30.0
+
+
+def _positive_int_from_env(name: str, default: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+    return value if value > 0 else default
+
+
+def _extract_gemini_text(response_data: dict[str, Any]) -> str:
+    """Extract visible text from a Gemini generateContent JSON payload."""
+    text_parts: list[str] = []
+    for candidate in response_data.get("candidates", []):
+        content = candidate.get("content", {})
+        for part in content.get("parts", []):
+            if part.get("text"):
+                text_parts.append(str(part["text"]))
+
+    return "\n".join(text_parts)
+
+
+def _extract_openai_text(response_data: dict[str, Any]) -> str:
+    """Extract visible text from a Responses API JSON payload."""
+    if isinstance(response_data.get("output_text"), str):
+        return response_data["output_text"]
+
+    text_parts: list[str] = []
+    for item in response_data.get("output", []):
+        for content in item.get("content", []):
+            if content.get("type") == "output_text" and content.get("text"):
+                text_parts.append(str(content["text"]))
+
+    return "\n".join(text_parts)
+
+
+def _ensure_source_line(answer: str, sources: list[SourceReference]) -> str:
+    """Keep the UI citation contract even if the model omits the final source line."""
+    if re.search(r"Heimildir:\s*\[\d+\]", answer):
+        return answer
+
+    cited_ids = sorted(
+        {
+            int(match)
+            for match in re.findall(r"\[(\d+)\]", answer)
+            if int(match) <= len(sources)
+        }
+    )
+    if not cited_ids:
+        cited_ids = [sources[0].citation_id]
+
+    source_line = ", ".join(f"[{citation_id}]" for citation_id in cited_ids)
+    return f"{answer.rstrip()}\n\nHeimildir: {source_line}"
 
 
 def _source_from_chunk(index: int, chunk: dict[str, Any]) -> SourceReference:
