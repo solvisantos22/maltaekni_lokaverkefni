@@ -39,7 +39,7 @@ Create a local `.env` file from `.env.example` and set:
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-3-flash-preview
-LLM_MAX_OUTPUT_TOKENS=1200
+LLM_MAX_OUTPUT_TOKENS=4096
 ```
 
 `LLM_PROVIDER=auto` tries Gemini first and then OpenAI. If no provider key is set,
