@@ -38,7 +38,7 @@ class EvaluationRow:
     question_id: str
     question: str
     topic: str
-    expected_source_hint: str
+    expected_relevant_section: str
     retrieval_method: str
     answer_method: str
     top_1_chunk_id: str
@@ -46,7 +46,7 @@ class EvaluationRow:
     top_1_section: str
     top_1_score: float | None
     top_3_sections: str
-    expected_hint_in_top_3: bool
+    expected_section_in_top_3: bool
     confidence: str
     latency_seconds: float
     answer: str
@@ -110,7 +110,7 @@ def main() -> None:
                         question_id=question["id"],
                         question=question["question"],
                         topic=question.get("topic", ""),
-                        expected_source_hint=question.get("expected_source_hint", ""),
+                        expected_relevant_section=expected_relevant_section(question),
                         retrieval_method=method,
                         answer_method="error",
                         top_1_chunk_id="",
@@ -118,7 +118,7 @@ def main() -> None:
                         top_1_section="",
                         top_1_score=None,
                         top_3_sections="",
-                        expected_hint_in_top_3=False,
+                        expected_section_in_top_3=False,
                         confidence="",
                         latency_seconds=latency,
                         answer="",
@@ -199,13 +199,13 @@ def build_row(
     sources = answer_result.get("sources", [])
     top_source = sources[0] if sources else {}
     top_3_sections = " | ".join(source.get("section", "") for source in sources[:3])
-    expected_hint = question.get("expected_source_hint", "")
+    expected_section = expected_relevant_section(question)
 
     return EvaluationRow(
         question_id=question["id"],
         question=question["question"],
         topic=question.get("topic", ""),
-        expected_source_hint=expected_hint,
+        expected_relevant_section=expected_section,
         retrieval_method=retrieval_method,
         answer_method=answer_result.get("method", ""),
         top_1_chunk_id=top_source.get("chunk_id", ""),
@@ -213,7 +213,7 @@ def build_row(
         top_1_section=top_source.get("section", ""),
         top_1_score=top_source.get("score"),
         top_3_sections=top_3_sections,
-        expected_hint_in_top_3=hint_matches(expected_hint, top_3_sections),
+        expected_section_in_top_3=section_matches(expected_section, top_3_sections),
         confidence=answer_result.get("confidence", ""),
         latency_seconds=round(latency_seconds, 3),
         answer=answer_result.get("answer", ""),
@@ -221,11 +221,16 @@ def build_row(
     )
 
 
-def hint_matches(expected_hint: str, retrieved_sections: str) -> bool:
-    if not expected_hint:
+def section_matches(expected_section: str, retrieved_sections: str) -> bool:
+    if not expected_section:
         return False
 
-    return normalize_text(expected_hint) in normalize_text(retrieved_sections)
+    return normalize_text(expected_section) in normalize_text(retrieved_sections)
+
+
+def expected_relevant_section(question: dict[str, str]) -> str:
+    """Read the current column name while accepting older evaluation CSV files."""
+    return question.get("expected_relevant_section") or question.get("expected_source_hint", "")
 
 
 def normalize_text(text: str) -> str:
@@ -251,10 +256,10 @@ def print_overview(rows: list[EvaluationRow]) -> None:
         method_rows = [row for row in rows if row.retrieval_method == method]
         total = len(method_rows)
         errors = sum(1 for row in method_rows if row.error)
-        hint_hits = sum(1 for row in method_rows if row.expected_hint_in_top_3)
+        section_hits = sum(1 for row in method_rows if row.expected_section_in_top_3)
         avg_latency = sum(row.latency_seconds for row in method_rows) / max(total, 1)
         print(
-            f"{method}: {hint_hits}/{total} hint hits in top 3, "
+            f"{method}: {section_hits}/{total} expected sections in top 3, "
             f"{errors} errors, avg {avg_latency:.2f}s"
         )
 

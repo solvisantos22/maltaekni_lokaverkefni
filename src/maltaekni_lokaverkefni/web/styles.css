@@ -440,7 +440,8 @@ output {
 }
 
 .welcome-overlay,
-.tour-overlay {
+.tour-overlay,
+.methodology-overlay {
   position: fixed;
   inset: 0;
   z-index: 30;
@@ -481,15 +482,67 @@ output {
 }
 
 .welcome-overlay.hidden,
-.tour-overlay.hidden {
+.tour-overlay.hidden,
+.methodology-overlay.hidden {
   display: none;
 }
 
-.tour-card {
+.tour-card,
+.methodology-card {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(21, 26, 24, 0.96);
   box-shadow: var(--shadow);
+}
+
+.methodology-overlay {
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(4, 7, 6, 0.78);
+  backdrop-filter: blur(10px);
+}
+
+.methodology-card {
+  position: relative;
+  width: min(620px, 100%);
+  padding: 24px;
+}
+
+.methodology-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.methodology-card h2 {
+  margin: 0 44px 16px 0;
+  font-size: 24px;
+}
+
+.methodology-card ol {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 22px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.methodology-note {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .welcome-panel {

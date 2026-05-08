@@ -56,6 +56,8 @@ python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25
 
 Use `--no-llm` to test retrieval without spending LLM calls. Results are written
 to `reports/evaluation/` as CSV and JSONL files.
+The summary includes `expected_relevant_section` and
+`expected_section_in_top_3` for the automatic retrieval check.
 
 For a quick smoke test:
 
@@ -71,6 +73,9 @@ http://127.0.0.1:8000/evaluation
 
 The review UI saves human scores to
 `reports/evaluation/evaluation_review_latest.csv`.
+
+The main app also includes an `Aðferð` button with a short explanation of the
+retrieval, Gemini answer generation, citations, and disclaimer.
 
 ## Notes
 

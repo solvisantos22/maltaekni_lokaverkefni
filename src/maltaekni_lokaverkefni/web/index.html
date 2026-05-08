@@ -78,6 +78,23 @@
       </section>
     </div>
 
+    <div id="methodologyOverlay" class="methodology-overlay hidden" aria-hidden="true">
+      <section class="methodology-card" role="dialog" aria-modal="true" aria-labelledby="methodologyTitle">
+        <button id="methodologyCloseButton" class="icon-button methodology-close" type="button" aria-label="Loka">
+          <i data-lucide="x"></i>
+        </button>
+        <p class="eyebrow">Aðferð</p>
+        <h2 id="methodologyTitle">Hvernig Réttarvísir svarar</h2>
+        <ol>
+          <li>Spurning er borin saman við íslensk laga- og neytendaréttartextabrot.</li>
+          <li>Leitaraðferð raðar heimildum eftir vægi og velur efstu brotin.</li>
+          <li>Gemini mótar stutt svar út frá völdum heimildum og setur tilvísanir við fullyrðingar.</li>
+          <li>Heimildirnar birtast með svarinu svo hægt sé að rekja niðurstöðuna.</li>
+        </ol>
+        <p class="methodology-note">Réttarvísir er upplýsingatól. Svarið er ekki endanleg lögfræðiráðgjöf.</p>
+      </section>
+    </div>
+
     <div class="shell">
       <aside class="rail" aria-label="Stillingar" data-tour="settings">
         <div class="brand">
@@ -114,6 +131,11 @@
         <button id="tourButton" class="tour-button" type="button">
           <i data-lucide="map"></i>
           <span>Skoða viðmót</span>
+        </button>
+
+        <button id="methodologyButton" class="tour-button" type="button">
+          <i data-lucide="scale"></i>
+          <span>Aðferð</span>
         </button>
 
         <div class="caveat">

@@ -23,6 +23,9 @@ const tourTitle = document.querySelector("#tourTitle");
 const tourText = document.querySelector("#tourText");
 const tourNextButton = document.querySelector("#tourNextButton");
 const tourSkipButton = document.querySelector("#tourSkipButton");
+const methodologyButton = document.querySelector("#methodologyButton");
+const methodologyOverlay = document.querySelector("#methodologyOverlay");
+const methodologyCloseButton = document.querySelector("#methodologyCloseButton");
 
 const introText =
   "Spurðu um neytendarétt. Ég svara með heimildum og sýni textabrotin sem styðja niðurstöðuna.";
@@ -97,6 +100,17 @@ skipWelcomeButton.addEventListener("click", () => {
 tourButton.addEventListener("click", () => {
   closeWelcome();
   startTour();
+});
+
+methodologyButton.addEventListener("click", () => {
+  closeWelcome();
+  methodologyOverlay.classList.remove("hidden");
+  methodologyOverlay.setAttribute("aria-hidden", "false");
+});
+
+methodologyCloseButton.addEventListener("click", closeMethodology);
+methodologyOverlay.addEventListener("click", (event) => {
+  if (event.target === methodologyOverlay) closeMethodology();
 });
 
 tourNextButton.addEventListener("click", () => {
@@ -303,6 +317,12 @@ function startTour() {
 function endTour() {
   tourOverlay.classList.add("hidden");
   tourOverlay.setAttribute("aria-hidden", "true");
+  questionInput.focus();
+}
+
+function closeMethodology() {
+  methodologyOverlay.classList.add("hidden");
+  methodologyOverlay.setAttribute("aria-hidden", "true");
   questionInput.focus();
 }
 

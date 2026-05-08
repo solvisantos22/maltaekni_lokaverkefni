@@ -454,8 +454,8 @@
           pill(`Spurning ${row.question_id}`),
           pill(row.retrieval_method),
           pill(row.answer_method || "engin aðferð"),
-          pill(`væntur kafli: ${row.expected_source_hint || "-"}`),
-          pill(row.expected_hint_in_top_3 === "True" ? "væntur kafli fannst" : "væntur kafli fannst ekki", row.expected_hint_in_top_3 === "True"),
+          pill(`væntur kafli: ${row.expected_relevant_section || row.expected_source_hint || "-"}`),
+          pill(expectedSectionFound(row) ? "væntur kafli fannst" : "væntur kafli fannst ekki", expectedSectionFound(row)),
           pill(`vægi ${formatScore(row.top_1_score)}`),
         ].join("");
 
@@ -548,6 +548,10 @@
       function formatScore(value) {
         const score = Number(value);
         return Number.isFinite(score) ? score.toFixed(3) : "-";
+      }
+
+      function expectedSectionFound(row) {
+        return row.expected_section_in_top_3 === "True" || row.expected_hint_in_top_3 === "True";
       }
 
       function escapeHtml(value) {

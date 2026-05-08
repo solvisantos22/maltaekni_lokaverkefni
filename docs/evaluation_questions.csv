@@ -1,4 +1,4 @@
-id,question,topic,expected_source_hint,bm25_top_section,tfidf_top_section,answer_correctness_1_5,source_support_1_5,clarity_1_5,notes
+id,question,topic,expected_relevant_section,bm25_top_section,tfidf_top_section,answer_correctness_1_5,source_support_1_5,clarity_1_5,notes
 1,"Hvað get ég gert ef vara sem ég keypti er gölluð?","gölluð vara","Úrræði neytanda vegna galla",,,,,,
 2,"Hvenær telst vara vera gölluð?","galli","Galli á söluhlut",,,,,,
 3,"Get ég fengið nýja vöru ef varan er gölluð?","úrbætur eða ný afhending","Úrbætur eða ný afhending",,,,,,
