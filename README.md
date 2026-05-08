@@ -39,12 +39,29 @@ Create a local `.env` file from `.env.example` and set:
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-3-flash-preview
-LLM_MAX_OUTPUT_TOKENS=1200
+LLM_MAX_OUTPUT_TOKENS=4096
 ```
 
 `LLM_PROVIDER=auto` tries Gemini first and then OpenAI. If no provider key is set,
 the app falls back to the local extractive answer generator so the demo still runs
 without credentials.
+
+## Evaluation
+
+Run the evaluation questions across retrieval methods without using the UI:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25
+```
+
+Use `--no-llm` to test retrieval without spending LLM calls. Results are written
+to `reports/evaluation/` as CSV and JSONL files.
+
+For a quick smoke test:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --no-llm --limit 2
+```
 
 ## Notes
 

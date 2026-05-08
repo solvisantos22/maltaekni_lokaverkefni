@@ -115,11 +115,20 @@ def _build_llm_answer(system_prompt: str, user_prompt: str) -> tuple[str, str]:
         load_dotenv()
 
     provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
+    if provider in {"none", "off", "disabled"}:
+        return "", ""
+
     if provider not in {"auto", "gemini", "openai"}:
         provider = "auto"
 
     if provider in {"auto", "gemini"}:
         answer = _build_gemini_answer(system_prompt, user_prompt)
+        if _is_incomplete_llm_answer(answer):
+            answer = _build_gemini_answer(
+                system_prompt,
+                user_prompt,
+                max_output_tokens=max(4096, _llm_max_output_tokens()),
+            )
         if answer:
             return answer, f"gemini:{_gemini_model()}"
 
@@ -131,7 +140,12 @@ def _build_llm_answer(system_prompt: str, user_prompt: str) -> tuple[str, str]:
     return "", ""
 
 
-def _build_gemini_answer(system_prompt: str, user_prompt: str) -> str:
+def _build_gemini_answer(
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    max_output_tokens: int | None = None,
+) -> str:
     """Call Gemini to turn retrieved chunks into a grounded Icelandic answer."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -148,7 +162,7 @@ def _build_gemini_answer(system_prompt: str, user_prompt: str) -> str:
             },
         ],
         "generationConfig": {
-            "maxOutputTokens": _llm_max_output_tokens(),
+            "maxOutputTokens": max_output_tokens or _llm_max_output_tokens(),
             "thinkingConfig": {
                 "thinkingLevel": os.getenv("GEMINI_THINKING_LEVEL", "low"),
             },
@@ -217,7 +231,7 @@ def _openai_model() -> str:
 
 
 def _llm_max_output_tokens() -> int:
-    return _positive_int_from_env("LLM_MAX_OUTPUT_TOKENS", default=1200)
+    return _positive_int_from_env("LLM_MAX_OUTPUT_TOKENS", default=4096)
 
 
 def _llm_timeout_seconds() -> float:
@@ -248,6 +262,20 @@ def _extract_gemini_text(response_data: dict[str, Any]) -> str:
                 text_parts.append(str(part["text"]))
 
     return "\n".join(text_parts)
+
+
+def _is_incomplete_llm_answer(answer: str) -> bool:
+    """Detect obviously truncated model text before it is shown to the user."""
+    stripped = answer.strip()
+    if not stripped:
+        return True
+
+    first_character = stripped[0]
+    starts_like_sentence = first_character.isupper() or first_character.isdigit()
+    has_source_line = bool(re.search(r"Heimildir:\s*\[\d+\]", stripped))
+    has_minimum_length = len(stripped) >= 120
+
+    return not (starts_like_sentence and has_source_line and has_minimum_length)
 
 
 def _extract_openai_text(response_data: dict[str, Any]) -> str:
