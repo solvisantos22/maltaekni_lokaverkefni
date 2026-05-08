@@ -47,6 +47,7 @@ starlette==1.0.0
 threadpoolctl==3.6.0
 tokenizer==3.6.2
 tokenizers==0.22.2
+torch
 tqdm==4.67.3
 transformers==5.8.0
 typer==0.25.1
