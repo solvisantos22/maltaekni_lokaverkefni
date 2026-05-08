@@ -115,6 +115,9 @@ def _build_llm_answer(system_prompt: str, user_prompt: str) -> tuple[str, str]:
         load_dotenv()
 
     provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
+    if provider in {"none", "off", "disabled"}:
+        return "", ""
+
     if provider not in {"auto", "gemini", "openai"}:
         provider = "auto"
 

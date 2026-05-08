@@ -46,6 +46,23 @@ LLM_MAX_OUTPUT_TOKENS=4096
 the app falls back to the local extractive answer generator so the demo still runs
 without credentials.
 
+## Evaluation
+
+Run the evaluation questions across retrieval methods without using the UI:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25
+```
+
+Use `--no-llm` to test retrieval without spending LLM calls. Results are written
+to `reports/evaluation/` as CSV and JSONL files.
+
+For a quick smoke test:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --no-llm --limit 2
+```
+
 ## Notes
 
 The local PDF handouts are intentionally ignored so the public GitHub repository starts clean.
