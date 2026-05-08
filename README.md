@@ -28,6 +28,19 @@ python -m pip install -r requirements.txt
 python -m ipykernel install --user --name maltaekni-lokaverkefni --display-name "Python (maltaekni-lokaverkefni)"
 ```
 
+## LLM answer generation
+
+The app can use OpenAI to construct grounded answers from retrieved source
+chunks. Create a local `.env` file from `.env.example` and set:
+
+```powershell
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+If `OPENAI_API_KEY` is not set, the app falls back to the local extractive answer
+generator so the demo still runs without credentials.
+
 ## Notes
 
 The local PDF handouts are intentionally ignored so the public GitHub repository starts clean.
