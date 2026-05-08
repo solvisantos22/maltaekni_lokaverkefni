@@ -143,6 +143,7 @@ class Retriever:
         else:
             raise ValueError(f"Search is not implemented for method {self.method}")
 
+        scores = self.__apply_domain_boosts(question, scores)
         top_indexes = scores.argsort()[::-1][:top_k]
 
         return self.__build_result(question, top_indexes, scores)
@@ -152,7 +153,7 @@ class Retriever:
         if self.chunk_matrix is None:
             raise ValueError("TF-IDF retriever must be fit before search")
 
-        question_vector = self.vectorizer.transform([question])
+        question_vector = self.vectorizer.transform([self.__expand_query_text(question)])
         scores = cosine_similarity(question_vector, self.chunk_matrix).flatten()
         return scores
 
@@ -161,14 +162,14 @@ class Retriever:
         if self.bm25 is None:
             raise ValueError("BM25 retriever must be fit before search")
 
-        return self.bm25.get_scores(self.__analyze(question))
+        return self.bm25.get_scores(self.__analyze(self.__expand_query_text(question)))
 
     def __search_embeddings(self, question: str):
         """Score all chunks against a question with embedding cosine similarity."""
         if self.embedder is None or self.embedding_matrix is None:
             raise ValueError("Embedding retriever must be fit before search")
 
-        query_tokens = self.__analyze(question)
+        query_tokens = self.__analyze(self.__expand_query_text(question))
         query_embedding = self.embedder.transform([query_tokens])[0]
         return self.embedding_matrix @ query_embedding
 
@@ -222,6 +223,42 @@ class Retriever:
                 fused[index] += 1.0 / (rank_constant + rank)
         return fused
 
+    def __apply_domain_boosts(self, question: str, scores):
+        """Nudge obvious consumer-law intents toward their controlling source law."""
+        boosted = np.array(scores, dtype=float, copy=True)
+        max_score = float(np.max(boosted)) if boosted.size else 0.0
+        boost_unit = max(max_score, 1e-6)
+        normalized = question.lower()
+
+        is_defect_question = any(
+            term in normalized
+            for term in ["gall", "göll", "galla", "göllu", "bilu", "skemmd"]
+        )
+        is_return_question = any(
+            term in normalized
+            for term in ["skil", "skila", "endurgrei", "hætta við"]
+        )
+
+        if not is_defect_question and not is_return_question:
+            return boosted
+
+        for index, chunk in enumerate(self.chunks):
+            haystack = " ".join(
+                [chunk.title, chunk.section, chunk.text[:500]]
+            ).lower()
+
+            if is_defect_question and "lög um neytendakaup" in haystack:
+                if "galla" in haystack or "gallaður" in haystack or "gallinn" in haystack:
+                    boosted[index] += boost_unit * 2.5
+                if "úrræði neytanda vegna galla" in haystack:
+                    boosted[index] += boost_unit * 1.5
+
+            if is_return_question and "lög um neytendasamninga" in haystack:
+                if "falla frá samningi" in haystack or "endurgreið" in haystack:
+                    boosted[index] += boost_unit * 2.0
+
+        return boosted
+
     def __normalize_method(self, method: str) -> str:
         """Normalize user-facing method aliases."""
         aliases = {
@@ -251,12 +288,78 @@ class Retriever:
         """Analyze text into lowercase Icelandic tokens for retrieval."""
         
         tokens = self.ice_tokenizer.tokenIce(text)
+        tokens.extend(
+            re.findall(r"[\wáðéíóúýþæöÁÐÉÍÓÚÝÞÆÖ]+", text.lower())
+        )
 
+        unique_tokens = dict.fromkeys(tokens)
         return [
             token
-            for token in tokens
-            if len(token) > 1 and re.search(r"[\wáðéíóúýþæö]", token)
+            for token in unique_tokens
+            if len(token) > 1 and re.search(r"\w", token)
         ]
+
+    def __expand_query_text(self, question: str) -> str:
+        """Add small domain synonyms for common Icelandic consumer-law questions."""
+        normalized = question.lower()
+        expansions = []
+
+        if any(
+            term in normalized
+            for term in ["gall", "göll", "galla", "göllu", "bilu", "skemmd"]
+        ):
+            expansions.extend(
+                [
+                    "galli",
+                    "galla",
+                    "gallaður",
+                    "gölluð",
+                    "úrræði neytanda vegna galla",
+                    "neytendakaup",
+                    "söluhlutur",
+                    "úrbætur",
+                    "ný afhending",
+                    "afsláttur",
+                    "riftun",
+                    "skaðabætur",
+                    "kvörtun",
+                ]
+            )
+
+        if any(
+            term in normalized
+            for term in ["skil", "skila", "endurgrei", "hætta við"]
+        ):
+            expansions.extend(
+                [
+                    "skilaréttur",
+                    "endurgreiðsla",
+                    "réttur til að falla frá samningi",
+                    "neytendasamningar",
+                    "fjarsölusamningur",
+                    "netkaup",
+                ]
+            )
+
+        if any(
+            term in normalized
+            for term in ["net", "vef", "fjarsölu", "upplýsing"]
+        ):
+            expansions.extend(
+                [
+                    "netkaup",
+                    "fjarsala",
+                    "fjarsölusamningur",
+                    "upplýsingagjöf",
+                    "upplýsingaskylda",
+                    "neytendasamningar",
+                ]
+            )
+
+        if not expansions:
+            return question
+
+        return f"{question}\n{' '.join(expansions)}"
 
     
 
