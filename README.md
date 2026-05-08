@@ -30,16 +30,20 @@ python -m ipykernel install --user --name maltaekni-lokaverkefni --display-name 
 
 ## LLM answer generation
 
-The app can use OpenAI to construct grounded answers from retrieved source
-chunks. Create a local `.env` file from `.env.example` and set:
+The app can use Gemini or OpenAI to construct grounded answers from retrieved
+source chunks. Gemini is the recommended provider for this project because
+Gemini 3 performs strongly on Icelandic benchmarks and Flash is cost-oriented.
+Create a local `.env` file from `.env.example` and set:
 
 ```powershell
-OPENAI_API_KEY=your_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-3-flash-preview
 ```
 
-If `OPENAI_API_KEY` is not set, the app falls back to the local extractive answer
-generator so the demo still runs without credentials.
+`LLM_PROVIDER=auto` tries Gemini first and then OpenAI. If no provider key is set,
+the app falls back to the local extractive answer generator so the demo still runs
+without credentials.
 
 ## Notes
 
