@@ -264,6 +264,9 @@ output {
 }
 
 .message.assistant:first-child .bubble {
+  width: min(680px, 100%);
+  padding: 9px 14px;
+  line-height: 1.42;
   box-shadow: none;
 }
 
