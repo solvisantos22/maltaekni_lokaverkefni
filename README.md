@@ -58,6 +58,8 @@ Use `--no-llm` to test retrieval without spending LLM calls. Results are written
 to `reports/evaluation/` as CSV and JSONL files.
 The summary includes `expected_relevant_section` and
 `expected_section_in_top_3` for the automatic retrieval check.
+It also stores `confidence_reason`, which explains the answer confidence in
+terms of source strength and citation coverage.
 
 For a quick smoke test:
 
@@ -76,6 +78,7 @@ The review UI saves human scores to
 
 The main app also includes an `Aðferð` button with a short explanation of the
 retrieval, Gemini answer generation, citations, and disclaimer.
+Each source card includes a short reason for why that text was selected.
 
 ## Notes
 

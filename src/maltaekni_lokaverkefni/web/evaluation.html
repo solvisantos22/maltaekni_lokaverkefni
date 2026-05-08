@@ -499,6 +499,7 @@
             <strong>[${escapeHtml(String(source.citation_id || ""))}] ${escapeHtml(source.title || "")}</strong>
             <div class="muted">${escapeHtml(source.section || "")}</div>
             <p>${escapeHtml(source.text || "")}</p>
+            <div class="muted">${escapeHtml(source.reason || "")}</div>
             <div class="muted">${escapeHtml(source.url || "")}</div>
           `;
           sourceRoot.append(article);

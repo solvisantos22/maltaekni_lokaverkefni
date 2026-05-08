@@ -216,7 +216,10 @@ async function typeAnswer(target, text) {
 function appendMeta(target, result) {
   const meta = document.createElement("div");
   meta.className = "meta";
-  meta.textContent = `Traust: ${result.confidence} · Aðferð: ${result.method}`;
+  meta.innerHTML = `
+    <span>Traust: ${escapeHtml(result.confidence)} · Aðferð: ${escapeHtml(result.method)}</span>
+    <span>${escapeHtml(result.confidence_reason || "")}</span>
+  `;
   target.append(meta);
 }
 
@@ -234,6 +237,7 @@ function renderSources(sources) {
       <span class="badge">[${escapeHtml(String(source.citation_id))}]</span>
       <h3>${escapeHtml(source.title)} - ${escapeHtml(source.section)}</h3>
       <p>${escapeHtml(source.text)}</p>
+      <p class="source-reason">${escapeHtml(source.reason || "")}</p>
       <a href="${escapeAttribute(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.url)}</a>
       <div class="score">Vægi: ${formatScore(source.score)} · ${escapeHtml(source.retrieval_method || "")}</div>
     `;

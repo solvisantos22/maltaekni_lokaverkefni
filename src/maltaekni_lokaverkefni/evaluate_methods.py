@@ -48,6 +48,7 @@ class EvaluationRow:
     top_3_sections: str
     expected_section_in_top_3: bool
     confidence: str
+    confidence_reason: str
     latency_seconds: float
     answer: str
     source_urls: str
@@ -120,6 +121,7 @@ def main() -> None:
                         top_3_sections="",
                         expected_section_in_top_3=False,
                         confidence="",
+                        confidence_reason="",
                         latency_seconds=latency,
                         answer="",
                         source_urls="",
@@ -215,6 +217,7 @@ def build_row(
         top_3_sections=top_3_sections,
         expected_section_in_top_3=section_matches(expected_section, top_3_sections),
         confidence=answer_result.get("confidence", ""),
+        confidence_reason=answer_result.get("confidence_reason", ""),
         latency_seconds=round(latency_seconds, 3),
         answer=answer_result.get("answer", ""),
         source_urls=" | ".join(source.get("url", "") for source in sources[:3]),

@@ -38,6 +38,7 @@ class SourceReference:
     text: str
     score: float | None = None
     retrieval_method: str | None = None
+    reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,7 @@ class AnswerResult:
     system_prompt: str
     user_prompt: str
     confidence: str
+    confidence_reason: str
     method: str
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,6 +62,7 @@ class AnswerResult:
             "system_prompt": self.system_prompt,
             "user_prompt": self.user_prompt,
             "confidence": self.confidence,
+            "confidence_reason": self.confidence_reason,
             "method": self.method,
         }
 
@@ -73,8 +76,9 @@ def generate_grounded_answer(
     question = retrieval_result.get("question", "")
     chunks = retrieval_result.get("chunks", [])[:max_sources]
     user_prompt = build_answer_prompt(question, chunks, max_chunks=max_sources)
+    question_terms = _content_terms(question)
     sources = [
-        _source_from_chunk(index=index, chunk=chunk)
+        _source_from_chunk(index=index, chunk=chunk, question_terms=question_terms)
         for index, chunk in enumerate(chunks, start=1)
     ]
 
@@ -86,6 +90,7 @@ def generate_grounded_answer(
             system_prompt=SYSTEM_PROMPT,
             user_prompt=user_prompt,
             confidence="low",
+            confidence_reason="Engar heimildir fundust fyrir spurninguna.",
             method=method,
         )
 
@@ -96,7 +101,11 @@ def generate_grounded_answer(
     else:
         answer = _build_extractive_answer(question, sources)
 
-    confidence = _estimate_confidence(sources)
+    confidence, confidence_reason = _estimate_confidence(
+        sources=sources,
+        answer=answer,
+        method=method,
+    )
 
     return AnswerResult(
         question=question,
@@ -105,6 +114,7 @@ def generate_grounded_answer(
         system_prompt=SYSTEM_PROMPT,
         user_prompt=user_prompt,
         confidence=confidence,
+        confidence_reason=confidence_reason,
         method=method,
     )
 
@@ -311,18 +321,79 @@ def _ensure_source_line(answer: str, sources: list[SourceReference]) -> str:
     return f"{answer.rstrip()}\n\nHeimildir: {source_line}"
 
 
-def _source_from_chunk(index: int, chunk: dict[str, Any]) -> SourceReference:
+def _source_from_chunk(
+    index: int,
+    chunk: dict[str, Any],
+    question_terms: set[str],
+) -> SourceReference:
+    text = str(chunk.get("text", ""))
+    title = str(chunk.get("title", "Óþekktur titill"))
+    section = str(chunk.get("section", "Ótilgreint"))
     return SourceReference(
         citation_id=index,
         chunk_id=str(chunk.get("chunk_id", "")),
-        title=str(chunk.get("title", "Óþekktur titill")),
+        title=title,
         source=str(chunk.get("source", "Óþekkt heimild")),
-        section=str(chunk.get("section", "Ótilgreint")),
+        section=section,
         url=str(chunk.get("url", "")),
-        text=str(chunk.get("text", "")),
+        text=text,
         score=_optional_float(chunk.get("score")),
         retrieval_method=chunk.get("retrieval_method"),
+        reason=_source_reason(
+            citation_id=index,
+            title=title,
+            section=section,
+            text=text,
+            score=_optional_float(chunk.get("score")),
+            question_terms=question_terms,
+        ),
     )
+
+
+def _source_reason(
+    *,
+    citation_id: int,
+    title: str,
+    section: str,
+    text: str,
+    score: float | None,
+    question_terms: set[str],
+) -> str:
+    """Explain source selection in simple reportable language."""
+    searchable = _content_terms(" ".join([title, section, text[:700]]))
+    overlap = _matching_terms(question_terms, searchable)
+    score_text = f" Vægi heimildar er {score:.4g}." if score is not None else ""
+
+    if overlap:
+        terms = ", ".join(overlap[:4])
+        return (
+            f"Heimild [{citation_id}] var valin vegna þess að kaflinn tengist "
+            f"spurningunni með lykilorðum eins og {terms}.{score_text}"
+        )
+
+    return (
+        f"Heimild [{citation_id}] var valin af leitarkerfinu sem eitt af efstu "
+        f"textabrotunum fyrir spurninguna.{score_text}"
+    )
+
+
+def _matching_terms(question_terms: set[str], source_terms: set[str]) -> list[str]:
+    """Find direct and light-normalized term overlap for Icelandic source reasons."""
+    direct_overlap = question_terms & source_terms
+    if direct_overlap:
+        return sorted(direct_overlap)
+
+    source_keys = {_term_key(term) for term in source_terms}
+    return sorted(
+        term
+        for term in question_terms
+        if _term_key(term) in source_keys
+    )
+
+
+def _term_key(term: str) -> str:
+    normalized = term.translate(str.maketrans({"ö": "a", "ó": "o", "á": "a"}))
+    return normalized[:4]
 
 
 def _build_extractive_answer(question: str, sources: list[SourceReference]) -> str:
@@ -418,16 +489,50 @@ def _content_terms(text: str) -> set[str]:
     }
     return {
         token
-        for token in re.findall(r"[\wáðéíóúýþæö]+", text.lower())
+        for token in re.findall(r"[^\W\d_]+", text.lower(), flags=re.UNICODE)
         if len(token) > 2 and token not in stopwords
     }
 
 
-def _estimate_confidence(sources: list[SourceReference]) -> str:
+def _estimate_confidence(
+    *,
+    sources: list[SourceReference],
+    answer: str,
+    method: str,
+) -> tuple[str, str]:
+    if not sources:
+        return "low", "Engar heimildir fundust."
+
+    if UNCERTAIN_ANSWER in answer:
+        return "low", "Svarið segir sjálft að heimildirnar nægi ekki."
+
     best_score = max((source.score or 0.0) for source in sources)
-    if best_score >= 10 or best_score >= 0.2:
-        return "medium"
-    return "low"
+    cited_ids = {
+        int(match)
+        for match in re.findall(r"\[(\d+)\]", answer)
+        if int(match) <= len(sources)
+    }
+    has_source_line = bool(re.search(r"Heimildir:\s*\[\d+\]", answer))
+    strong_retrieval = best_score >= 10 or best_score >= 0.2
+    enough_citations = len(cited_ids) >= min(2, len(sources))
+    llm_answer = method.startswith(("gemini:", "openai:"))
+
+    if llm_answer and strong_retrieval and enough_citations and has_source_line:
+        return (
+            "high",
+            "Sterkustu heimildirnar hafa hátt vægi og svarið vísar í fleiri en eina heimild.",
+        )
+
+    if strong_retrieval and cited_ids:
+        return (
+            "medium",
+            "Að minnsta kosti ein heimild hefur gott vægi og svarið inniheldur tilvísanir.",
+        )
+
+    return (
+        "low",
+        "Heimildir eða tilvísanir eru veikar og því ætti að lesa svarið með varúð.",
+    )
 
 
 def _optional_float(value: Any) -> float | None:
