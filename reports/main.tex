@@ -1,0 +1,226 @@
+\documentclass[fleqn]{report}
+
+% Neðangreindar þrjá línur eru nauðsynlegar fyrir íslensku, t.d. til að geta skrifað Þ og Æ.
+\usepackage[icelandic]{babel}
+\usepackage{tikz}
+\usepackage[T1]{fontenc}
+\usepackage{amssymb}
+\usepackage[utf8]{inputenc}
+\usepackage[fleqn]{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{tcolorbox}
+\usepackage{setspace}
+\usepackage{sectsty}
+\usepackage{hyperref}
+
+\chapterfont{\centering\scshape\mdseries}
+\sectionfont{\centering\scshape\mdseries}
+\subsectionfont{\centering\scshape\mdseries}
+
+\onehalfspacing
+
+\usepackage{newtxtext, newtxmath}
+
+\usepackage{caption}
+\DeclareCaptionLabelSeparator{pkt}{. }
+\captionsetup{
+    labelfont = {bf, it},
+    labelsep  = pkt,
+    font = small
+}
+
+\usepackage{booktabs}
+
+\usepackage{parskip}
+\usepackage{enumerate}
+\graphicspath{{./img/}}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% pakki fyrir heimildavinnu (þarf yfirleitt ekki fyrir heimadæmi)
+\usepackage[numbers]{natbib}
+
+% graphicx er pakki sem er m.a. notaður fyrir myndir
+\usepackage{graphicx}
+
+% Booktabs er pakki sem gerir töflur snyrtilegri
+\usepackage{booktabs}
+
+% Pakki sem gerir okkur kleyft að nota align umhverfið
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{bm}
+\usepackage{tikz}
+
+\newcommand{\ms}{\hspace{\minuslength}}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\usepackage{wasysym}
+\font\wasy=wasy10 at 10pt
+\def\thorn{{\wasy\char105}}
+\def\eth{{\wasy\char107}}
+
+\def\lstlistingname{Listun}
+\lstset{
+  language = Python, 
+  frame = single, 
+  escapeinside={(*@}{@*)},
+  aboveskip=2mm,
+  belowskip=1mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  captionpos=b,
+  literate=%
+    {é}{{\'{e}}}1
+    {è}{{\`{e}}}1
+    {ê}{{\^{e}}}1
+    {ë}{{\¨{e}}}1
+    {É}{{\'{E}}}1
+    {Ê}{{\^{E}}}1
+    {û}{{\^{u}}}1
+    {ù}{{\`{u}}}1
+    {ú}{{\'{u}}}1
+    {â}{{\^{a}}}1
+    {à}{{\`{a}}}1
+    {á}{{\'{a} }}1
+    {ã}{{\~{a}}}1
+    {Á}{{\'{A}}}1
+    {Â}{{\^{A}}}1
+    {Ã}{{\~{A}}}1
+    {ç}{{\c{c}}}1
+    {Ç}{{\c{C}}}1
+    {õ}{{\~{o}}}1
+    {ó}{{\'{o}}}1
+    {ô}{{\^{o}}}1
+    {Õ}{{\~{O}}}1
+    {Ó}{{\'{O}}}1
+    {Ô}{{\^{O}}}1
+    {î}{{\^{i}}}1
+    {Î}{{\^{I}}}1
+    {í}{{\'{i}}}1
+    {Í}{{\~{Í}}}1
+    {ð}{{\eth}}1
+}
+
+\newlength{\minuslength}
+\settowidth{\minuslength}{$-$}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\titill}{Titill!!! Vantar hér}
+
+\setcounter{secnumdepth}{0}
+
+% Titill
+\title{
+\includegraphics[width = 0.45\textwidth]{Tákn blátt.pdf}
+\vspace{2cm}
+
+\textsc{TÖL025M Inngangur að máltækni} \\ 
+\Huge \titill}
+\author{\Large Jóhannes Reykdal Einarsson\\\Large Sölvi Santos}
+
+\date{\Large\today \vfill \large Lokaverkefni í TÖL025M \\ Verk- og náttúruvísindasvið}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+\setcounter{page}{1}
+
+\chapter*{\titill}
+\addcontentsline{toc}{chapter}{\titill}
+\section{Inngangur}
+
+\section{Bakgrunnur}
+
+\section{Umræður}
+
+\section{Næstu skref}
+
+\section{Hvað fór úrskeiðis}
+
+\section{Samstarf}
+
+
+\chapter*{Skjölun}
+\addcontentsline{toc}{chapter}{Skjölun}
+\section{Bakendi}
+
+
+\newpage
+
+\appendix
+
+\chapter*{Viðauki}
+\addcontentsline{toc}{chapter}{Viðauki}
+\section{Skilgreiningar}
+\fbox{%
+  \parbox{\linewidth}{%
+    \textbf{Skilgreining 1}\\
+    Látum $f_{t,d}$ tákna hversu oft hugtak $t$ kemur fyrir í skjali $d$. Tíðni hugtaks (e. term frequency) í skjali $d$ er skilrgeint sem hlutfallsleg tíðni hugtaks í skjali,\begin{align*}
+        \text{tf}(t,d) = \frac{f_{t,d}}{\sum_{t'\in d}f_{t',d}}.
+    \end{align*}
+  }%
+}
+
+\fbox{%
+  \parbox{\linewidth}{%
+    \textbf{Skilgreining 2}\\
+    Hallo
+  }%
+}
+
+\newpage
+
+\addcontentsline{toc}{chapter}{Heimildaskrá}
+\begin{thebibliography}{99}
+    \bibitem{rna-seq}
+    Kukurba, K. R., \& Montgomery, S. B. (2015). \textit{RNA sequencing and analysis}. Cold Spring Harbor Protocols.
+
+    \bibitem{transcriptome}
+Caudai, C., Galizia, A., Geraci, F., Le Pera, L., Morea, V., Salerno, E., Via, A., \& Colombo, T. (2021). \textit{AI applications in functional genomics}. Computational and Structural Biotechnology Journal, 19, 5762–5790.
+
+\bibitem{fastq}
+Cock, P. J. A., Fields, C. J., Goto, N., Heuer, M. L., \& Rice, P. M. (2010).
+\textit{The Sanger FASTQ file format for sequences with quality scores, and the Solexa/Illumina FASTQ variants}. Nucleic Acids Research 38(6):1767-71.    
+
+\bibitem{wass}
+Wasserman, L. (2004). \textit{All of statistics: A concise course in statistical inference}. Springer.
+
+\bibitem{lag}
+Lagrange multiplier. (n.d.). In Wikipedia. Retrieved March 29, 2026, from \href{https://en.wikipedia.org/wiki/Lagrange_multiplier}{https://en.wikipedia.org/wiki/Lagrange\_multiplier}
+
+\bibitem{kallisto}
+Bray, N. L., Pimentel, H., Melsted, P., \& Pachter, L. (2016). \textit{Near-optimal probabilistic RNA-seq quantification}. Nature Biotechnology, 34(5), 525–527.
+
+\bibitem{equiv}
+McMero. (2021). \textit{Equivalence classes}. Retrieved March 30, 2026, from \href{https://mcmero.github.io/blog/Equivalence-classes/}{https://mcmero.github.io/blog/Equivalence-classes/}
+\end{thebibliography}
+
+\end{document}
