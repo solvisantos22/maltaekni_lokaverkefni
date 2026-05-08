@@ -11,12 +11,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-try:
-    from .answer_generator import generate_grounded_answer
-    from .retriever import build_retriever
-except ImportError:  # Allows direct script execution during early experiments.
-    from answer_generator import generate_grounded_answer
-    from retriever import build_retriever
+from .answer_generator import generate_grounded_answer
+from .retriever import build_retriever
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -29,7 +25,14 @@ app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=1000)
-    method: Literal["tfidf", "bm25"] = "tfidf"
+    method: Literal[
+        "tfidf",
+        "bm25",
+        "icebert",
+        "bge-m3",
+        "rrf-icebert-bm25",
+        "rrf-bge-m3-bm25",
+    ] = "tfidf"
     top_k: int = Field(default=3, ge=1, le=5)
 
 
@@ -39,7 +42,7 @@ class StatusResponse(BaseModel):
     message: str
 
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=8)
 def _load_retriever(method: str):
     return build_retriever(method, chunks_path=CHUNKS_PATH)
 
