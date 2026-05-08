@@ -240,6 +240,7 @@ output {
 .message.user .bubble {
   grid-column: 1;
   grid-row: 1;
+  justify-self: end;
   background: #e8e5d7;
   color: #101411;
 }
@@ -811,6 +812,7 @@ output {
 
   .message.user .bubble {
     grid-column: 2;
+    justify-self: start;
   }
 
   .mark,
