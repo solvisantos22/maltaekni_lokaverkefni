@@ -217,7 +217,7 @@ def _openai_model() -> str:
 
 
 def _llm_max_output_tokens() -> int:
-    return _positive_int_from_env("LLM_MAX_OUTPUT_TOKENS", default=450)
+    return _positive_int_from_env("LLM_MAX_OUTPUT_TOKENS", default=1200)
 
 
 def _llm_timeout_seconds() -> float:
