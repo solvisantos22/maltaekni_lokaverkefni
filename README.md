@@ -63,6 +63,15 @@ For a quick smoke test:
 python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --no-llm --limit 2
 ```
 
+After running an evaluation, open the local review UI:
+
+```text
+http://127.0.0.1:8000/evaluation
+```
+
+The review UI saves human scores to
+`reports/evaluation/evaluation_review_latest.csv`.
+
 ## Notes
 
 The local PDF handouts are intentionally ignored so the public GitHub repository starts clean.

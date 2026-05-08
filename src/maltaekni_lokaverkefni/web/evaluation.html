@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="is">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Réttarvísir - Mat</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #121512;
+        --panel: #191d18;
+        --panel-2: #20261f;
+        --text: #f2efe7;
+        --muted: #b7b0a1;
+        --gold: #d7b56d;
+        --green: #28c6b2;
+        --line: rgba(215, 181, 109, 0.2);
+        --bad: #ef8c7b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 12% 10%, rgba(40, 198, 178, 0.13), transparent 28%),
+          linear-gradient(135deg, #121512, #191d18 52%, #141817);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 310px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--line);
+        background: rgba(18, 21, 18, 0.9);
+        padding: 24px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+
+      .mark {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 1px solid rgba(215, 181, 109, 0.45);
+        border-radius: 8px;
+        color: var(--gold);
+        font-family: Georgia, serif;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .sidebar p,
+      .muted {
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-top: 22px;
+      }
+
+      label {
+        color: var(--gold);
+        font-size: 13px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #10130f;
+        color: var(--text);
+        padding: 11px 12px;
+      }
+
+      textarea {
+        min-height: 104px;
+        resize: vertical;
+      }
+
+      .progress {
+        margin-top: 22px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .bar {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .bar span {
+        display: block;
+        width: 0;
+        height: 100%;
+        background: linear-gradient(90deg, var(--gold), var(--green));
+      }
+
+      .main {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        min-width: 0;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 22px clamp(20px, 4vw, 44px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .pill.good {
+        border-color: rgba(40, 198, 178, 0.45);
+        color: var(--green);
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+        gap: 20px;
+        min-height: 0;
+        padding: 22px clamp(20px, 4vw, 44px);
+      }
+
+      .stack {
+        display: grid;
+        align-content: start;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(25, 29, 24, 0.88);
+        padding: 16px;
+      }
+
+      .panel h2 {
+        margin-bottom: 10px;
+        color: var(--gold);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
+
+      .question {
+        font-size: 24px;
+        line-height: 1.25;
+      }
+
+      .answer {
+        white-space: pre-wrap;
+        line-height: 1.6;
+      }
+
+      .sources {
+        display: grid;
+        gap: 10px;
+        max-height: 54vh;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .source {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        background: var(--panel-2);
+        padding: 12px;
+      }
+
+      .source strong {
+        color: var(--gold);
+      }
+
+      .source p {
+        margin-top: 8px;
+        color: var(--muted);
+        line-height: 1.45;
+        max-height: 145px;
+        overflow: auto;
+      }
+
+      .score-group {
+        display: grid;
+        gap: 10px;
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .score-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .score-row span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 6px;
+      }
+
+      .score-button,
+      .action {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #11140f;
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .score-button {
+        width: 34px;
+        height: 34px;
+      }
+
+      .score-button.active {
+        border-color: var(--green);
+        background: rgba(40, 198, 178, 0.18);
+        color: var(--green);
+      }
+
+      .actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 18px clamp(20px, 4vw, 44px);
+        border-top: 1px solid var(--line);
+      }
+
+      .action {
+        padding: 10px 14px;
+      }
+
+      .action.primary {
+        border-color: rgba(215, 181, 109, 0.55);
+        background: rgba(215, 181, 109, 0.16);
+        color: var(--gold);
+      }
+
+      .error {
+        color: var(--bad);
+      }
+
+      @media (max-width: 900px) {
+        .shell,
+        .content {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="mark">§</div>
+          <div>
+            <h1>Réttarvísir mat</h1>
+            <p>Fljótleg yfirferð á heimildum og svörum.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="evaluator">Matsaðili</label>
+          <input id="evaluator" value="Sölvi" />
+        </div>
+
+        <div class="progress">
+          <p id="counter">Hleð...</p>
+          <div class="bar"><span id="progressBar"></span></div>
+          <p id="savedState" class="muted">Vistað staðbundið í reports/evaluation.</p>
+        </div>
+
+        <div class="field">
+          <label for="notes">Athugasemdir</label>
+          <textarea id="notes" placeholder="Hvað gekk vel eða illa?"></textarea>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="pills" id="pills"></div>
+          <p class="muted" id="paths"></p>
+        </header>
+
+        <section class="content">
+          <div class="stack">
+            <article class="panel">
+              <h2>Spurning</h2>
+              <p id="question" class="question"></p>
+            </article>
+
+            <article class="panel">
+              <h2>Svar</h2>
+              <p id="answer" class="answer"></p>
+            </article>
+          </div>
+
+          <div class="stack">
+            <article class="panel">
+              <h2>Stigagjöf</h2>
+              <div id="scoreGroups"></div>
+            </article>
+
+            <article class="panel">
+              <h2>Heimildir</h2>
+              <div id="sources" class="sources"></div>
+            </article>
+          </div>
+        </section>
+
+        <footer class="actions">
+          <button id="prevButton" class="action" type="button">Fyrra</button>
+          <div>
+            <button id="saveButton" class="action primary" type="button">Vista</button>
+            <button id="nextButton" class="action primary" type="button">Vista og næsta</button>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      const scoreFields = [
+        ["retrieval_relevance_1_5", "Réttmæti heimilda"],
+        ["answer_correctness_1_5", "Réttleiki svars"],
+        ["source_support_1_5", "Stuðningur heimilda"],
+        ["clarity_1_5", "Skýrleiki"],
+      ];
+
+      let rows = [];
+      let reviews = {};
+      let activeIndex = 0;
+      let scores = {};
+
+      const evaluatorInput = document.querySelector("#evaluator");
+      const notesInput = document.querySelector("#notes");
+      const scoreGroups = document.querySelector("#scoreGroups");
+
+      evaluatorInput.value = localStorage.getItem("evaluationEvaluator") || "Sölvi";
+      evaluatorInput.addEventListener("change", () => {
+        localStorage.setItem("evaluationEvaluator", evaluatorInput.value.trim() || "Sölvi");
+        renderActiveRow();
+      });
+
+      document.querySelector("#prevButton").addEventListener("click", () => move(-1));
+      document.querySelector("#saveButton").addEventListener("click", saveReview);
+      document.querySelector("#nextButton").addEventListener("click", async () => {
+        await saveReview();
+        move(1);
+      });
+
+      loadEvaluation();
+
+      async function loadEvaluation() {
+        try {
+          const response = await fetch("/api/evaluation/latest");
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Næ ekki í matsgögn.");
+          }
+          const payload = await response.json();
+          rows = payload.rows;
+          reviews = payload.reviews || {};
+          document.querySelector("#paths").textContent = payload.summary_path;
+          renderActiveRow();
+        } catch (error) {
+          document.querySelector("#question").textContent = "Vantar matsgögn";
+          document.querySelector("#answer").innerHTML =
+            `<span class="error">${escapeHtml(error.message)}</span>`;
+        }
+      }
+
+      function renderActiveRow() {
+        if (!rows.length) return;
+
+        const row = rows[activeIndex];
+        const evaluator = evaluatorInput.value.trim() || "Sölvi";
+        const existing = reviews[row.row_key]?.[evaluator] || {};
+        scores = {};
+
+        for (const [field] of scoreFields) {
+          scores[field] = existing[field] ? Number(existing[field]) : null;
+        }
+        notesInput.value = existing.notes || "";
+
+        document.querySelector("#question").textContent = row.question;
+        document.querySelector("#answer").textContent = row.answer || row.error || "Ekkert svar.";
+        document.querySelector("#counter").textContent = `${activeIndex + 1} / ${rows.length}`;
+        document.querySelector("#progressBar").style.width =
+          `${((activeIndex + 1) / rows.length) * 100}%`;
+
+        document.querySelector("#pills").innerHTML = [
+          pill(`Spurning ${row.question_id}`),
+          pill(row.retrieval_method),
+          pill(row.answer_method || "engin aðferð"),
+          pill(`væntur kafli: ${row.expected_source_hint || "-"}`),
+          pill(row.expected_hint_in_top_3 === "True" ? "væntur kafli fannst" : "væntur kafli fannst ekki", row.expected_hint_in_top_3 === "True"),
+          pill(`vægi ${formatScore(row.top_1_score)}`),
+        ].join("");
+
+        renderScores();
+        renderSources(row);
+      }
+
+      function renderScores() {
+        scoreGroups.innerHTML = "";
+        for (const [field, label] of scoreFields) {
+          const group = document.createElement("div");
+          group.className = "score-group";
+          group.innerHTML = `<div class="score-row"><span>${label}</span><div class="buttons"></div></div>`;
+          const buttons = group.querySelector(".buttons");
+          for (let value = 1; value <= 5; value += 1) {
+            const button = document.createElement("button");
+            button.className = `score-button ${scores[field] === value ? "active" : ""}`;
+            button.type = "button";
+            button.textContent = value;
+            button.addEventListener("click", () => {
+              scores[field] = value;
+              renderScores();
+            });
+            buttons.append(button);
+          }
+          scoreGroups.append(group);
+        }
+      }
+
+      function renderSources(row) {
+        const sourceRoot = document.querySelector("#sources");
+        const sources = row.sources?.length
+          ? row.sources
+          : [{ citation_id: 1, title: row.top_1_title, section: row.top_1_section, text: row.top_3_sections, url: row.source_urls }];
+
+        sourceRoot.innerHTML = "";
+        sources.forEach((source) => {
+          const article = document.createElement("article");
+          article.className = "source";
+          article.innerHTML = `
+            <strong>[${escapeHtml(String(source.citation_id || ""))}] ${escapeHtml(source.title || "")}</strong>
+            <div class="muted">${escapeHtml(source.section || "")}</div>
+            <p>${escapeHtml(source.text || "")}</p>
+            <div class="muted">${escapeHtml(source.url || "")}</div>
+          `;
+          sourceRoot.append(article);
+        });
+      }
+
+      async function saveReview() {
+        if (!rows.length) return;
+
+        const row = rows[activeIndex];
+        const evaluator = evaluatorInput.value.trim() || "Sölvi";
+        localStorage.setItem("evaluationEvaluator", evaluator);
+        const payload = {
+          question_id: row.question_id,
+          retrieval_method: row.retrieval_method,
+          evaluator,
+          notes: notesInput.value,
+          ...scores,
+        };
+
+        const response = await fetch("/api/evaluation/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          document.querySelector("#savedState").textContent = "Vista mistókst.";
+          document.querySelector("#savedState").classList.add("error");
+          return;
+        }
+
+        reviews[row.row_key] = reviews[row.row_key] || {};
+        reviews[row.row_key][evaluator] = payload;
+        document.querySelector("#savedState").textContent = `Vistað: ${row.question_id} / ${row.retrieval_method}`;
+        document.querySelector("#savedState").classList.remove("error");
+      }
+
+      function move(delta) {
+        activeIndex = Math.min(rows.length - 1, Math.max(0, activeIndex + delta));
+        renderActiveRow();
+      }
+
+      function pill(text, good = false) {
+        return `<span class="pill ${good ? "good" : ""}">${escapeHtml(String(text))}</span>`;
+      }
+
+      function formatScore(value) {
+        const score = Number(value);
+        return Number.isFinite(score) ? score.toFixed(3) : "-";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+    </script>
+  </body>
+</html>
