@@ -139,3 +139,10 @@ class Embeddings:
             ) from error
 
         return torch, np, functional, AutoModel, AutoTokenizer
+
+if __name__ == "__main__":
+    embedder = Embeddings(model="BGE-M3")
+    from ice_tokenizer import IceTokenizer
+    it = IceTokenizer()
+    tokens = it.tokenIce("Hvað getur neytandi gert ef vara er gölluð")
+    print(embedder.fit([tokens]))

@@ -237,7 +237,14 @@ class _AlthingiParser(HTMLParser):
 
 if __name__ == "__main__":
     sources = ["https://www.althingi.is/lagas/nuna/2003048.html",
-               "https://www.althingi.is/lagas/nuna/2016016.html"]
+               "https://www.althingi.is/lagas/nuna/2016016.html",
+               "https://www.althingi.is/lagas/nuna/2011076.html",
+               "https://www.althingi.is/lagas/nuna/2013120.html",
+               "https://www.althingi.is/lagas/nuna/2002030.html",
+               "https://www.althingi.is/lagas/nuna/2018095.html",
+               "https://www.althingi.is/lagas/nuna/2016118.html",
+               "https://www.althingi.is/lagas/nuna/2013033.html",
+               "https://www.althingi.is/lagas/nuna/2005057.html"]
     
     documents = []
     
@@ -253,5 +260,4 @@ if __name__ == "__main__":
         json.dump(documents, file, ensure_ascii=False, indent=2)
 
 
-# Backwards-compatible alias for the original class name used in early scripts.
 fetch_data = FetchData

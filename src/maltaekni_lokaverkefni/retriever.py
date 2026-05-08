@@ -1,41 +1,54 @@
-"""TF-IDF retriever over processed retrieval chunks."""
+"""Retrievers over processed retrieval chunks."""
 
 from __future__ import annotations
 
 from dataclasses import asdict
+import hashlib
 import json
 from pathlib import Path
 import re
 from typing import Any
 
+import numpy as np
 from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-try:
-    from .types_classes import Chunk
-    from .ice_tokenizer import IceTokenizer
-except ImportError:  # Allows direct script execution during early experiments.
-    from types_classes import Chunk
-    from ice_tokenizer import IceTokenizer
+from .embeddings import Embeddings
+from .types_classes import Chunk
+from .ice_tokenizer import IceTokenizer
+
+
+EMBEDDING_METHODS = {
+    "icebert": "IceBert",
+    "bge-m3": "BGE-M3",
+}
+
+RRF_METHODS = {
+    "rrf-icebert-bm25": "icebert",
+    "rrf-bge-m3-bm25": "bge-m3",
+}
+
+SUPPORTED_METHODS = {"tfidf", "bm25", *EMBEDDING_METHODS, *RRF_METHODS}
 
 
 class Retriever:
     """
-    Lexical retriever for the MVP RAG pipeline.
+    Retriever for the MVP RAG pipeline.
 
     Explanation:
         Retriever indexes processed Chunk objects and returns the most relevant
-        chunks for a user question. It supports TF-IDF and BM25 retrieval. Both
-        methods use IceTokenizer for Icelandic tokenization and return results
-        in the retrieval contract shape expected by the answer-generation code.
+        chunks for a user question. It supports lexical retrieval, embedding
+        retrieval, and reciprocal rank fusion between BM25 and embeddings.
 
     Attributes:
         chunks: Chunk objects currently indexed by the retriever.
-        method: Retrieval method name, currently "tfidf" or "bm25".
-        ice_tokenizer: Icelandic tokenizer used by both retrieval methods.
+        method: Retrieval method name.
+        ice_tokenizer: Icelandic tokenizer used before lexical and embedding retrieval.
         tokenized_chunks: Tokenized chunk texts used by BM25.
-        bm25: BM25Okapi index when method is "bm25".
+        bm25: BM25Okapi index when method uses BM25.
+        embedder: Embedding encoder when method uses embeddings.
+        embedding_matrix: Normalized embedding matrix for chunks.
         vectorizer: TfidfVectorizer when method is "tfidf".
         chunk_matrix: TF-IDF matrix when method is "tfidf".
 
@@ -44,27 +57,29 @@ class Retriever:
         search(question, top_k=3): Return ranked chunks for a question.
     """
 
-    def __init__(self, method):
+    def __init__(self, method, *, cache_dir: Path | None = None):
         """Initialize an unfitted retriever for a supported retrieval method."""
+        method = self.__normalize_method(method)
         self.chunks: list[Chunk] = []
         self.method = method
         self.ice_tokenizer = IceTokenizer()
         self.tokenized_chunks: list[list[str]] = []
         self.bm25 = None
-        if method == 'tfidf':
+        self.embedder = None
+        self.embedding_matrix = None
+        self.cache_dir = cache_dir
+        self.chunk_fingerprint = ""
+        if method == "tfidf":
             self.vectorizer = TfidfVectorizer(
                 analyzer=self.__analyze,
-                lowercase=False,
+                smooth_idf=True
             )
             self.chunk_matrix = None
-        if method == 'bm25':
+        else:
             self.vectorizer = None
             self.chunk_matrix = None
-        if method == 'embeddings':
-            raise Exception("Not available yet")
-        if method == 'word2vec':
-            raise Exception("Not available yet")
-        if method not in {'tfidf', 'bm25', 'embeddings', 'word2vec'}:
+
+        if method not in SUPPORTED_METHODS:
             raise ValueError(f"Unknown retrieval method: {method}")
 
     def fit(self, chunks: list[Chunk]):
@@ -73,10 +88,16 @@ class Retriever:
             raise ValueError("Cannot fit retriever with no chunks")
         self.chunks = chunks
         texts = [self._searchable_text(chunk) for chunk in chunks]
-        if self.method == 'tfidf':
+        self.chunk_fingerprint = self.__fingerprint_chunks(chunks)
+        if self.method == "tfidf":
             self.__fit_tfidf(texts)
-        elif self.method == 'bm25':
+        elif self.method == "bm25":
             self.__fit_bm25(texts)
+        elif self.method in EMBEDDING_METHODS:
+            self.__fit_embeddings(texts, self.method)
+        elif self.method in RRF_METHODS:
+            self.__fit_bm25(texts)
+            self.__fit_embeddings(texts, RRF_METHODS[self.method])
         
     def __fit_tfidf(self, texts):
         """Fit the TF-IDF vectorizer on searchable chunk texts."""
@@ -86,14 +107,39 @@ class Retriever:
         """Fit the BM25 index on tokenized searchable chunk texts."""
         self.tokenized_chunks = [self.__analyze(text) for text in texts]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
+
+    def __fit_embeddings(self, texts: list[str], method: str):
+        """Fit or load chunk embeddings for an embedding retrieval method."""
+        tokenized_texts = [self.__analyze(text) for text in texts]
+        self.embedder = Embeddings(model=EMBEDDING_METHODS[method])
+
+        cache_path = self.__embedding_cache_path(method)
+        if cache_path is not None and cache_path.exists():
+            with np.load(cache_path) as cached:
+                if cached["fingerprint"].item() == self.chunk_fingerprint:
+                    self.embedding_matrix = cached["embeddings"]
+                    return
+
+        self.embedding_matrix = self.embedder.fit(tokenized_texts)
+        if cache_path is not None:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            np.savez_compressed(
+                cache_path,
+                fingerprint=self.chunk_fingerprint,
+                embeddings=self.embedding_matrix,
+            )
         
 
     def search(self, question: str, top_k: int = 3) -> dict[str, Any]:
         """Return top chunks in the retrieval contract shape."""
-        if self.method == 'tfidf':
+        if self.method == "tfidf":
             scores = self.__search_tfidf(question)
-        elif self.method == 'bm25':
+        elif self.method == "bm25":
             scores = self.__search_bm25(question)
+        elif self.method in EMBEDDING_METHODS:
+            scores = self.__search_embeddings(question)
+        elif self.method in RRF_METHODS:
+            scores = self.__search_rrf(question)
         else:
             raise ValueError(f"Search is not implemented for method {self.method}")
 
@@ -106,7 +152,7 @@ class Retriever:
         if self.chunk_matrix is None:
             raise ValueError("TF-IDF retriever must be fit before search")
 
-        question_vector = self.vectorizer.transform([self.__expand_question(question)])
+        question_vector = self.vectorizer.transform([question])
         scores = cosine_similarity(question_vector, self.chunk_matrix).flatten()
         return scores
 
@@ -115,7 +161,22 @@ class Retriever:
         if self.bm25 is None:
             raise ValueError("BM25 retriever must be fit before search")
 
-        return self.bm25.get_scores(self.__analyze(self.__expand_question(question)))
+        return self.bm25.get_scores(self.__analyze(question))
+
+    def __search_embeddings(self, question: str):
+        """Score all chunks against a question with embedding cosine similarity."""
+        if self.embedder is None or self.embedding_matrix is None:
+            raise ValueError("Embedding retriever must be fit before search")
+
+        query_tokens = self.__analyze(question)
+        query_embedding = self.embedder.transform([query_tokens])[0]
+        return self.embedding_matrix @ query_embedding
+
+    def __search_rrf(self, question: str, rank_constant: int = 60):
+        """Combine BM25 and embedding ranks with reciprocal rank fusion."""
+        bm25_scores = self.__search_bm25(question)
+        embedding_scores = self.__search_embeddings(question)
+        return self.__rrf_scores([bm25_scores, embedding_scores], rank_constant)
 
     def __build_result(self, question: str, top_indexes, scores) -> dict[str, Any]:
         """Build the retrieval contract response from ranked chunk indexes."""
@@ -135,6 +196,45 @@ class Retriever:
             "chunks": result_chunks,
         }
 
+    def __embedding_cache_path(self, method: str) -> Path | None:
+        """Return the local cache path for chunk embeddings."""
+        if self.cache_dir is None:
+            return None
+
+        return self.cache_dir / f"{method}-{self.chunk_fingerprint}.npz"
+
+    def __fingerprint_chunks(self, chunks: list[Chunk]) -> str:
+        """Build a stable fingerprint for cache invalidation."""
+        digest = hashlib.sha256()
+        for chunk in chunks:
+            digest.update(chunk.chunk_id.encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(self._searchable_text(chunk).encode("utf-8"))
+            digest.update(b"\0")
+        return digest.hexdigest()[:16]
+
+    def __rrf_scores(self, ranked_score_lists, rank_constant: int):
+        """Convert score lists to reciprocal-rank-fusion scores."""
+        fused = np.zeros(len(self.chunks), dtype=float)
+        for scores in ranked_score_lists:
+            ranked_indexes = np.argsort(scores)[::-1]
+            for rank, index in enumerate(ranked_indexes, start=1):
+                fused[index] += 1.0 / (rank_constant + rank)
+        return fused
+
+    def __normalize_method(self, method: str) -> str:
+        """Normalize user-facing method aliases."""
+        aliases = {
+            "IceBert": "icebert",
+            "IceBERT": "icebert",
+            "BGE-M3": "bge-m3",
+            "bgem3": "bge-m3",
+            "bgm3": "bge-m3",
+            "hybrid-icebert": "rrf-icebert-bm25",
+            "hybrid-bge-m3": "rrf-bge-m3-bm25",
+        }
+        return aliases.get(method, method)
+
     def _searchable_text(self, chunk: Chunk) -> str:
         """Weight titles/sections a little more than body text."""
         return "\n".join(
@@ -149,10 +249,8 @@ class Retriever:
 
     def __analyze(self, text: str) -> list[str]:
         """Analyze text into lowercase Icelandic tokens for retrieval."""
-        try:
-            tokens = self.ice_tokenizer.tokenIce(text)
-        except Exception:
-            tokens = re.findall(r"[\wáðéíóúýþæö]+", text.lower())
+        
+        tokens = self.ice_tokenizer.tokenIce(text)
 
         return [
             token
@@ -160,24 +258,7 @@ class Retriever:
             if len(token) > 1 and re.search(r"[\wáðéíóúýþæö]", token)
         ]
 
-    def __expand_question(self, question: str) -> str:
-        """Add a few transparent consumer-rights synonyms before retrieval."""
-        lower_question = question.lower()
-        additions = []
-
-        if any(word in lower_question for word in ["vara", "vöru", "vörur", "hlutur"]):
-            additions.extend(["söluhlutur", "hlutur", "vara"])
-
-        if any(word in lower_question for word in ["gölluð", "gallað", "gallaður", "galli", "galla"]):
-            additions.extend(["galli", "galla", "gallaður", "úrræði", "neytanda"])
-
-        if any(word in lower_question for word in ["netkaup", "fjarsala", "skila", "skilaréttur"]):
-            additions.extend(["fjarsölusamningur", "falla frá samningi", "uppsögn", "skilaréttur"])
-
-        if any(word in lower_question for word in ["kvarta", "kvörtun", "tilkynna"]):
-            additions.extend(["tilkynning", "kvörtun", "galla", "seljanda"])
-
-        return " ".join([question, *additions])
+    
 
 
 def load_chunks(path: Path) -> list[Chunk]:
@@ -201,7 +282,7 @@ def load_chunks(path: Path) -> list[Chunk]:
 def build_retriever(method, chunks_path: Path = Path("data/processed/chunks.json")) -> Retriever:
     """Load chunks and return a fitted retriever."""
     chunks = load_chunks(chunks_path)
-    retriever = Retriever(method)
+    retriever = Retriever(method, cache_dir=chunks_path.parent / "embedding_cache")
     retriever.fit(chunks)
     return retriever
 
