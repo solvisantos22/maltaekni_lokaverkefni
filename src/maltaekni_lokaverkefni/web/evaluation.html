@@ -442,7 +442,9 @@
           <p id="savedState" class="muted">Vistað staðbundið í reports/evaluation.</p>
         </div>
 
-        <p class="demo-note">Sýnidæmi: þessi gögn eru tilbúin fyrir kynningu og kosta enga tokena.</p>
+        <p class="demo-note">
+          Sýnidæmi: þetta eru ekki raunverulegar niðurstöður úr lokamati. Gögnin eru aðeins hér til að sýna hvernig matsferlið, stigagjöfin og heimildayfirferðin virka án þess að keyra Gemini eða eyða tokenum.
+        </p>
 
         <a id="dashboardLink" class="sidebar-link" href="/evaluation/dashboard">Yfirlit mats</a>
 
@@ -528,7 +530,7 @@
       if (demoMode) {
         document.body.classList.add("demo-mode");
         dashboardLink.href = "/evaluation/dashboard?demo=1";
-        document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er ekki vistuð.";
+        document.querySelector("#savedState").textContent = "Sýnidæmi: þetta er ekki raunverulegt mat og vistast ekki.";
       }
 
       const savedEvaluator = localStorage.getItem("evaluationEvaluator") || "Sölvi";
@@ -559,12 +561,12 @@
           if (activeDemoMode) {
             document.body.classList.add("demo-mode");
             dashboardLink.href = "/evaluation/dashboard?demo=1";
-            document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er ekki vistuð.";
+            document.querySelector("#savedState").textContent = "Sýnidæmi: þetta er ekki raunverulegt mat og vistast ekki.";
           }
           rows = payload.rows;
           reviews = payload.reviews || {};
           document.querySelector("#datasetState").textContent = payload.is_demo
-            ? `Sýnidæmi · ${rows.length} matsraðir`
+            ? `Sýnidæmi · ekki raunveruleg niðurstaða · ${rows.length} matsraðir`
             : `Raunkeyrsla · ${rows.length} matsraðir`;
           document.querySelector("#paths").textContent =
             `Samantekt: ${payload.summary_path} · Ítarlegt: ${payload.details_path} · Mannlegt mat: ${payload.review_path}`;
@@ -657,7 +659,7 @@
       async function saveReview() {
         if (!rows.length) return;
         if (activeDemoMode) {
-          document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er aðeins til að skoða flæðið.";
+          document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er aðeins til að skoða matsflæðið.";
           document.querySelector("#savedState").classList.remove("error");
           return;
         }

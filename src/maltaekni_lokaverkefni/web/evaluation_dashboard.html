@@ -177,6 +177,21 @@
         line-height: 1.45;
       }
 
+      .demo-warning {
+        display: none;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border: 1px solid rgba(40, 198, 178, 0.34);
+        border-radius: 8px;
+        background: rgba(40, 198, 178, 0.08);
+        color: var(--green);
+        line-height: 1.45;
+      }
+
+      body.demo-mode .demo-warning {
+        display: block;
+      }
+
       .explain {
         display: grid;
         gap: 10px;
@@ -275,6 +290,10 @@
         Ef kennari prófar keyrslu með LLM ætti að gera það einu sinni sem dæmi, ekki endurtaka stórar keyrslur að óþörfu.
       </p>
 
+      <p class="demo-warning">
+        Sýnidæmi: tölurnar á þessari síðu eru ekki raunverulegar lokaniðurstöður. Þær eru tilbúin dæmigögn sem sýna hvernig við ætlum að yfirfara svör, bera saman leitaraðferðir og safna mannlegu mati eftir raunkeyrslu.
+      </p>
+
       <section class="explain">
         <h2>Hvað er verið að mæla?</h2>
         <p>Top 3 mælir hvort væntur lagakafli fannst meðal þriggja efstu heimilda. Heimildanotkun sýnir hversu stór hluti sóttra heimilda var vísað í svarinu. Vistaðar yfirferðir eru fjöldi mannlegra matsblaða, ekki einkunn.</p>
@@ -332,10 +351,11 @@
             throw new Error(error.detail || "Na ekki i matsgogn.");
           }
           const payload = await response.json();
+          document.body.classList.toggle("demo-mode", Boolean(payload.is_demo));
           renderCards(payload.overall);
           renderMethods(payload.methods);
           datasetLine.textContent = payload.is_demo
-            ? `Sýnidæmi · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`
+            ? `Sýnidæmi · ekki raunveruleg niðurstaða · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`
             : `Raunkeyrsla · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`;
           paths.textContent = `Samantekt: ${payload.summary_path} · Mannlegt mat: ${payload.review_path}`;
           if (payload.is_demo) reviewLink.href = "/evaluation?demo=1";
