@@ -1,5 +1,3 @@
-"""Retrievers over processed retrieval chunks."""
-
 from __future__ import annotations
 
 from dataclasses import asdict

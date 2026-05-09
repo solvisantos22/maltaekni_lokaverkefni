@@ -1,0 +1,2 @@
+﻿retrieval_method,run_label,prompt_profile,questions,retrieval_check_questions,errors,expected_section_top3_hits,expected_section_top3_rate,avg_latency_seconds,avg_source_coverage_ratio,total_prompt_tokens,total_output_tokens,total_thought_tokens,total_tokens,estimated_cost_usd
+tfidf,import-smoke,balanced,1,1,0,1,1.0,0.04,0.3333,,,,,

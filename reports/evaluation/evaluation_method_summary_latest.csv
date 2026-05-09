@@ -1,0 +1,6 @@
+﻿retrieval_method,run_label,prompt_profile,questions,retrieval_check_questions,errors,expected_section_top3_hits,expected_section_top3_rate,avg_latency_seconds,avg_source_coverage_ratio,total_prompt_tokens,total_output_tokens,total_thought_tokens,total_tokens,estimated_cost_usd
+bm25,gemini-strict-final,strict,20,18,0,8,0.4444,5.043,0.7167,33171,3377,16202,52750,
+rrf-bge-m3-bm25,gemini-strict-final,strict,20,18,0,13,0.7222,6.003,0.6167,27846,3693,19177,50716,
+rrf-bge-m3-bm25-rerank,gemini-strict-final,strict,20,18,0,12,0.6667,11.811,0.7333,39918,3711,14818,58447,
+rrf-icebert-bm25,gemini-strict-final,strict,20,18,0,5,0.2778,5.293,0.7,34892,3429,16194,54515,
+tfidf,gemini-strict-final,strict,20,18,0,7,0.3889,5.449,0.8,32760,3568,17097,53425,

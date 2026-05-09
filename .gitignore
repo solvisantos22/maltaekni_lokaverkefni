@@ -36,7 +36,6 @@ data/processed/*.json
 data/processed/embedding_cache/*
 models/*
 reports/figures/*
-reports/evaluation/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !models/.gitkeep

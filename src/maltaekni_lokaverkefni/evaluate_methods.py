@@ -11,7 +11,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 from typing import Any
-from types_classes import EvaluationRow
 
 try:
     from dotenv import load_dotenv
@@ -21,9 +20,11 @@ except ImportError:
 try:
     from .answer_generator import generate_grounded_answer
     from .retriever import build_retriever
+    from .types_classes import EvaluationRow
 except ImportError:  # Allows direct script execution during early experiments.
     from answer_generator import generate_grounded_answer
     from retriever import build_retriever
+    from types_classes import EvaluationRow
 
 
 DEFAULT_METHODS = ["tfidf", "bm25"]
