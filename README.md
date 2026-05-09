@@ -62,8 +62,9 @@ Then open:
 http://127.0.0.1:8001
 ```
 
-The main app sidebar links to the demo evaluation screens. You can also open
-them directly without running evaluation or spending tokens:
+The main app sidebar links to the evaluation dashboard and human review screens.
+For development, the committed demo dataset can still be opened directly without
+running evaluation or spending tokens:
 
 ```text
 http://127.0.0.1:8000/evaluation?demo=1

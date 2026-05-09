@@ -27,13 +27,13 @@
     },
     {
       id: "dashboard",
-      label: "Skoða sýnidæmi mælaborðs",
-      href: "/evaluation/dashboard?demo=1",
+      label: "Skoða mælaborð mats",
+      href: "/evaluation/dashboard",
     },
     {
       id: "review",
-      label: "Skoða sýnidæmi mannlegs mats",
-      href: "/evaluation?demo=1",
+      label: "Skoða mannlegt mat",
+      href: "/evaluation",
     },
   ];
 

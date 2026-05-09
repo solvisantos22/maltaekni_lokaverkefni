@@ -75,12 +75,17 @@
       }
 
       .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         min-height: 40px;
         padding: 0 14px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
         color: var(--text);
+        line-height: 1.15;
+        text-align: center;
         text-decoration: none;
       }
 
@@ -280,7 +285,7 @@
       </header>
 
       <p class="notice">
-        Þetta yfirlit notar vistuð matsgögn og keyrir ekki ný LLM-köll. Í sýnidæminu eru tölurnar tilbúin dæmigögn sem sýna matsferlið; í lokamatinu eru sömu reitir fylltir með raunkeyrðum niðurstöðum.
+        Þetta yfirlit er hluti af kennara- og verkefnayfirferðinni. Það les vistuð matsgögn og keyrir ekki ný LLM-köll. Í venjulegu framleiðsluumhverfi væri svona innra matsmælaborð ekki hluti af almennu notendaviðmóti.
       </p>
 
       <section class="explain">
