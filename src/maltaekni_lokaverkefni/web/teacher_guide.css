@@ -1,0 +1,180 @@
+.teacher-guide {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 90;
+  width: min(330px, calc(100vw - 28px));
+  border: 1px solid rgba(215, 181, 109, 0.28);
+  border-radius: 8px;
+  background: rgba(12, 15, 13, 0.95);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+  color: #f2efe7;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  backdrop-filter: blur(14px);
+}
+
+.teacher-guide[hidden],
+.teacher-guide-bubble[hidden] {
+  display: none;
+}
+
+.onboarding-active .teacher-guide,
+.onboarding-active .teacher-guide-bubble {
+  display: none;
+}
+
+.teacher-guide.dragging {
+  user-select: none;
+}
+
+.teacher-guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 11px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: move;
+  touch-action: none;
+}
+
+.teacher-guide-title {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.teacher-guide-title strong {
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.teacher-guide-title span {
+  color: #b7b0a1;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.teacher-guide-toggle {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(215, 181, 109, 0.26);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f2efe7;
+  cursor: pointer;
+}
+
+.teacher-guide-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 9px;
+  list-style: none;
+}
+
+.teacher-guide-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.teacher-guide-list li:hover {
+  border-color: rgba(40, 198, 178, 0.2);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.teacher-guide-list label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #f2efe7;
+  font-size: 12px;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.teacher-guide-list input {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  accent-color: #28c6b2;
+}
+
+.teacher-guide-list input:checked + span {
+  color: #b7b0a1;
+  text-decoration: line-through;
+}
+
+.teacher-guide-list a {
+  color: #28c6b2;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.teacher-guide-list a:hover,
+.teacher-guide-list a:focus-visible {
+  color: #d7b56d;
+  outline: none;
+}
+
+.teacher-guide-bubble {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(215, 181, 109, 0.35);
+  border-radius: 8px;
+  background: rgba(12, 15, 13, 0.95);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+  color: #f2efe7;
+  font: 700 12px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+  touch-action: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.teacher-guide-bubble span {
+  color: #d7b56d;
+}
+
+.teacher-guide-bubble:hover,
+.teacher-guide-bubble:focus-visible {
+  border-color: rgba(40, 198, 178, 0.75);
+  background: rgba(20, 28, 25, 0.98);
+  box-shadow: 0 18px 44px rgba(40, 198, 178, 0.2);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.teacher-guide-bubble.dragging {
+  cursor: grabbing;
+  transform: scale(1.02);
+}
+
+@media (max-width: 720px) {
+  .teacher-guide,
+  .teacher-guide-bubble {
+    right: 12px;
+    bottom: 12px;
+  }
+}

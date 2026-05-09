@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Réttarvísir</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/teacher_guide.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="/static/teacher_guide.js" defer></script>
     <script src="/static/app.js" defer></script>
   </head>
   <body>
@@ -96,7 +98,7 @@
     </div>
 
     <div class="shell">
-      <aside class="rail" aria-label="Stillingar" data-tour="settings">
+      <aside id="settingsPanel" class="rail" aria-label="Stillingar" data-tour="settings">
         <div class="brand">
           <div class="mark">[§]</div>
           <div>
@@ -154,7 +156,7 @@
         </div>
       </aside>
 
-      <main class="chat" data-tour="chat">
+      <main id="chatPanel" class="chat" data-tour="chat">
         <div id="messages" class="messages" aria-live="polite">
           <section class="message assistant">
             <div class="avatar">[§]</div>
@@ -176,7 +178,7 @@
         </form>
       </main>
 
-      <aside class="sources" aria-label="Heimildir" data-tour="sources">
+      <aside id="sourcesPanel" class="sources" aria-label="Heimildir" data-tour="sources">
         <div class="sources-head">
           <h2>Heimildir</h2>
           <button id="clearButton" class="icon-button" type="button" aria-label="Hreinsa">
