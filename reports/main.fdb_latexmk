@@ -1,5 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1778255055.63476 "main.tex" "main.pdf" "main" 1778255056.27106 0
+["pdflatex"] 1778333167.09791 "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" "main.pdf" "main" 1778333167.71998 2
+  "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" 1778333166.07738 5786 7ae77513b957ead42dada27137d97c85 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf-pc.enc" 1698694482 3136 bbe665bd0bb471a2da1e8fd326cff9fa ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -242,10 +243,10 @@
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1763913718 3345743 7d8e66f3a9904ad31548cbd34e2ee214 ""
   "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
   "img/Tákn blátt.pdf" 1778194593.21054 52233 dadb42e903d74ac2adde0a188eb5e17e ""
-  "main.aux" 1778255056.19596 1725 ea2a0eb700581e6034374fbcdc067412 "pdflatex"
-  "main.out" 1778255056.19657 1316 ca66a911092358f9ef06890cdb0bb8da "pdflatex"
-  "main.tex" 1778255048.009 5754 83b0fd131c3b55ebcaace501467473b3 ""
-  "main.toc" 1778255056.19673 682 c293c3488f700664a542d4389561dd57 "pdflatex"
+  "main.aux" 1778333167.65441 1725 ea2a0eb700581e6034374fbcdc067412 "pdflatex"
+  "main.out" 1778333167.65491 1316 ca66a911092358f9ef06890cdb0bb8da "pdflatex"
+  "main.tex" 1778333166.07738 5786 7ae77513b957ead42dada27137d97c85 ""
+  "main.toc" 1778333167.65506 682 c293c3488f700664a542d4389561dd57 "pdflatex"
   (generated)
   "main.aux"
   "main.log"

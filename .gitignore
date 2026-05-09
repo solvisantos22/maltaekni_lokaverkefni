@@ -32,7 +32,8 @@ Thumbs.db
 
 # Data and model artifacts stay local by default
 data/raw/*
-data/processed/*
+data/processed/*.json
+data/processed/embedding_cache/*
 models/*
 reports/figures/*
 reports/evaluation/*
