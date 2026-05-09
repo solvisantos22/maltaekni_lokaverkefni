@@ -90,7 +90,7 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 12px;
         margin-bottom: 18px;
       }
@@ -105,8 +105,9 @@
       }
 
       .card {
-        min-height: 112px;
+        min-height: 138px;
         padding: 16px;
+        min-width: 0;
       }
 
       .label {
@@ -116,8 +117,15 @@
 
       .value {
         margin-top: 10px;
-        font-size: 28px;
+        font-size: clamp(20px, 2.2vw, 28px);
         font-weight: 800;
+        line-height: 1.12;
+        overflow-wrap: anywhere;
+      }
+
+      .value.long-value {
+        font-size: 18px;
+        line-height: 1.25;
       }
 
       .card-help {
@@ -192,6 +200,71 @@
         display: block;
       }
 
+      .teacher-path {
+        margin-bottom: 18px;
+        padding: 16px;
+        border: 1px solid rgba(215, 181, 109, 0.24);
+        border-radius: 8px;
+        background: rgba(18, 23, 20, 0.78);
+      }
+
+      .teacher-path h2 {
+        margin: 0;
+        color: var(--gold);
+        font-size: 16px;
+      }
+
+      .teacher-path > p {
+        margin: 6px 0 14px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .path-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+      }
+
+      .path-item {
+        position: relative;
+        display: grid;
+        gap: 8px;
+        min-height: 86px;
+        padding: 13px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .path-item:hover,
+      .path-item:focus-visible {
+        border-color: rgba(40, 198, 178, 0.65);
+        outline: none;
+      }
+
+      .path-item strong {
+        color: var(--text);
+      }
+
+      .path-item span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .path-help {
+        display: none;
+        color: var(--green);
+      }
+
+      .path-item:hover .path-help,
+      .path-item:focus-visible .path-help {
+        display: block;
+      }
+
       .explain {
         display: grid;
         gap: 10px;
@@ -257,7 +330,7 @@
         }
 
         .grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: repeat(2, minmax(220px, 1fr));
         }
 
         .panel {
@@ -293,6 +366,33 @@
       <p class="demo-warning">
         Sýnidæmi: tölurnar á þessari síðu eru ekki raunverulegar lokaniðurstöður. Þær eru tilbúin dæmigögn sem sýna hvernig svör voru yfirfarin, leitaraðferðir bornar saman og mannlegt mat skráð.
       </p>
+
+      <section class="teacher-path" aria-labelledby="teacherPathTitle">
+        <h2 id="teacherPathTitle">Leið fyrir yfirferð</h2>
+        <p>Stysta leiðin í gegnum verkefnið: skoða niðurstöðuyfirlit, opna mannlegt mat, prófa spjallið og lesa aðferðina í appinu.</p>
+        <div class="path-list">
+          <a class="path-item" href="#cards">
+            <strong>1. Byrja á yfirliti</strong>
+            <span>Helstu tölur um matsraðir, leitaraðferðir, tokena og vistaðar yfirferðir.</span>
+            <span class="path-help">Þetta setur samhengi áður en taflan er skoðuð.</span>
+          </a>
+          <a id="pathReviewLink" class="path-item" href="/evaluation">
+            <strong>2. Skoða mannlegt mat</strong>
+            <span>Ferlið sem Sölvi og Jóhannes notuðu til að gefa 1-5 einkunnir.</span>
+            <span class="path-help">Þar sjást spurning, svar, heimildir og matskvarði á sama skjá.</span>
+          </a>
+          <a class="path-item" href="/?skipWelcome=1">
+            <strong>3. Prófa spjallið</strong>
+            <span>Opnar Réttarvísi án móttökuskjás og sýnir notendaupplifunina.</span>
+            <span class="path-help">Gott til að sjá hvernig heimildir birtast við venjulega spurningu.</span>
+          </a>
+          <a class="path-item" href="/?skipWelcome=1&methodology=1">
+            <strong>4. Lesa aðferð</strong>
+            <span>Opnar stuttu aðferðarskýringuna um retrieval, Gemini og tilvísanir.</span>
+            <span class="path-help">Þetta tengir vöruna við aðferðafræðina í skýrslunni án þess að leita að hnappnum.</span>
+          </a>
+        </div>
+      </section>
 
       <section class="explain">
         <h2>Hvað er verið að mæla?</h2>
@@ -339,7 +439,9 @@
       const datasetLine = document.querySelector("#datasetLine");
       const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
       const reviewLink = document.querySelector("#reviewLink");
+      const pathReviewLink = document.querySelector("#pathReviewLink");
       if (demoMode) reviewLink.href = "/evaluation?demo=1";
+      if (demoMode) pathReviewLink.href = "/evaluation?demo=1";
 
       loadDashboard();
 
@@ -359,6 +461,7 @@
             : `Raunkeyrsla · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`;
           paths.textContent = `Samantekt: ${payload.summary_path} · Mannlegt mat: ${payload.review_path}`;
           if (payload.is_demo) reviewLink.href = "/evaluation?demo=1";
+          if (payload.is_demo) pathReviewLink.href = "/evaluation?demo=1";
         } catch (error) {
           cards.innerHTML = `<article class="card"><p class="error">${escapeHtml(error.message)}</p></article>`;
         }
@@ -378,7 +481,7 @@
         cards.innerHTML = items.map(([label, value, help]) => `
           <article class="card">
             <p class="label">${escapeHtml(label)}</p>
-            <p class="value">${escapeHtml(String(value ?? "-"))}</p>
+            <p class="value ${String(value ?? "").length > 10 ? "long-value" : ""}">${escapeHtml(String(value ?? "-"))}</p>
             <p class="card-help">${escapeHtml(help)}</p>
           </article>
         `).join("");

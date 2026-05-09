@@ -29,6 +29,7 @@ const methodologyCloseButton = document.querySelector("#methodologyCloseButton")
 const pageParams = new URLSearchParams(window.location.search);
 const skipWelcome = pageParams.get("skipWelcome") === "1";
 const forceWelcome = pageParams.get("welcome") === "1";
+const openMethodologyOnLoad = pageParams.get("methodology") === "1";
 const welcomeSeenKey = "rettarvisirWelcomeSeen";
 
 const introText =
@@ -108,8 +109,7 @@ tourButton.addEventListener("click", () => {
 
 methodologyButton.addEventListener("click", () => {
   closeWelcome();
-  methodologyOverlay.classList.remove("hidden");
-  methodologyOverlay.setAttribute("aria-hidden", "false");
+  openMethodology();
 });
 
 methodologyCloseButton.addEventListener("click", closeMethodology);
@@ -365,6 +365,11 @@ function closeMethodology() {
   questionInput.focus();
 }
 
+function openMethodology() {
+  methodologyOverlay.classList.remove("hidden");
+  methodologyOverlay.setAttribute("aria-hidden", "false");
+}
+
 function renderTourStep() {
   const step = tourSteps[activeTourIndex];
   const target = document.querySelector(step.selector);
@@ -415,8 +420,11 @@ function positionTourCard(rect) {
 
 window.addEventListener("load", () => {
   if (window.lucide) window.lucide.createIcons();
-  if (forceWelcome) localStorage.removeItem(welcomeSeenKey);
-  if (skipWelcome || (!forceWelcome && localStorage.getItem(welcomeSeenKey) === "1")) {
+  if (forceWelcome && !openMethodologyOnLoad) localStorage.removeItem(welcomeSeenKey);
+  if (openMethodologyOnLoad) {
+    closeWelcome({ remember: false });
+    openMethodology();
+  } else if (skipWelcome || (!forceWelcome && localStorage.getItem(welcomeSeenKey) === "1")) {
     closeWelcome({ remember: false });
   } else {
     document.body.classList.add("onboarding-active");
