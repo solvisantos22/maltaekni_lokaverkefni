@@ -243,8 +243,7 @@ if __name__ == "__main__":
                "https://www.althingi.is/lagas/nuna/2002030.html",
                "https://www.althingi.is/lagas/nuna/2018095.html",
                "https://www.althingi.is/lagas/nuna/2016118.html",
-               "https://www.althingi.is/lagas/nuna/2013033.html",
-               "https://www.althingi.is/lagas/nuna/2005057.html"]
+               "https://www.althingi.is/lagas/nuna/2013033.html"]
     
     documents = []
     

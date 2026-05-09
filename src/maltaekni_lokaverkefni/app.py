@@ -45,6 +45,7 @@ class AskRequest(BaseModel):
         "bge-m3",
         "rrf-icebert-bm25",
         "rrf-bge-m3-bm25",
+        "rrf-bge-m3-bm25-rerank",
     ] = "tfidf"
     top_k: int = Field(default=3, ge=1, le=5)
 
