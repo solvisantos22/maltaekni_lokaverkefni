@@ -7,13 +7,24 @@ The goal is to avoid changing prompts, models, or metrics after spending tokens.
 
 Evaluation questions live in `docs/evaluation_questions.csv`.
 
-The current set has 30 questions:
+The current set has 20 questions. The set is intentionally smaller than the
+earlier 30-question version because the final matrix includes several retrieval
+methods, and every method-question pair also needs human review.
 
-- direct consumer-rights questions
-- paraphrased questions that should still retrieve the same legal section
-- ambiguous or multi-source questions
-- advertising and marketing-law questions
-- no-source questions where the system should avoid unsupported advice
+The core design is paired evaluation:
+
+- 8 questions use legal terminology that appears in the source laws, for example
+  `söluhlutur`, `úrræði`, `afhendingardráttur`, and `fjarsölusamningur`.
+- 8 questions ask for the same expected legal sections in everyday consumer
+  language, for example `varan`, `búðin`, `pöntunin`, and `hætta við netkaup`.
+- 2 questions are ambiguous or multi-source questions.
+- 2 questions are no-source questions where the system should avoid unsupported
+  advice.
+
+The paired legal/everyday wording is part of the experiment. It tests whether
+retrieval methods depend on matching legal vocabulary exactly, and whether
+embedding, fusion, or reranking methods degrade less when users phrase questions
+in ordinary language.
 
 Rows with `expected_relevant_section=NO_RELEVANT_SOURCE` are used for human
 uncertainty evaluation. They are not included in the automatic top-3 legal
@@ -25,7 +36,7 @@ Primary paid evaluation:
 
 | Setting | Value |
 |---|---|
-| Retrieval methods | `tfidf`, `bm25`, `bge-m3`, `rrf-bge-m3-bm25` |
+| Retrieval methods | `tfidf`, `bm25`, `icebert`, `bge-m3`, `rrf-icebert-bm25`, `rrf-bge-m3-bm25`, `rrf-bge-m3-bm25-rerank` |
 | LLM provider | `gemini` |
 | LLM model | `gemini-3-flash-preview` |
 | Prompt profile | `strict` |
@@ -59,7 +70,7 @@ python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --no-
 Primary paid run:
 
 ```powershell
-python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 bge-m3 rrf-bge-m3-bm25 --llm-provider gemini --gemini-model gemini-3-flash-preview --prompt-profile strict --run-label gemini-strict-final
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 icebert bge-m3 rrf-icebert-bm25 rrf-bge-m3-bm25 rrf-bge-m3-bm25-rerank --llm-provider gemini --gemini-model gemini-3-flash-preview --prompt-profile strict --run-label gemini-strict-final
 ```
 
 Optional prompt comparison:
