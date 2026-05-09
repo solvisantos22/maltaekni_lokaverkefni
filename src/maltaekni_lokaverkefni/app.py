@@ -23,6 +23,10 @@ EVALUATION_DIR = PROJECT_ROOT / "reports" / "evaluation"
 EVALUATION_SUMMARY_PATH = EVALUATION_DIR / "evaluation_summary_latest.csv"
 EVALUATION_DETAILS_PATH = EVALUATION_DIR / "evaluation_details_latest.jsonl"
 EVALUATION_REVIEW_PATH = EVALUATION_DIR / "evaluation_review_latest.csv"
+DEMO_EVALUATION_DIR = PROJECT_ROOT / "docs" / "demo_evaluation"
+DEMO_EVALUATION_SUMMARY_PATH = DEMO_EVALUATION_DIR / "evaluation_summary_demo.csv"
+DEMO_EVALUATION_DETAILS_PATH = DEMO_EVALUATION_DIR / "evaluation_details_demo.jsonl"
+DEMO_EVALUATION_REVIEW_PATH = DEMO_EVALUATION_DIR / "evaluation_review_demo.csv"
 WEB_DIR = Path(__file__).resolve().parent / "web"
 
 app = FastAPI(title="Réttarvísir")
@@ -119,19 +123,20 @@ def ask(request: AskRequest):
 
 
 @app.get("/api/evaluation/latest")
-def latest_evaluation():
-    if not EVALUATION_SUMMARY_PATH.exists():
+def latest_evaluation(demo: bool = False):
+    paths = _evaluation_paths(demo=demo)
+    if not paths["summary"].exists():
         raise HTTPException(
             status_code=404,
             detail=(
                 "Missing reports/evaluation/evaluation_summary_latest.csv. "
-                "Run evaluate_methods.py first."
+                "Run evaluate_methods.py first or open /evaluation?demo=1."
             ),
         )
 
-    rows = _load_evaluation_rows()
-    details = _load_evaluation_details()
-    reviews = _load_evaluation_reviews()
+    rows = _load_evaluation_rows(paths["summary"])
+    details = _load_evaluation_details(paths["details"])
+    reviews = _load_evaluation_reviews(paths["review"])
 
     for row in rows:
         key = _review_key(row["question_id"], row["retrieval_method"])
@@ -139,30 +144,35 @@ def latest_evaluation():
         row["sources"] = details.get(key, {}).get("answer_result", {}).get("sources", [])
 
     return {
-        "summary_path": str(EVALUATION_SUMMARY_PATH),
-        "details_path": str(EVALUATION_DETAILS_PATH),
-        "review_path": str(EVALUATION_REVIEW_PATH),
+        "mode": paths["mode"],
+        "is_demo": paths["mode"] == "demo",
+        "summary_path": str(paths["summary"]),
+        "details_path": str(paths["details"]),
+        "review_path": str(paths["review"]),
         "rows": rows,
         "reviews": reviews,
     }
 
 
 @app.get("/api/evaluation/dashboard")
-def evaluation_dashboard_data():
-    if not EVALUATION_SUMMARY_PATH.exists():
+def evaluation_dashboard_data(demo: bool = False):
+    paths = _evaluation_paths(demo=demo)
+    if not paths["summary"].exists():
         raise HTTPException(
             status_code=404,
             detail=(
                 "Missing reports/evaluation/evaluation_summary_latest.csv. "
-                "Run evaluate_methods.py first."
+                "Run evaluate_methods.py first or open /evaluation/dashboard?demo=1."
             ),
         )
 
-    rows = _load_evaluation_rows()
-    review_rows = _load_evaluation_review_rows()
+    rows = _load_evaluation_rows(paths["summary"])
+    review_rows = _load_evaluation_review_rows(paths["review"])
     return {
-        "summary_path": str(EVALUATION_SUMMARY_PATH),
-        "review_path": str(EVALUATION_REVIEW_PATH),
+        "mode": paths["mode"],
+        "is_demo": paths["mode"] == "demo",
+        "summary_path": str(paths["summary"]),
+        "review_path": str(paths["review"]),
         "overall": _dashboard_overall(rows, review_rows),
         "methods": _dashboard_by_method(rows, review_rows),
     }
@@ -193,17 +203,37 @@ def save_evaluation_review(review: EvaluationReviewRequest):
     return {"saved": True, "review": review_row}
 
 
-def _load_evaluation_rows() -> list[dict[str, str]]:
-    with EVALUATION_SUMMARY_PATH.open("r", encoding="utf-8-sig", newline="") as file:
-        return list(csv.DictReader(file))
+def _evaluation_paths(*, demo: bool = False) -> dict[str, Path | str]:
+    if demo or not EVALUATION_SUMMARY_PATH.exists():
+        return {
+            "mode": "demo",
+            "summary": DEMO_EVALUATION_SUMMARY_PATH,
+            "details": DEMO_EVALUATION_DETAILS_PATH,
+            "review": DEMO_EVALUATION_REVIEW_PATH,
+        }
+
+    return {
+        "mode": "real",
+        "summary": EVALUATION_SUMMARY_PATH,
+        "details": EVALUATION_DETAILS_PATH,
+        "review": EVALUATION_REVIEW_PATH,
+    }
 
 
-def _load_evaluation_details() -> dict[str, dict]:
-    if not EVALUATION_DETAILS_PATH.exists():
+def _load_evaluation_rows(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as file:
+        rows = list(csv.DictReader(file))
+    for row in rows:
+        row["answer"] = row.get("answer", "").replace("||", "\n\n")
+    return rows
+
+
+def _load_evaluation_details(path: Path) -> dict[str, dict]:
+    if not path.exists():
         return {}
 
     details = {}
-    with EVALUATION_DETAILS_PATH.open("r", encoding="utf-8") as file:
+    with path.open("r", encoding="utf-8") as file:
         for line in file:
             if not line.strip():
                 continue
@@ -214,9 +244,9 @@ def _load_evaluation_details() -> dict[str, dict]:
     return details
 
 
-def _load_evaluation_reviews() -> dict[str, dict[str, dict[str, str]]]:
+def _load_evaluation_reviews(path: Path = EVALUATION_REVIEW_PATH) -> dict[str, dict[str, dict[str, str]]]:
     reviews: dict[str, dict[str, dict[str, str]]] = {}
-    for row in _load_evaluation_review_rows():
+    for row in _load_evaluation_review_rows(path):
         row_key = row.get("row_key", "")
         evaluator = row.get("evaluator", "")
         if not row_key or not evaluator:
@@ -225,11 +255,11 @@ def _load_evaluation_reviews() -> dict[str, dict[str, dict[str, str]]]:
     return reviews
 
 
-def _load_evaluation_review_rows() -> list[dict[str, str]]:
-    if not EVALUATION_REVIEW_PATH.exists():
+def _load_evaluation_review_rows(path: Path = EVALUATION_REVIEW_PATH) -> list[dict[str, str]]:
+    if not path.exists():
         return []
 
-    with EVALUATION_REVIEW_PATH.open("r", encoding="utf-8-sig", newline="") as file:
+    with path.open("r", encoding="utf-8-sig", newline="") as file:
         return list(csv.DictReader(file))
 
 

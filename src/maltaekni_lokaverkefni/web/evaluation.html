@@ -299,6 +299,22 @@
         text-decoration: none;
       }
 
+      .demo-note {
+        display: none;
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid rgba(40, 198, 178, 0.34);
+        border-radius: 8px;
+        background: rgba(40, 198, 178, 0.08);
+        color: var(--green);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      body.demo-mode .demo-note {
+        display: block;
+      }
+
       .action.primary {
         border-color: rgba(215, 181, 109, 0.55);
         background: rgba(215, 181, 109, 0.16);
@@ -344,7 +360,9 @@
           <p id="savedState" class="muted">Vistað staðbundið í reports/evaluation.</p>
         </div>
 
-        <a class="sidebar-link" href="/evaluation/dashboard">Yfirlit mats</a>
+        <p class="demo-note">Sýnidæmi: þessi gögn eru tilbúin fyrir kynningu og kosta enga tokena.</p>
+
+        <a id="dashboardLink" class="sidebar-link" href="/evaluation/dashboard">Yfirlit mats</a>
 
         <div class="field">
           <label for="notes">Athugasemdir</label>
@@ -406,10 +424,19 @@
       let reviews = {};
       let activeIndex = 0;
       let scores = {};
+      const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
+      let activeDemoMode = demoMode;
 
       const evaluatorInput = document.querySelector("#evaluator");
       const notesInput = document.querySelector("#notes");
       const scoreGroups = document.querySelector("#scoreGroups");
+      const dashboardLink = document.querySelector("#dashboardLink");
+
+      if (demoMode) {
+        document.body.classList.add("demo-mode");
+        dashboardLink.href = "/evaluation/dashboard?demo=1";
+        document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er ekki vistuð.";
+      }
 
       evaluatorInput.value = localStorage.getItem("evaluationEvaluator") || "Sölvi";
       evaluatorInput.addEventListener("change", () => {
@@ -428,15 +455,23 @@
 
       async function loadEvaluation() {
         try {
-          const response = await fetch("/api/evaluation/latest");
+          const response = await fetch(`/api/evaluation/latest${demoMode ? "?demo=1" : ""}`);
           if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || "Næ ekki í matsgögn.");
           }
           const payload = await response.json();
+          activeDemoMode = demoMode || payload.is_demo;
+          if (activeDemoMode) {
+            document.body.classList.add("demo-mode");
+            dashboardLink.href = "/evaluation/dashboard?demo=1";
+            document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er ekki vistuð.";
+          }
           rows = payload.rows;
           reviews = payload.reviews || {};
-          document.querySelector("#paths").textContent = payload.summary_path;
+          document.querySelector("#paths").textContent = payload.is_demo
+            ? `Sýnidæmi · ${payload.summary_path}`
+            : payload.summary_path;
           renderActiveRow();
         } catch (error) {
           document.querySelector("#question").textContent = "Vantar matsgögn";
@@ -522,6 +557,11 @@
 
       async function saveReview() {
         if (!rows.length) return;
+        if (activeDemoMode) {
+          document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er aðeins til að skoða flæðið.";
+          document.querySelector("#savedState").classList.remove("error");
+          return;
+        }
 
         const row = rows[activeIndex];
         const evaluator = evaluatorInput.value.trim() || "Sölvi";

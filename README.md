@@ -95,6 +95,13 @@ The review UI saves human scores to
 The dashboard at `http://127.0.0.1:8000/evaluation/dashboard` summarizes the
 latest automatic metrics, token usage, and human review averages without making
 new LLM calls.
+To show the evaluation UI without running evaluation first, use the committed
+demo dataset:
+
+```text
+http://127.0.0.1:8000/evaluation?demo=1
+http://127.0.0.1:8000/evaluation/dashboard?demo=1
+```
 
 The main app also includes an `Aðferð` button with a short explanation of the
 retrieval, Gemini answer generation, citations, and disclaimer.

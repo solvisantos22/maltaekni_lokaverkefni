@@ -4,3 +4,4 @@ Use this folder for project notes and documentation that can safely live in the 
 
 - `evaluation_questions.csv`: final evaluation question set.
 - `evaluation_protocol.md`: fixed test matrix, metrics, and human review protocol.
+- `demo_evaluation/`: committed no-token demo data for the evaluation UI.

@@ -90,7 +90,7 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 12px;
         margin-bottom: 18px;
       }
@@ -213,7 +213,7 @@
         </div>
         <nav class="actions">
           <a class="button" href="/">Opna spjall</a>
-          <a class="button primary" href="/evaluation">Opna mannlegt mat</a>
+          <a id="reviewLink" class="button primary" href="/evaluation">Opna mannlegt mat</a>
         </nav>
       </header>
 
@@ -254,12 +254,15 @@
       const cards = document.querySelector("#cards");
       const methodRows = document.querySelector("#methodRows");
       const paths = document.querySelector("#paths");
+      const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
+      const reviewLink = document.querySelector("#reviewLink");
+      if (demoMode) reviewLink.href = "/evaluation?demo=1";
 
       loadDashboard();
 
       async function loadDashboard() {
         try {
-          const response = await fetch("/api/evaluation/dashboard");
+          const response = await fetch(`/api/evaluation/dashboard${demoMode ? "?demo=1" : ""}`);
           if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || "Na ekki i matsgogn.");
@@ -267,7 +270,8 @@
           const payload = await response.json();
           renderCards(payload.overall);
           renderMethods(payload.methods);
-          paths.textContent = payload.summary_path;
+          paths.textContent = payload.is_demo ? `Sýnidæmi · ${payload.summary_path}` : payload.summary_path;
+          if (payload.is_demo) reviewLink.href = "/evaluation?demo=1";
         } catch (error) {
           cards.innerHTML = `<article class="card"><p class="error">${escapeHtml(error.message)}</p></article>`;
         }

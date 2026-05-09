@@ -1,0 +1,5 @@
+row_key,question_id,retrieval_method,evaluator,retrieval_relevance_1_5,answer_correctness_1_5,source_support_1_5,clarity_1_5,notes
+1::tfidf,1,tfidf,Sölvi,5,5,5,5,"Demo row: strong answer and sources."
+1::bm25,1,bm25,Jóhannes,5,4,5,4,"Demo row: relevant, slightly more legal phrasing."
+19::tfidf,19,tfidf,Sölvi,5,5,5,5,"Demo row: good example of exact legal section."
+29::tfidf,29,tfidf,Jóhannes,3,5,4,5,"Demo row: useful uncertainty behavior."
