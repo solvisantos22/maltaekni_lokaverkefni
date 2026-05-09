@@ -160,6 +160,20 @@ git push origin main
 Jóhannes uses `reports/evaluation/evaluation_review_johannes.csv` in the same
 workflow.
 
+To export report-ready tables after the final automatic run and human review:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.export_report_tables
+```
+
+This writes CSV files to `reports/evaluation/report_tables/`:
+
+- `table_retrieval_methods.csv`: top-3 retrieval score, source coverage, errors
+- `table_cost_latency.csv`: latency, token counts, and estimated cost
+- `table_human_scores.csv`: average 1-5 human scores by method
+- `table_inter_reviewer.csv`: Sölvi/Jóhannes comparison
+- `qualitative_cases.csv`: suggested examples for the error-analysis section
+
 To show the evaluation UI without running evaluation first, use the committed
 demo dataset:
 

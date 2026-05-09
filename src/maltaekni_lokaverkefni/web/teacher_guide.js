@@ -2,7 +2,8 @@
   const collapsedKey = "rettarvisirTeacherGuideCollapsed";
   const checkedKey = "rettarvisirTeacherGuideChecked";
   const positionKey = "rettarvisirTeacherGuidePosition";
-  const defaultPosition = { right: 18, bottom: 18 };
+  const sessionStartedKey = "rettarvisirTeacherGuideSessionStarted";
+  const defaultPosition = { left: 24, top: 96 };
   const items = [
     {
       id: "chat",
@@ -88,12 +89,16 @@
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  function setCollapsed(collapsed) {
+  function setCollapsed(collapsed, options = {}) {
     const previous = collapsed ? guide : bubble;
     const previousRect = previous.getBoundingClientRect();
     guide.hidden = collapsed;
     bubble.hidden = !collapsed;
     localStorage.setItem(collapsedKey, collapsed ? "1" : "0");
+    if (options.useDefaultPosition) {
+      applyDefaultPosition(collapsed ? bubble : guide);
+      return;
+    }
     if (collapsed && previousRect.width > 0) {
       const bubbleWidth = bubble.offsetWidth || 112;
       const next = clampPosition(previousRect.right - bubbleWidth, previousRect.top, bubble);
@@ -111,6 +116,14 @@
     applyStoredPosition(collapsed ? bubble : guide);
   }
 
+  function applyDefaultPosition(element) {
+    const next = clampPosition(defaultPosition.left, defaultPosition.top, element);
+    element.style.left = `${next.left}px`;
+    element.style.top = `${next.top}px`;
+    element.style.right = "auto";
+    element.style.bottom = "auto";
+  }
+
   function applyStoredPosition(element) {
     const position = readJson(positionKey, null);
     if (position && Number.isFinite(position.left) && Number.isFinite(position.top)) {
@@ -121,10 +134,7 @@
       return;
     }
 
-    element.style.left = "auto";
-    element.style.top = "auto";
-    element.style.right = `${defaultPosition.right}px`;
-    element.style.bottom = `${defaultPosition.bottom}px`;
+    applyDefaultPosition(element);
   }
 
   function clampPosition(left, top, element) {
@@ -211,6 +221,15 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     document.body.append(guide, bubble);
-    setCollapsed(localStorage.getItem(collapsedKey) === "1");
+    if (sessionStorage.getItem(sessionStartedKey) !== "1") {
+      sessionStorage.setItem(sessionStartedKey, "1");
+      setCollapsed(false, { useDefaultPosition: true });
+      return;
+    }
+
+    const collapsed = localStorage.getItem(collapsedKey) === "1";
+    guide.hidden = collapsed;
+    bubble.hidden = !collapsed;
+    applyStoredPosition(collapsed ? bubble : guide);
   });
 })();

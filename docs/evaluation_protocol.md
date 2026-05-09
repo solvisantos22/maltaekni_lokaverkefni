@@ -86,6 +86,21 @@ Report these automatic metrics:
 The script also writes `reports/evaluation/evaluation_method_summary_latest.csv`
 for report-ready aggregate tables.
 
+After the final run and human review, export the report tables with:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.export_report_tables
+```
+
+The exporter writes clean CSV tables to `reports/evaluation/report_tables/`.
+These tables are intended for direct use in the written report:
+
+- retrieval-method comparison
+- latency, token, and cost comparison
+- human quality scores
+- inter-reviewer comparison
+- qualitative case candidates for error analysis
+
 ## Human Evaluation
 
 After a run, open:

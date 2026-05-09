@@ -1,7 +1,7 @@
 .teacher-guide {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  top: 96px;
+  left: 24px;
   z-index: 90;
   width: min(330px, calc(100vw - 28px));
   border: 1px solid rgba(215, 181, 109, 0.28);
@@ -130,8 +130,8 @@
 
 .teacher-guide-bubble {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  top: 96px;
+  left: 24px;
   z-index: 90;
   display: inline-flex;
   align-items: center;
@@ -174,7 +174,7 @@
 @media (max-width: 720px) {
   .teacher-guide,
   .teacher-guide-bubble {
-    right: 12px;
-    bottom: 12px;
+    top: 76px;
+    left: 12px;
   }
 }
