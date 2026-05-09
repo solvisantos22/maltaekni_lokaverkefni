@@ -434,6 +434,10 @@ output {
   border-color: var(--accent);
 }
 
+.rail-link {
+  text-decoration: none;
+}
+
 .primary-action {
   min-width: 112px;
   padding: 0 14px;

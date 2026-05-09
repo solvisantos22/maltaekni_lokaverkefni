@@ -6,7 +6,9 @@ Author: Sölvi
 
 ## Status
 
-This repository is in setup mode. The actual project implementation and write-up have not started yet.
+Réttarvísir is a local Icelandic consumer-rights RAG prototype. It retrieves
+legal source chunks, generates grounded Icelandic answers with citations, and
+includes a no-token evaluation demo UI.
 
 ## Structure
 
@@ -26,6 +28,48 @@ python -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m ipykernel install --user --name maltaekni-lokaverkefni --display-name "Python (maltaekni-lokaverkefni)"
+```
+
+## Run Locally
+
+Start the FastAPI web app:
+
+```powershell
+python -m uvicorn src.maltaekni_lokaverkefni.app:app --host 127.0.0.1 --port 8000
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+If port `8000` is already in use, choose another port:
+
+```powershell
+python -m uvicorn src.maltaekni_lokaverkefni.app:app --host 127.0.0.1 --port 8001
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8001
+```
+
+The main app sidebar links to the demo evaluation screens. You can also open
+them directly without running evaluation or spending tokens:
+
+```text
+http://127.0.0.1:8000/evaluation?demo=1
+http://127.0.0.1:8000/evaluation/dashboard?demo=1
+```
+
+To ask live questions through retrieval, make sure `data/processed/chunks.json`
+exists. If it is missing, run:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.fetch_sources
+python -m src.maltaekni_lokaverkefni.chunking
 ```
 
 ## LLM answer generation
