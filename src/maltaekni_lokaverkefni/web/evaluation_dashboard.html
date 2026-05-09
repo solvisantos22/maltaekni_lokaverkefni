@@ -134,6 +134,7 @@
       .panel-head {
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
         gap: 14px;
         padding: 18px;
         border-bottom: 1px solid var(--line);
@@ -141,6 +142,29 @@
 
       .panel-head h2 {
         font-size: 18px;
+      }
+
+      .dataset-line {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .technical-details {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .technical-details summary {
+        cursor: pointer;
+        color: var(--gold);
+      }
+
+      .technical-details p {
+        margin-top: 6px;
+        max-width: 520px;
+        overflow-wrap: anywhere;
       }
 
       .notice {
@@ -263,7 +287,11 @@
         <div class="panel-head">
           <div>
             <h2>Aðferðir</h2>
-            <p id="paths" class="muted"></p>
+            <p id="datasetLine" class="dataset-line">Hleð matsgögnum...</p>
+            <details class="technical-details">
+              <summary>Tæknilegar skrár</summary>
+              <p id="paths"></p>
+            </details>
           </div>
           <p class="muted">Sjálfvirkar tölur + meðaleinkunnir frá Sölva og Jóhannesi þegar þær eru til.</p>
         </div>
@@ -289,6 +317,7 @@
       const cards = document.querySelector("#cards");
       const methodRows = document.querySelector("#methodRows");
       const paths = document.querySelector("#paths");
+      const datasetLine = document.querySelector("#datasetLine");
       const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
       const reviewLink = document.querySelector("#reviewLink");
       if (demoMode) reviewLink.href = "/evaluation?demo=1";
@@ -305,7 +334,10 @@
           const payload = await response.json();
           renderCards(payload.overall);
           renderMethods(payload.methods);
-          paths.textContent = payload.is_demo ? `Sýnidæmi · ${payload.summary_path}` : payload.summary_path;
+          datasetLine.textContent = payload.is_demo
+            ? `Sýnidæmi · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`
+            : `Raunkeyrsla · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`;
+          paths.textContent = `Samantekt: ${payload.summary_path} · Mannlegt mat: ${payload.review_path}`;
           if (payload.is_demo) reviewLink.href = "/evaluation?demo=1";
         } catch (error) {
           cards.innerHTML = `<article class="card"><p class="error">${escapeHtml(error.message)}</p></article>`;

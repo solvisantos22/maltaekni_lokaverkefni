@@ -141,9 +141,40 @@
       .topbar {
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
         gap: 16px;
         padding: 22px clamp(20px, 4vw, 44px);
         border-bottom: 1px solid var(--line);
+      }
+
+      .topbar-info {
+        display: grid;
+        justify-items: end;
+        gap: 6px;
+        min-width: min(360px, 40vw);
+      }
+
+      .dataset-state {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .technical-details {
+        color: var(--muted);
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .technical-details summary {
+        cursor: pointer;
+        color: var(--gold);
+      }
+
+      .technical-details p {
+        margin-top: 6px;
+        max-width: 460px;
+        overflow-wrap: anywhere;
       }
 
       .pills {
@@ -408,7 +439,13 @@
       <main class="main">
         <header class="topbar">
           <div class="pills" id="pills"></div>
-          <p class="muted" id="paths"></p>
+          <div class="topbar-info">
+            <p class="dataset-state" id="datasetState">Hleð matsgögnum...</p>
+            <details class="technical-details">
+              <summary>Tæknilegar skrár</summary>
+              <p id="paths"></p>
+            </details>
+          </div>
         </header>
 
         <section class="content">
@@ -505,9 +542,11 @@
           }
           rows = payload.rows;
           reviews = payload.reviews || {};
-          document.querySelector("#paths").textContent = payload.is_demo
-            ? `Sýnidæmi · ${payload.summary_path}`
-            : payload.summary_path;
+          document.querySelector("#datasetState").textContent = payload.is_demo
+            ? `Sýnidæmi · ${rows.length} matsraðir`
+            : `Raunkeyrsla · ${rows.length} matsraðir`;
+          document.querySelector("#paths").textContent =
+            `Samantekt: ${payload.summary_path} · Ítarlegt: ${payload.details_path} · Mannlegt mat: ${payload.review_path}`;
           renderActiveRow();
         } catch (error) {
           document.querySelector("#question").textContent = "Vantar matsgögn";
