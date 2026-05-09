@@ -26,6 +26,10 @@ const tourSkipButton = document.querySelector("#tourSkipButton");
 const methodologyButton = document.querySelector("#methodologyButton");
 const methodologyOverlay = document.querySelector("#methodologyOverlay");
 const methodologyCloseButton = document.querySelector("#methodologyCloseButton");
+const pageParams = new URLSearchParams(window.location.search);
+const skipWelcome = pageParams.get("skipWelcome") === "1";
+const forceWelcome = pageParams.get("welcome") === "1";
+const welcomeSeenKey = "rettarvisirWelcomeSeen";
 
 const introText =
   "Spurðu um neytendarétt. Ég svara með heimildum og sýni textabrotin sem styðja niðurstöðuna.";
@@ -336,9 +340,10 @@ function smoothStep(value) {
   return value * value * (3 - 2 * value);
 }
 
-function closeWelcome() {
+function closeWelcome({ remember = true } = {}) {
   welcomeOverlay.classList.add("hidden");
   document.body.classList.remove("onboarding-active");
+  if (remember) localStorage.setItem(welcomeSeenKey, "1");
 }
 
 function startTour() {
@@ -410,7 +415,12 @@ function positionTourCard(rect) {
 
 window.addEventListener("load", () => {
   if (window.lucide) window.lucide.createIcons();
-  document.body.classList.add("onboarding-active");
-  updateWelcomeIntro();
+  if (forceWelcome) localStorage.removeItem(welcomeSeenKey);
+  if (skipWelcome || (!forceWelcome && localStorage.getItem(welcomeSeenKey) === "1")) {
+    closeWelcome({ remember: false });
+  } else {
+    document.body.classList.add("onboarding-active");
+    updateWelcomeIntro();
+  }
   checkStatus();
 });

@@ -44,6 +44,12 @@ Open:
 http://127.0.0.1:8000
 ```
 
+To open the chat directly without the welcome screen:
+
+```text
+http://127.0.0.1:8000/?skipWelcome=1
+```
+
 If port `8000` is already in use, choose another port:
 
 ```powershell
