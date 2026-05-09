@@ -41,3 +41,5 @@ reports/evaluation/*
 !models/.gitkeep
 !reports/figures/.gitkeep
 !reports/evaluation/.gitkeep
+!reports/evaluation/evaluation_review_*.csv
+reports/evaluation/evaluation_review_latest.csv

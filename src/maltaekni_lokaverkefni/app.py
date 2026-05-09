@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import csv
 import json
+import re
+import unicodedata
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
@@ -23,6 +25,7 @@ EVALUATION_DIR = PROJECT_ROOT / "reports" / "evaluation"
 EVALUATION_SUMMARY_PATH = EVALUATION_DIR / "evaluation_summary_latest.csv"
 EVALUATION_DETAILS_PATH = EVALUATION_DIR / "evaluation_details_latest.jsonl"
 EVALUATION_REVIEW_PATH = EVALUATION_DIR / "evaluation_review_latest.csv"
+EVALUATION_REVIEW_GLOB = "evaluation_review_*.csv"
 DEMO_EVALUATION_DIR = PROJECT_ROOT / "docs" / "demo_evaluation"
 DEMO_EVALUATION_SUMMARY_PATH = DEMO_EVALUATION_DIR / "evaluation_summary_demo.csv"
 DEMO_EVALUATION_DETAILS_PATH = DEMO_EVALUATION_DIR / "evaluation_details_demo.jsonl"
@@ -148,7 +151,7 @@ def latest_evaluation(demo: bool = False):
         "is_demo": paths["mode"] == "demo",
         "summary_path": str(paths["summary"]),
         "details_path": str(paths["details"]),
-        "review_path": str(paths["review"]),
+        "review_path": _format_review_paths(paths["review"]),
         "rows": rows,
         "reviews": reviews,
     }
@@ -172,7 +175,7 @@ def evaluation_dashboard_data(demo: bool = False):
         "mode": paths["mode"],
         "is_demo": paths["mode"] == "demo",
         "summary_path": str(paths["summary"]),
-        "review_path": str(paths["review"]),
+        "review_path": _format_review_paths(paths["review"]),
         "overall": _dashboard_overall(rows, review_rows),
         "methods": _dashboard_by_method(rows, review_rows),
     }
@@ -181,7 +184,8 @@ def evaluation_dashboard_data(demo: bool = False):
 @app.post("/api/evaluation/review")
 def save_evaluation_review(review: EvaluationReviewRequest):
     EVALUATION_DIR.mkdir(parents=True, exist_ok=True)
-    reviews = _load_evaluation_review_rows()
+    review_path = _review_path_for_evaluator(review.evaluator)
+    reviews = _load_evaluation_review_rows(review_path)
     review_row = review.model_dump()
     review_row["row_key"] = _review_key(review.question_id, review.retrieval_method)
 
@@ -199,11 +203,11 @@ def save_evaluation_review(review: EvaluationReviewRequest):
     else:
         reviews[existing_index] = review_row
 
-    _write_evaluation_reviews(reviews)
-    return {"saved": True, "review": review_row}
+    _write_evaluation_reviews(reviews, review_path)
+    return {"saved": True, "review": review_row, "review_path": str(review_path)}
 
 
-def _evaluation_paths(*, demo: bool = False) -> dict[str, Path | str]:
+def _evaluation_paths(*, demo: bool = False) -> dict[str, Path | list[Path] | str]:
     if demo or not EVALUATION_SUMMARY_PATH.exists():
         return {
             "mode": "demo",
@@ -216,7 +220,7 @@ def _evaluation_paths(*, demo: bool = False) -> dict[str, Path | str]:
         "mode": "real",
         "summary": EVALUATION_SUMMARY_PATH,
         "details": EVALUATION_DETAILS_PATH,
-        "review": EVALUATION_REVIEW_PATH,
+        "review": _evaluation_review_paths(),
     }
 
 
@@ -244,7 +248,40 @@ def _load_evaluation_details(path: Path) -> dict[str, dict]:
     return details
 
 
-def _load_evaluation_reviews(path: Path = EVALUATION_REVIEW_PATH) -> dict[str, dict[str, dict[str, str]]]:
+def _evaluation_review_paths() -> list[Path]:
+    review_paths = sorted(
+        path
+        for path in EVALUATION_DIR.glob(EVALUATION_REVIEW_GLOB)
+        if path.name != EVALUATION_REVIEW_PATH.name
+    )
+    if review_paths:
+        return review_paths
+    if EVALUATION_REVIEW_PATH.exists():
+        return [EVALUATION_REVIEW_PATH]
+    return []
+
+
+def _review_path_for_evaluator(evaluator: str) -> Path:
+    return EVALUATION_DIR / f"evaluation_review_{_evaluator_slug(evaluator)}.csv"
+
+
+def _evaluator_slug(evaluator: str) -> str:
+    normalized = unicodedata.normalize("NFKD", evaluator).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "_", normalized.lower()).strip("_")
+    return slug or "unknown"
+
+
+def _format_review_paths(path: Path | list[Path]) -> str:
+    if isinstance(path, list):
+        if not path:
+            return str(EVALUATION_DIR / EVALUATION_REVIEW_GLOB)
+        return ", ".join(str(item) for item in path)
+    return str(path)
+
+
+def _load_evaluation_reviews(
+    path: Path | list[Path] | None = None,
+) -> dict[str, dict[str, dict[str, str]]]:
     reviews: dict[str, dict[str, dict[str, str]]] = {}
     for row in _load_evaluation_review_rows(path):
         row_key = row.get("row_key", "")
@@ -255,15 +292,23 @@ def _load_evaluation_reviews(path: Path = EVALUATION_REVIEW_PATH) -> dict[str, d
     return reviews
 
 
-def _load_evaluation_review_rows(path: Path = EVALUATION_REVIEW_PATH) -> list[dict[str, str]]:
-    if not path.exists():
-        return []
+def _load_evaluation_review_rows(
+    path: Path | list[Path] | None = None,
+) -> list[dict[str, str]]:
+    paths = _evaluation_review_paths() if path is None else path
+    if isinstance(paths, Path):
+        paths = [paths]
 
-    with path.open("r", encoding="utf-8-sig", newline="") as file:
-        return list(csv.DictReader(file))
+    rows = []
+    for review_path in paths:
+        if not review_path.exists():
+            continue
+        with review_path.open("r", encoding="utf-8-sig", newline="") as file:
+            rows.extend(csv.DictReader(file))
+    return rows
 
 
-def _write_evaluation_reviews(rows: list[dict]) -> None:
+def _write_evaluation_reviews(rows: list[dict], path: Path) -> None:
     fieldnames = [
         "row_key",
         "question_id",
@@ -275,7 +320,7 @@ def _write_evaluation_reviews(rows: list[dict]) -> None:
         "clarity_1_5",
         "notes",
     ]
-    with EVALUATION_REVIEW_PATH.open("w", encoding="utf-8-sig", newline="") as file:
+    with path.open("w", encoding="utf-8-sig", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:

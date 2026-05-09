@@ -140,11 +140,26 @@ After running an evaluation, open the local review UI:
 http://127.0.0.1:8000/evaluation
 ```
 
-The review UI saves human scores to
-`reports/evaluation/evaluation_review_latest.csv`.
+The review UI saves human scores to one CSV per evaluator, for example
+`reports/evaluation/evaluation_review_solvi.csv` and
+`reports/evaluation/evaluation_review_johannes.csv`. These review CSVs are
+intended to be committed, so Sölvi and Jóhannes can review on separate machines
+and then pull each other's files before writing the report.
 The dashboard at `http://127.0.0.1:8000/evaluation/dashboard` summarizes the
-latest automatic metrics, token usage, and human review averages without making
-new LLM calls.
+latest automatic metrics, token usage, and all committed human review files
+without making new LLM calls.
+After finishing a review session, commit only your evaluator file:
+
+```powershell
+git add reports/evaluation/evaluation_review_solvi.csv
+git commit -m "Add Solvi human evaluation reviews"
+git pull --rebase origin main
+git push origin main
+```
+
+Jóhannes uses `reports/evaluation/evaluation_review_johannes.csv` in the same
+workflow.
+
 To show the evaluation UI without running evaluation first, use the committed
 demo dataset:
 

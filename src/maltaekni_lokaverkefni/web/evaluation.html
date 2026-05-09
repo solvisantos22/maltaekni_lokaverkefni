@@ -687,9 +687,11 @@
           return;
         }
 
+        const result = await response.json();
         reviews[row.row_key] = reviews[row.row_key] || {};
-        reviews[row.row_key][evaluator] = payload;
-        document.querySelector("#savedState").textContent = `Vistað: ${row.question_id} / ${row.retrieval_method}`;
+        reviews[row.row_key][evaluator] = result.review || payload;
+        document.querySelector("#savedState").textContent =
+          `Vistað í ${result.review_path}: ${row.question_id} / ${row.retrieval_method}`;
         document.querySelector("#savedState").classList.remove("error");
       }
 
