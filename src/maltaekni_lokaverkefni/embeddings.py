@@ -1,4 +1,4 @@
-"""Embedding helpers for pre-tokenized retrieval chunks."""
+"""Embedding helpers for raw retrieval text."""
 
 from __future__ import annotations
 
@@ -28,12 +28,12 @@ DEFAULT_MAX_LENGTHS: dict[str, int] = {
 
 class Embeddings:
     """
-    Encode pre-tokenized chunks with either BGE-M3 or IceBert.
+    Encode retrieval text with either BGE-M3 or IceBert.
 
     Explanation:
         These models are already pretrained, so fit() does not train model
-        weights. It encodes the provided tokenized chunks and stores the
-        resulting normalized embedding matrix for later retrieval use.
+        weights. It encodes the provided raw chunk text and stores the resulting
+        normalized embedding matrix for later retrieval use.
 
     Attributes:
         model_name: Friendly model name, either "BGE-M3" or "IceBert".
@@ -41,8 +41,8 @@ class Embeddings:
         chunk_embeddings: Matrix produced by fit(), one row per chunk.
 
     Public methods:
-        fit(tokenized_chunks): Encode and store chunk embeddings.
-        transform(tokenized_chunks): Encode tokenized chunks without storing.
+        fit(texts): Encode and store chunk embeddings.
+        transform(texts): Encode texts without storing.
     """
 
     def __init__(
@@ -72,21 +72,23 @@ class Embeddings:
         self.model = AutoModel.from_pretrained(self.model_id).to(self.device)
         self.model.eval()
 
-    def fit(self, tokenized_chunks: Sequence[Sequence[str]]):
-        """Encode and store embeddings for already-tokenized chunks."""
-        self.chunk_embeddings = self.transform(tokenized_chunks)
+    def fit(self, texts: Sequence[str]):
+        """Encode and store embeddings for raw chunk texts."""
+        self.chunk_embeddings = self.transform(texts, input_type="document")
         return self.chunk_embeddings
 
-    def transform(self, tokenized_chunks: Sequence[Sequence[str]]):
-        """Encode already-tokenized chunks into L2-normalized embeddings."""
-        self.__validate_tokenized_chunks(tokenized_chunks)
+    def transform(self, texts: Sequence[str], *, input_type: str = "document"):
+        """Encode raw texts into L2-normalized embeddings."""
+        self.__validate_texts(texts)
         vectors = []
 
-        for start in range(0, len(tokenized_chunks), self.batch_size):
-            batch = [list(tokens) for tokens in tokenized_chunks[start:start + self.batch_size]]
+        for start in range(0, len(texts), self.batch_size):
+            batch = [
+                self.__format_text(text, input_type=input_type)
+                for text in texts[start:start + self.batch_size]
+            ]
             encoded = self.tokenizer(
                 batch,
-                is_split_into_words=True,
                 padding=True,
                 truncation=True,
                 max_length=self.max_length,
@@ -102,6 +104,13 @@ class Embeddings:
 
         return np.vstack(vectors)
 
+    def __format_text(self, text: str, *, input_type: str) -> str:
+        """Apply model-specific query formatting where useful."""
+        if self.model_name == "BGE-M3" and input_type == "query":
+            return f"Represent this sentence for searching relevant passages: {text}"
+
+        return text
+
     def __mean_pool(self, token_embeddings: Any, attention_mask: Any):
         """Mean-pool token embeddings while ignoring padding tokens."""
         mask = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
@@ -109,28 +118,22 @@ class Embeddings:
         counts = torch.clamp(mask.sum(dim=1), min=1e-9)
         return summed / counts
 
-    def __validate_tokenized_chunks(self, tokenized_chunks: Sequence[Sequence[str]]):
-        """Validate the expected list-of-token-lists input shape."""
-        if not tokenized_chunks:
-            raise ValueError("Cannot fit embeddings with no chunks")
+    def __validate_texts(self, texts: Sequence[str]):
+        """Validate the expected raw-text input shape."""
+        if not texts:
+            raise ValueError("Cannot fit embeddings with no texts")
 
-        for index, tokens in enumerate(tokenized_chunks):
-            if isinstance(tokens, str) or not isinstance(tokens, Sequence):
+        for index, text in enumerate(texts):
+            if not isinstance(text, str):
                 raise TypeError(
-                    "Each chunk must be a sequence of tokens, not raw text. "
-                    f"Chunk {index} has type {type(tokens).__name__}."
+                    "Each embedding input must be raw text. "
+                    f"Item {index} has type {type(text).__name__}."
                 )
 
-            if not tokens:
-                raise ValueError(f"Chunk {index} has no tokens")
-
-            if not all(isinstance(token, str) for token in tokens):
-                raise TypeError(f"Chunk {index} contains a non-string token")
+            if not text.strip():
+                raise ValueError(f"Embedding input {index} is empty")
 
 
 if __name__ == "__main__":
     embedder = Embeddings(model="BGE-M3")
-    from ice_tokenizer import IceTokenizer
-    it = IceTokenizer()
-    tokens = it.tokenIce("Hvað getur neytandi gert ef vara er gölluð")
-    print(embedder.fit([tokens]))
+    print(embedder.fit(["Hvað getur neytandi gert ef vara er gölluð"]))

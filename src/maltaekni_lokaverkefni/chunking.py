@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 from dataclasses import asdict
+import hashlib
 import json
 from pathlib import Path
 import re
 
 try:
+    from .ice_tokenizer import IceTokenizer
     from .types_classes import Document, Chunk
 except ImportError:  # Allows direct script execution during early experiments.
+    from ice_tokenizer import IceTokenizer
     from types_classes import Document, Chunk
 
 
 ARTICLE_RE = re.compile(r"^\[?\d+\. gr\.?.*")
+LEMMA_CACHE_VERSION = 1
 
 
 class Chunker():
@@ -51,6 +55,28 @@ class Chunker():
     def get_chunks(self):
         """Return generated chunks."""
         return self.chunks
+
+    def lemmatize_chunks(self, path: Path):
+        """Lemmatize searchable chunk text and write a retrieval-token cache."""
+        tokenizer = IceTokenizer()
+        cache = {
+            "version": LEMMA_CACHE_VERSION,
+            "tokenizer": "IceTokenizer.lemmatIce",
+            "chunks": {},
+        }
+
+        for chunk in self.chunks:
+            searchable_text = searchable_text_for_chunk(chunk)
+            cache["chunks"][chunk.chunk_id] = {
+                "text_hash": text_hash(searchable_text),
+                "lemmas": tokenizer.lemmatIce(searchable_text),
+            }
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as file:
+            json.dump(cache, file, ensure_ascii=False, indent=2)
+
+        return cache
 
     def __chunk_document(self, document: Document):
         """Choose the chunking strategy for one document."""
@@ -115,6 +141,24 @@ def save_chunks(chunks: list[Chunk], path: Path):
         json.dump([asdict(chunk) for chunk in chunks], file, ensure_ascii=False, indent=2)
 
 
+def searchable_text_for_chunk(chunk: Chunk) -> str:
+    """Build the same indexed text representation used by the retriever."""
+    return "\n".join(
+        [
+            chunk.title,
+            chunk.section,
+            chunk.section,
+            chunk.section,
+            chunk.text,
+        ]
+    )
+
+
+def text_hash(text: str) -> str:
+    """Return a stable hash for cached searchable text."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 if __name__ == "__main__":
     input_path = Path("data/processed/documents.json")
     output_path = Path("data/processed/chunks.json")
@@ -124,5 +168,6 @@ if __name__ == "__main__":
     chunker.chunk_documents()
     chunks = chunker.get_chunks()
     save_chunks(chunks, output_path)
+    chunker.lemmatize_chunks(output_path.parent / "chunk_lemmas.json")
 
     print(f"Saved {len(chunks)} chunks to {output_path}")

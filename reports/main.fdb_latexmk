@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1778333167.09791 "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" "main.pdf" "main" 1778333167.71998 2
-  "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" 1778333166.07738 5786 7ae77513b957ead42dada27137d97c85 ""
+["pdflatex"] 1778353128.88923 "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" "main.pdf" "main" 1778353129.68005 0
+  "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" 1778353128.6831 5699 3123de95d0085bd7d3876ff34c4b04b4 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf-pc.enc" 1698694482 3136 bbe665bd0bb471a2da1e8fd326cff9fa ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -44,6 +44,7 @@
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/txmiaSTbb.tfm" 1569879884 920 99acdf374993fd46fd345f9cac168080 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/txmiaX.tfm" 1736550153 1708 e6ab41b8c6f33e297f8c7977f1424a40 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/txsys.tfm" 1724614892 1656 68b5079c64f1cefe2cf442b6a60cf2fd ""
+  "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/txfonts/t1xtt.tfm" 1136768653 1384 8943063000d26272532f74ca134dfecd ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/wasy/wasy10.tfm" 1579560596 908 375dcd194b89b9cc9481ab62f2da0667 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/wasy/wasy5.tfm" 1579560596 908 9b2ed8097703005e83b790aecb955a2f ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/wasy/wasy7.tfm" 1579560596 912 e43f3049348c6f2670d3b324e657c6e7 ""
@@ -56,6 +57,7 @@
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/ztmb.pfb" 1698694482 255251 958c6ad4e5518904a53cf1118c612893 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/ztmr.pfb" 1698694482 286816 82db2bfe6920054b1a43661c07078412 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/ztmri.pfb" 1698694482 248316 6c047e35119cde1bffb3263909816feb ""
+  "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/txfonts/t1xtt.pfb" 1136849748 26301 f08b3c26ea42c3177a262c2ac37d6a91 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/vf/public/newtx/ntxexx.vf" 1699567298 1716 73c8d39d4c3ace9ec98a8f066bb3b494 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/vf/public/newtx/ntxmi.vf" 1724614892 2600 81386b40b010afb86643b695ffc490aa ""
   "/usr/local/texlive/2025/texmf-dist/fonts/vf/public/newtx/ntxmi7.vf" 1622753257 2576 4000b56c7179792370b883556f71007a ""
@@ -206,6 +208,7 @@
   "/usr/local/texlive/2025/texmf-dist/tex/latex/newtx/omlntxmi.fd" 1476653768 1919 e9d8f2f584e8bea3fa98fd6a074cab36 ""
   "/usr/local/texlive/2025/texmf-dist/tex/latex/newtx/ot1minntx.fd" 1698694482 2498 5cbe11c7caf802a0127dc4515daf85ea ""
   "/usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtlf.fd" 1641850547 2211 2794559346df5bbb0dbf1a757c3cc21f ""
+  "/usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd" 1336691118 1500 76616326ae68ec568910194063e7101c ""
   "/usr/local/texlive/2025/texmf-dist/tex/latex/newtx/untxexa.fd" 1376004569 558 91031960917530f42e0f8fc4d1db1550 ""
   "/usr/local/texlive/2025/texmf-dist/tex/latex/newtx/untxmia.fd" 1718914330 4181 343926c9f03f7dd5c88e425dd9f47b91 ""
   "/usr/local/texlive/2025/texmf-dist/tex/latex/newtx/untxsyc.fd" 1376004569 558 e8967b9c8273bc0c05b993fe92a9b757 ""
@@ -243,10 +246,10 @@
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1763913718 3345743 7d8e66f3a9904ad31548cbd34e2ee214 ""
   "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
   "img/Tákn blátt.pdf" 1778194593.21054 52233 dadb42e903d74ac2adde0a188eb5e17e ""
-  "main.aux" 1778333167.65441 1725 ea2a0eb700581e6034374fbcdc067412 "pdflatex"
-  "main.out" 1778333167.65491 1316 ca66a911092358f9ef06890cdb0bb8da "pdflatex"
-  "main.tex" 1778333166.07738 5786 7ae77513b957ead42dada27137d97c85 ""
-  "main.toc" 1778333167.65506 682 c293c3488f700664a542d4389561dd57 "pdflatex"
+  "main.aux" 1778353129.6059 1717 ae803fe51103d3dc37aef6de644b26bd "pdflatex"
+  "main.out" 1778353129.60648 1268 842c93ab6f8f26a580dd57b3f3edb2a0 "pdflatex"
+  "main.tex" 1778353128.6831 5699 3123de95d0085bd7d3876ff34c4b04b4 ""
+  "main.toc" 1778353129.60677 674 05fc5b7b5e5d45fa40f057fcdc4d8959 "pdflatex"
   (generated)
   "main.aux"
   "main.log"

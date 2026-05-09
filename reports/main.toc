@@ -1,5 +1,5 @@
 \babel@toc {icelandic}{}\relax 
-\contentsline {chapter}{Titill!!! Vantar hér}{1}{chapter*.2}%
+\contentsline {chapter}{Réttarvísir}{1}{chapter*.2}%
 \contentsline {section}{Inngangur}{1}{section*.3}%
 \contentsline {section}{Bakgrunnur}{1}{section*.4}%
 \contentsline {section}{Umræður}{1}{section*.5}%

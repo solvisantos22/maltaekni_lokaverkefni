@@ -15,6 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from .embeddings import Embeddings
+from .reranker import Reranker
 from .types_classes import Chunk
 from .ice_tokenizer import IceTokenizer
 
@@ -29,9 +30,22 @@ RRF_METHODS = {
     "rrf-bge-m3-bm25": "bge-m3",
 }
 
-SUPPORTED_METHODS = {"tfidf", "bm25", *EMBEDDING_METHODS, *RRF_METHODS}
+RERANK_METHODS = {
+    "rrf-bge-m3-bm25-rerank": "bge-m3",
+}
+
+SUPPORTED_METHODS = {
+    "tfidf",
+    "bm25",
+    *EMBEDDING_METHODS,
+    *RRF_METHODS,
+    *RERANK_METHODS,
+}
 DEFAULT_STOP_WORDS_PATH = (
     Path(__file__).resolve().parents[2] / "data" / "processed" / "all_stop_words.txt"
+)
+DEFAULT_LEMMA_CACHE_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "processed" / "chunk_lemmas.json"
 )
 
 
@@ -66,21 +80,30 @@ class Retriever:
         *,
         cache_dir: Path | None = None,
         stop_words_path: Path | None = DEFAULT_STOP_WORDS_PATH,
+        lemma_cache_path: Path | None = DEFAULT_LEMMA_CACHE_PATH,
+        rrf_candidate_k: int = 50,
     ):
         """Initialize an unfitted retriever for a supported retrieval method."""
+        if rrf_candidate_k < 1:
+            raise ValueError("rrf_candidate_k must be at least 1")
+
         self.chunks: list[Chunk] = []
         self.method = method
+        self.rrf_candidate_k = rrf_candidate_k
         self.ice_tokenizer = IceTokenizer()
         self.stop_words = self.__load_stop_words(stop_words_path)
+        self.lemma_cache = self.__load_lemma_cache(lemma_cache_path)
         self.tokenized_chunks: list[list[str]] = []
+        self.embedding_texts: list[str] = []
         self.bm25 = None
         self.embedder = None
         self.embedding_matrix = None
+        self.reranker = None
         self.cache_dir = cache_dir
         self.chunk_fingerprint = ""
         if method == "tfidf":
             self.vectorizer = TfidfVectorizer(
-                analyzer=self.__analyze,
+                analyzer=str.split,
                 smooth_idf=True
             )
             self.chunk_matrix = None
@@ -97,29 +120,38 @@ class Retriever:
             raise ValueError("Cannot fit retriever with no chunks")
         self.chunks = chunks
         texts = [self._searchable_text(chunk) for chunk in chunks]
+        self.embedding_texts = texts
         self.chunk_fingerprint = self.__fingerprint_chunks(chunks)
         if self.method == "tfidf":
-            self.__fit_tfidf(texts)
+            self.tokenized_chunks = self.__tokenize_chunks(chunks, texts)
+            self.__fit_tfidf()
         elif self.method == "bm25":
-            self.__fit_bm25(texts)
+            self.tokenized_chunks = self.__tokenize_chunks(chunks, texts)
+            self.__fit_bm25()
         elif self.method in EMBEDDING_METHODS:
-            self.__fit_embeddings(texts, self.method)
+            self.__fit_embeddings(self.method)
         elif self.method in RRF_METHODS:
-            self.__fit_bm25(texts)
-            self.__fit_embeddings(texts, RRF_METHODS[self.method])
+            self.tokenized_chunks = self.__tokenize_chunks(chunks, texts)
+            self.__fit_bm25()
+            self.__fit_embeddings(RRF_METHODS[self.method])
+        elif self.method in RERANK_METHODS:
+            self.tokenized_chunks = self.__tokenize_chunks(chunks, texts)
+            self.__fit_bm25()
+            self.__fit_embeddings(RERANK_METHODS[self.method])
+            self.__fit_reranker()
         
-    def __fit_tfidf(self, texts):
-        """Fit the TF-IDF vectorizer on searchable chunk texts."""
-        self.chunk_matrix = self.vectorizer.fit_transform(texts)
+    def __fit_tfidf(self):
+        """Fit the TF-IDF vectorizer on cached/analyzed chunk tokens."""
+        self.chunk_matrix = self.vectorizer.fit_transform(
+            [" ".join(tokens) for tokens in self.tokenized_chunks]
+        )
 
-    def __fit_bm25(self, texts):
+    def __fit_bm25(self):
         """Fit the BM25 index on tokenized searchable chunk texts."""
-        self.tokenized_chunks = [self.__analyze(text) for text in texts]
         self.bm25 = BM25Okapi(self.tokenized_chunks)
 
-    def __fit_embeddings(self, texts: list[str], method: str):
+    def __fit_embeddings(self, method: str):
         """Fit or load chunk embeddings for an embedding retrieval method."""
-        tokenized_texts = [self.__analyze(text) for text in texts]
         self.embedder = Embeddings(model=EMBEDDING_METHODS[method])
 
         cache_path = self.__embedding_cache_path(method)
@@ -129,7 +161,7 @@ class Retriever:
                     self.embedding_matrix = cached["embeddings"]
                     return
 
-        self.embedding_matrix = self.embedder.fit(tokenized_texts)
+        self.embedding_matrix = self.embedder.fit(self.embedding_texts)
         if cache_path is not None:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
             np.savez_compressed(
@@ -137,6 +169,10 @@ class Retriever:
                 fingerprint=self.chunk_fingerprint,
                 embeddings=self.embedding_matrix,
             )
+
+    def __fit_reranker(self):
+        """Load the cross-encoder reranker used after first-stage retrieval."""
+        self.reranker = Reranker(model="BGE-Reranker-v2-m3")
         
 
     def search(self, question: str, top_k: int = 3) -> dict[str, Any]:
@@ -149,6 +185,8 @@ class Retriever:
             scores = self.__search_embeddings(question)
         elif self.method in RRF_METHODS:
             scores = self.__search_rrf(question)
+        elif self.method in RERANK_METHODS:
+            scores = self.__search_rrf_rerank(question)
         else:
             raise ValueError(f"Search is not implemented for method {self.method}")
 
@@ -161,7 +199,7 @@ class Retriever:
         if self.chunk_matrix is None:
             raise ValueError("TF-IDF retriever must be fit before search")
 
-        question_vector = self.vectorizer.transform([question])
+        question_vector = self.vectorizer.transform([" ".join(self.__analyze(question))])
         scores = cosine_similarity(question_vector, self.chunk_matrix).flatten()
         return scores
 
@@ -177,15 +215,40 @@ class Retriever:
         if self.embedder is None or self.embedding_matrix is None:
             raise ValueError("Embedding retriever must be fit before search")
 
-        query_tokens = self.__analyze(question)
-        query_embedding = self.embedder.transform([query_tokens])[0]
+        query_embedding = self.embedder.transform([question], input_type="query")[0]
         return self.embedding_matrix @ query_embedding
 
     def __search_rrf(self, question: str, rank_constant: int = 60):
         """Combine BM25 and embedding ranks with reciprocal rank fusion."""
         bm25_scores = self.__search_bm25(question)
         embedding_scores = self.__search_embeddings(question)
-        return self.__rrf_scores([bm25_scores, embedding_scores], rank_constant)
+        return self.__rrf_scores(
+            [bm25_scores, embedding_scores],
+            rank_constant,
+            candidate_k=self.rrf_candidate_k,
+        )
+
+    def __search_rrf_rerank(self, question: str):
+        """Rerank the strongest RRF candidates with a cross-encoder."""
+        if self.reranker is None:
+            raise ValueError("Reranker retriever must be fit before search")
+
+        rrf_scores = self.__search_rrf(question)
+        candidate_indexes = [
+            index
+            for index in np.argsort(rrf_scores)[::-1][:self.rrf_candidate_k]
+            if rrf_scores[index] > 0
+        ]
+        reranked_scores = np.zeros(len(self.chunks), dtype=float)
+        if not candidate_indexes:
+            return reranked_scores
+
+        candidate_texts = [self.embedding_texts[index] for index in candidate_indexes]
+        candidate_scores = self.reranker.score(question, candidate_texts)
+        for index, score in zip(candidate_indexes, candidate_scores):
+            reranked_scores[index] = float(score)
+
+        return reranked_scores
 
     def __build_result(self, question: str, top_indexes, scores) -> dict[str, Any]:
         """Build the retrieval contract response from ranked chunk indexes."""
@@ -215,6 +278,8 @@ class Retriever:
     def __fingerprint_chunks(self, chunks: list[Chunk]) -> str:
         """Build a stable fingerprint for cache invalidation."""
         digest = hashlib.sha256()
+        digest.update(b"raw-embedding-input-v1")
+        digest.update(b"\0")
         for stop_word in sorted(self.stop_words):
             digest.update(stop_word.encode("utf-8"))
             digest.update(b"\0")
@@ -225,12 +290,37 @@ class Retriever:
             digest.update(b"\0")
         return digest.hexdigest()[:16]
 
-    def __rrf_scores(self, ranked_score_lists, rank_constant: int):
-        """Convert score lists to reciprocal-rank-fusion scores."""
+    def __tokenize_chunks(self, chunks: list[Chunk], texts: list[str]) -> list[list[str]]:
+        """Load cached chunk lemmas where possible and analyze stale chunks."""
+        return [
+            self.__filter_tokens(self.__chunk_lemmas(chunk, text))
+            for chunk, text in zip(chunks, texts)
+        ]
+
+    def __chunk_lemmas(self, chunk: Chunk, searchable_text: str) -> list[str]:
+        """Return cached lemmas for one chunk, falling back to live lemmatization."""
+        cached_chunk = self.lemma_cache.get(chunk.chunk_id)
+        if (
+            isinstance(cached_chunk, dict)
+            and cached_chunk.get("text_hash") == self.__text_hash(searchable_text)
+            and isinstance(cached_chunk.get("lemmas"), list)
+        ):
+            return [
+                lemma
+                for lemma in cached_chunk["lemmas"]
+                if isinstance(lemma, str)
+            ]
+
+        return self.ice_tokenizer.lemmatIce(searchable_text)
+
+    def __rrf_scores(self, ranked_score_lists, rank_constant: int, *, candidate_k: int):
+        """Fuse only the top candidates from each score list."""
         fused = np.zeros(len(self.chunks), dtype=float)
         for scores in ranked_score_lists:
-            ranked_indexes = np.argsort(scores)[::-1]
+            ranked_indexes = np.argsort(scores)[::-1][:candidate_k]
             for rank, index in enumerate(ranked_indexes, start=1):
+                if scores[index] <= 0:
+                    continue
                 fused[index] += 1.0 / (rank_constant + rank)
         return fused
 
@@ -242,17 +332,16 @@ class Retriever:
             [
                 chunk.title,
                 chunk.section,
-                chunk.section,
-                chunk.section,
                 chunk.text,
             ]
         )
 
     def __analyze(self, text: str) -> list[str]:
         """Analyze text into lowercase Icelandic tokens for retrieval."""
-        
-        tokens = self.ice_tokenizer.lemmatIce(text)
-        
+        return self.__filter_tokens(self.ice_tokenizer.lemmatIce(text))
+
+    def __filter_tokens(self, tokens: list[str]) -> list[str]:
+        """Filter analyzed tokens for retrieval."""
         return [
             token
             for token in tokens
@@ -262,6 +351,17 @@ class Retriever:
                 and re.search(r"\w", token)
             )
         ]
+
+    def __load_lemma_cache(self, path: Path | None) -> dict[str, Any]:
+        """Load precomputed chunk lemmas if the cache file is available."""
+        if path is None or not path.exists():
+            return {}
+
+        with path.open("r", encoding="utf-8") as file:
+            cache = json.load(file)
+
+        chunks = cache.get("chunks", {})
+        return chunks if isinstance(chunks, dict) else {}
 
     def __load_stop_words(self, path: Path | None) -> set[str]:
         """Load stop words and their lemmas for analyzer filtering."""
@@ -285,6 +385,10 @@ class Retriever:
             if token and re.search(r"\w", token)
         }
         return words | lemmas
+
+    def __text_hash(self, text: str) -> str:
+        """Return the hash format used by the chunk lemma cache."""
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
     
 
 
@@ -313,6 +417,7 @@ def build_retriever(method, chunks_path: Path = Path("data/processed/chunks.json
         method,
         cache_dir=chunks_path.parent / "embedding_cache",
         stop_words_path=chunks_path.parent / "all_stop_words.txt",
+        lemma_cache_path=chunks_path.parent / "chunk_lemmas.json",
     )
     retriever.fit(chunks)
     return retriever

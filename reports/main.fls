@@ -390,6 +390,9 @@ INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtlf.fd
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtlf.fd
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtlf.fd
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
+INPUT ./main.aux
+INPUT ./main.aux
+INPUT main.aux
 OUTPUT main.aux
 INPUT /usr/local/texlive/2025/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 INPUT /usr/local/texlive/2025/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
@@ -399,8 +402,14 @@ INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.st
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-OUTPUT main.out
+INPUT ./main.out
+INPUT ./main.out
+INPUT main.out
+INPUT main.out
 OUTPUT main.pdf
+INPUT ./main.out
+INPUT ./main.out
+OUTPUT main.out
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
 INPUT ./img/Tákn blátt.pdf
 INPUT ./img/Tákn blátt.pdf
@@ -460,11 +469,14 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-sc-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-sc-t1.tfm
+INPUT ./main.toc
+INPUT ./main.toc
+INPUT main.toc
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
 OUTPUT main.toc
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-sc-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-sc-t1.tfm
-INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/vf/public/newtx/ntxmi.vf
@@ -488,11 +500,16 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/vf/public/newtx/ntxsy7.vf
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/txsys.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/txex-bar.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Italic-tlf-t1.tfm
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/txfonts/t1xtt.tfm
 INPUT main.aux
 INPUT ./main.out
 INPUT ./main.out
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/txfonts/t1xtt.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/txexs.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/txsys.pfb

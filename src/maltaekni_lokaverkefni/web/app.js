@@ -79,7 +79,7 @@ welcomeOverlay.addEventListener(
     if (event.target.closest("button")) return;
 
     event.preventDefault();
-    welcomeScroll.scrollBy({ top: event.deltaY, behavior: "auto" });
+    welcomeScroll.scrollBy({ top: event.deltaY * 1.4, behavior: "auto" });
   },
   { passive: false },
 );

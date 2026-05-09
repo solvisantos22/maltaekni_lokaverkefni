@@ -5,11 +5,7 @@ from __future__ import annotations
 import re
 
 from tokenizer import tokenize
-
-try:
-    from reynir import Greynir
-except ImportError:
-    Greynir = None
+from reynir import Greynir
 
 
 class IceTokenizer:
@@ -33,7 +29,7 @@ class IceTokenizer:
 
     def __init__(self):
         """Create the Reynir parser used by this tokenizer."""
-        self.greynir = Greynir() if Greynir is not None else None
+        self.greynir = Greynir()
 
     def tokenIce(self, text: str | list[str]):
         """Tokenize a string or list of strings into Icelandic tokens."""
@@ -68,21 +64,24 @@ class IceTokenizer:
         item in the first analysis tuple is the lemma, for example "Mig" maps
         to "ég".
         """
-        if self.greynir is None:
-            return self.__tokenize(text)
 
         lemmas = []
         job = self.greynir.parse(text)
         for sentence in job["sentences"]:
-            for token in sentence.tokens:
-                lemma = token.val[0][0]
-                if lemma is not None:
-                    lemmas.append(lemma.lower())
+            if not sentence.lemmas:
+                for token in sentence.tokens:
+                    token_text = getattr(token, "txt", "").strip().lower()
+                    if token_text:
+                        lemmas.append(token_text)
+            else:
+                for lemma in sentence.lemmas:
+                    if lemma is not None:
+                        lemmas.append(lemma.lower())
         
-        return lemmas
+        return [lemma for lemma in lemmas if (re.search(r"\w", lemma))]
 
 
 
 if __name__ == "__main__":
     it = IceTokenizer()
-    print(it.lemmatIce("Mig þig Jóhannesi ferðaðist rauðasti bíllinn"))
+    print(it.lemmatIce("Hvað get ég gert ef vara sem ég keypti er gölluð?"))
