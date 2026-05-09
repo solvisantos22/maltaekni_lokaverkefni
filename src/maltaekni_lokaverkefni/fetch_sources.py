@@ -49,12 +49,10 @@ class FetchData:
     
     def fetch(self, url: str, timeout_seconds: int = 60):
         """Download a supported source URL and store the raw HTML."""
-        if 'neytendastofa' in url:
-            self.source = 'neytendastofa'
-        elif 'althingi' in url:
+        if 'althingi' in url:
             self.source = 'althingi'
         else:
-            raise ValueError(f"url must be from althingi.is or neytendastofa.is, got {url}")
+            raise ValueError(f"only urls from althingi supported, got {url}")
         
         self.url = url
         self.timeout_seconds = timeout_seconds
