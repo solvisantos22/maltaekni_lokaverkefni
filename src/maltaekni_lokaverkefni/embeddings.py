@@ -5,6 +5,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Literal
 
+import numpy as np
+import torch
+import torch.nn.functional as functional
+from transformers import AutoModel, AutoTokenizer
+
 
 EmbeddingModelName = Literal["BGE-M3", "IceBert"]
 
@@ -62,10 +67,9 @@ class Embeddings:
         self.max_length = max_length or DEFAULT_MAX_LENGTHS[model]
         self.chunk_embeddings = None
 
-        torch, _, _, auto_model, auto_tokenizer = self.__load_dependencies()
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.tokenizer = auto_tokenizer.from_pretrained(self.model_id)
-        self.model = auto_model.from_pretrained(self.model_id).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+        self.model = AutoModel.from_pretrained(self.model_id).to(self.device)
         self.model.eval()
 
     def fit(self, tokenized_chunks: Sequence[Sequence[str]]):
@@ -75,7 +79,6 @@ class Embeddings:
 
     def transform(self, tokenized_chunks: Sequence[Sequence[str]]):
         """Encode already-tokenized chunks into L2-normalized embeddings."""
-        torch, np, functional, _, _ = self.__load_dependencies()
         self.__validate_tokenized_chunks(tokenized_chunks)
         vectors = []
 
@@ -101,7 +104,6 @@ class Embeddings:
 
     def __mean_pool(self, token_embeddings: Any, attention_mask: Any):
         """Mean-pool token embeddings while ignoring padding tokens."""
-        torch, _, _, _, _ = self.__load_dependencies()
         mask = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
         summed = torch.sum(token_embeddings * mask, dim=1)
         counts = torch.clamp(mask.sum(dim=1), min=1e-9)
@@ -125,20 +127,6 @@ class Embeddings:
             if not all(isinstance(token, str) for token in tokens):
                 raise TypeError(f"Chunk {index} contains a non-string token")
 
-    def __load_dependencies(self):
-        """Load optional ML dependencies only when embeddings are used."""
-        try:
-            import numpy as np
-            import torch
-            import torch.nn.functional as functional
-            from transformers import AutoModel, AutoTokenizer
-        except ImportError as error:
-            raise ImportError(
-                "Embeddings requires numpy, torch, and transformers. "
-                "Install the project requirements before using this class."
-            ) from error
-
-        return torch, np, functional, AutoModel, AutoTokenizer
 
 if __name__ == "__main__":
     embedder = Embeddings(model="BGE-M3")

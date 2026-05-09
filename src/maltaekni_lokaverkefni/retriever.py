@@ -30,6 +30,9 @@ RRF_METHODS = {
 }
 
 SUPPORTED_METHODS = {"tfidf", "bm25", *EMBEDDING_METHODS, *RRF_METHODS}
+DEFAULT_STOP_WORDS_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "processed" / "all_stop_words.txt"
+)
 
 
 class Retriever:
@@ -57,12 +60,18 @@ class Retriever:
         search(question, top_k=3): Return ranked chunks for a question.
     """
 
-    def __init__(self, method, *, cache_dir: Path | None = None):
+    def __init__(
+        self,
+        method,
+        *,
+        cache_dir: Path | None = None,
+        stop_words_path: Path | None = DEFAULT_STOP_WORDS_PATH,
+    ):
         """Initialize an unfitted retriever for a supported retrieval method."""
-        method = self.__normalize_method(method)
         self.chunks: list[Chunk] = []
         self.method = method
         self.ice_tokenizer = IceTokenizer()
+        self.stop_words = self.__load_stop_words(stop_words_path)
         self.tokenized_chunks: list[list[str]] = []
         self.bm25 = None
         self.embedder = None
@@ -143,7 +152,6 @@ class Retriever:
         else:
             raise ValueError(f"Search is not implemented for method {self.method}")
 
-        scores = self.__apply_domain_boosts(question, scores)
         top_indexes = scores.argsort()[::-1][:top_k]
 
         return self.__build_result(question, top_indexes, scores)
@@ -153,7 +161,7 @@ class Retriever:
         if self.chunk_matrix is None:
             raise ValueError("TF-IDF retriever must be fit before search")
 
-        question_vector = self.vectorizer.transform([self.__expand_query_text(question)])
+        question_vector = self.vectorizer.transform([question])
         scores = cosine_similarity(question_vector, self.chunk_matrix).flatten()
         return scores
 
@@ -162,14 +170,14 @@ class Retriever:
         if self.bm25 is None:
             raise ValueError("BM25 retriever must be fit before search")
 
-        return self.bm25.get_scores(self.__analyze(self.__expand_query_text(question)))
+        return self.bm25.get_scores(self.__analyze(question))
 
     def __search_embeddings(self, question: str):
         """Score all chunks against a question with embedding cosine similarity."""
         if self.embedder is None or self.embedding_matrix is None:
             raise ValueError("Embedding retriever must be fit before search")
 
-        query_tokens = self.__analyze(self.__expand_query_text(question))
+        query_tokens = self.__analyze(question)
         query_embedding = self.embedder.transform([query_tokens])[0]
         return self.embedding_matrix @ query_embedding
 
@@ -207,6 +215,9 @@ class Retriever:
     def __fingerprint_chunks(self, chunks: list[Chunk]) -> str:
         """Build a stable fingerprint for cache invalidation."""
         digest = hashlib.sha256()
+        for stop_word in sorted(self.stop_words):
+            digest.update(stop_word.encode("utf-8"))
+            digest.update(b"\0")
         for chunk in chunks:
             digest.update(chunk.chunk_id.encode("utf-8"))
             digest.update(b"\0")
@@ -223,54 +234,7 @@ class Retriever:
                 fused[index] += 1.0 / (rank_constant + rank)
         return fused
 
-    def __apply_domain_boosts(self, question: str, scores):
-        """Nudge obvious consumer-law intents toward their controlling source law."""
-        boosted = np.array(scores, dtype=float, copy=True)
-        max_score = float(np.max(boosted)) if boosted.size else 0.0
-        boost_unit = max(max_score, 1e-6)
-        normalized = question.lower()
-
-        is_defect_question = any(
-            term in normalized
-            for term in ["gall", "göll", "galla", "göllu", "bilu", "skemmd"]
-        )
-        is_return_question = any(
-            term in normalized
-            for term in ["skil", "skila", "endurgrei", "hætta við"]
-        )
-
-        if not is_defect_question and not is_return_question:
-            return boosted
-
-        for index, chunk in enumerate(self.chunks):
-            haystack = " ".join(
-                [chunk.title, chunk.section, chunk.text[:500]]
-            ).lower()
-
-            if is_defect_question and "lög um neytendakaup" in haystack:
-                if "galla" in haystack or "gallaður" in haystack or "gallinn" in haystack:
-                    boosted[index] += boost_unit * 2.5
-                if "úrræði neytanda vegna galla" in haystack:
-                    boosted[index] += boost_unit * 1.5
-
-            if is_return_question and "lög um neytendasamninga" in haystack:
-                if "falla frá samningi" in haystack or "endurgreið" in haystack:
-                    boosted[index] += boost_unit * 2.0
-
-        return boosted
-
-    def __normalize_method(self, method: str) -> str:
-        """Normalize user-facing method aliases."""
-        aliases = {
-            "IceBert": "icebert",
-            "IceBERT": "icebert",
-            "BGE-M3": "bge-m3",
-            "bgem3": "bge-m3",
-            "bgm3": "bge-m3",
-            "hybrid-icebert": "rrf-icebert-bm25",
-            "hybrid-bge-m3": "rrf-bge-m3-bm25",
-        }
-        return aliases.get(method, method)
+    
 
     def _searchable_text(self, chunk: Chunk) -> str:
         """Weight titles/sections a little more than body text."""
@@ -287,80 +251,40 @@ class Retriever:
     def __analyze(self, text: str) -> list[str]:
         """Analyze text into lowercase Icelandic tokens for retrieval."""
         
-        tokens = self.ice_tokenizer.tokenIce(text)
-        tokens.extend(
-            re.findall(r"[\wáðéíóúýþæöÁÐÉÍÓÚÝÞÆÖ]+", text.lower())
-        )
-
-        unique_tokens = dict.fromkeys(tokens)
+        tokens = self.ice_tokenizer.lemmatIce(text)
+        
         return [
             token
-            for token in unique_tokens
-            if len(token) > 1 and re.search(r"\w", token)
+            for token in tokens
+            if (
+                len(token) > 1
+                and token.casefold() not in self.stop_words
+                and re.search(r"\w", token)
+            )
         ]
 
-    def __expand_query_text(self, question: str) -> str:
-        """Add small domain synonyms for common Icelandic consumer-law questions."""
-        normalized = question.lower()
-        expansions = []
+    def __load_stop_words(self, path: Path | None) -> set[str]:
+        """Load stop words and their lemmas for analyzer filtering."""
+        if path is None:
+            return set()
 
-        if any(
-            term in normalized
-            for term in ["gall", "göll", "galla", "göllu", "bilu", "skemmd"]
-        ):
-            expansions.extend(
-                [
-                    "galli",
-                    "galla",
-                    "gallaður",
-                    "gölluð",
-                    "úrræði neytanda vegna galla",
-                    "neytendakaup",
-                    "söluhlutur",
-                    "úrbætur",
-                    "ný afhending",
-                    "afsláttur",
-                    "riftun",
-                    "skaðabætur",
-                    "kvörtun",
-                ]
-            )
+        if not path.exists():
+            return set()
 
-        if any(
-            term in normalized
-            for term in ["skil", "skila", "endurgrei", "hætta við"]
-        ):
-            expansions.extend(
-                [
-                    "skilaréttur",
-                    "endurgreiðsla",
-                    "réttur til að falla frá samningi",
-                    "neytendasamningar",
-                    "fjarsölusamningur",
-                    "netkaup",
-                ]
-            )
+        words = {
+            line.strip().casefold()
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        }
+        if not words:
+            return set()
 
-        if any(
-            term in normalized
-            for term in ["net", "vef", "fjarsölu", "upplýsing"]
-        ):
-            expansions.extend(
-                [
-                    "netkaup",
-                    "fjarsala",
-                    "fjarsölusamningur",
-                    "upplýsingagjöf",
-                    "upplýsingaskylda",
-                    "neytendasamningar",
-                ]
-            )
-
-        if not expansions:
-            return question
-
-        return f"{question}\n{' '.join(expansions)}"
-
+        lemmas = {
+            token.casefold()
+            for token in self.ice_tokenizer.lemmatIce(" ".join(sorted(words)))
+            if token and re.search(r"\w", token)
+        }
+        return words | lemmas
     
 
 
@@ -385,7 +309,11 @@ def load_chunks(path: Path) -> list[Chunk]:
 def build_retriever(method, chunks_path: Path = Path("data/processed/chunks.json")) -> Retriever:
     """Load chunks and return a fitted retriever."""
     chunks = load_chunks(chunks_path)
-    retriever = Retriever(method, cache_dir=chunks_path.parent / "embedding_cache")
+    retriever = Retriever(
+        method,
+        cache_dir=chunks_path.parent / "embedding_cache",
+        stop_words_path=chunks_path.parent / "all_stop_words.txt",
+    )
     retriever.fit(chunks)
     return retriever
 
