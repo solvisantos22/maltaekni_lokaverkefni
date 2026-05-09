@@ -261,6 +261,7 @@ def _dashboard_overall(
         "rows": total,
         "methods": len({row.get("retrieval_method", "") for row in rows if row.get("retrieval_method")}),
         "questions": len({row.get("question_id", "") for row in rows if row.get("question_id")}),
+        "retrieval_check_questions": sum(1 for row in rows if _retrieval_check_applicable(row)),
         "run_labels": sorted({row.get("run_label", "") for row in rows if row.get("run_label")}),
         "prompt_profiles": sorted(
             {row.get("prompt_profile", "") for row in rows if row.get("prompt_profile")}
@@ -288,11 +289,12 @@ def _dashboard_by_method(
     summaries = []
     for method in methods:
         method_rows = [row for row in rows if row.get("retrieval_method") == method]
+        applicable_rows = [row for row in method_rows if _retrieval_check_applicable(row)]
         reviews = method_reviews.get(method, [])
         total = len(method_rows)
         expected_hits = sum(
             1
-            for row in method_rows
+            for row in applicable_rows
             if str(row.get("expected_section_in_top_3", "")).lower() == "true"
         )
         summaries.append(
@@ -302,9 +304,12 @@ def _dashboard_by_method(
                 "prompt_profile": _first_value(row.get("prompt_profile", "") for row in method_rows),
                 "llm_model": _first_value(row.get("llm_model", "") for row in method_rows),
                 "rows": total,
+                "retrieval_check_questions": len(applicable_rows),
                 "errors": sum(1 for row in method_rows if row.get("error")),
                 "expected_section_top3_hits": expected_hits,
-                "expected_section_top3_rate": round(expected_hits / total, 4) if total else None,
+                "expected_section_top3_rate": (
+                    round(expected_hits / len(applicable_rows), 4) if applicable_rows else None
+                ),
                 "avg_source_coverage_ratio": _avg_number(
                     row.get("source_coverage_ratio") for row in method_rows
                 ),
@@ -360,6 +365,15 @@ def _to_number(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _retrieval_check_applicable(row: dict[str, str]) -> bool:
+    explicit = str(row.get("retrieval_check_applicable", "")).lower()
+    if explicit in {"true", "false"}:
+        return explicit == "true"
+
+    expected_section = " ".join(row.get("expected_relevant_section", "").casefold().split())
+    return bool(expected_section) and expected_section not in {"no_relevant_source", "none", "n/a"}
 
 
 def _first_value(values: Any) -> str:

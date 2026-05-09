@@ -277,6 +277,7 @@
         const items = [
           ["Raðir", overall.rows],
           ["Spurningar", overall.questions],
+          ["Top-3 próf", overall.retrieval_check_questions],
           ["Aðferðir", overall.methods],
           ["Keyrsla", (overall.run_labels || []).join(", ") || "-"],
           ["Prompt", (overall.prompt_profiles || []).join(", ") || "-"],
@@ -294,7 +295,7 @@
       function renderMethods(methods) {
         methodRows.innerHTML = methods.map((method) => {
           const rate = method.expected_section_top3_rate;
-          const top3 = rate === null ? "-" : `${method.expected_section_top3_hits}/${method.rows} (${Math.round(rate * 100)}%)`;
+          const top3 = rate === null ? "-" : `${method.expected_section_top3_hits}/${method.retrieval_check_questions} (${Math.round(rate * 100)}%)`;
           const human = [
             ["heimildir", method.avg_retrieval_relevance_1_5],
             ["svar", method.avg_answer_correctness_1_5],

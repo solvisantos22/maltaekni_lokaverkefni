@@ -59,6 +59,7 @@ Run the evaluation questions across retrieval methods without using the UI:
 python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25
 ```
 
+The fixed evaluation plan is documented in `docs/evaluation_protocol.md`.
 Use `--no-llm` to test retrieval without spending LLM calls. Results are written
 to `reports/evaluation/` as CSV and JSONL files.
 The summary includes `expected_relevant_section` and

@@ -39,6 +39,8 @@ class EvaluationRow:
     question_id: str
     question: str
     topic: str
+    case_type: str
+    expected_behavior: str
     expected_relevant_section: str
     retrieval_method: str
     answer_method: str
@@ -47,6 +49,7 @@ class EvaluationRow:
     top_1_section: str
     top_1_score: float | None
     top_3_sections: str
+    retrieval_check_applicable: bool
     expected_section_in_top_3: bool
     confidence: str
     confidence_reason: str
@@ -127,6 +130,8 @@ def main() -> None:
                         question_id=question["id"],
                         question=question["question"],
                         topic=question.get("topic", ""),
+                        case_type=question.get("case_type", ""),
+                        expected_behavior=question.get("expected_behavior", ""),
                         expected_relevant_section=expected_relevant_section(question),
                         retrieval_method=method,
                         answer_method="error",
@@ -135,6 +140,9 @@ def main() -> None:
                         top_1_section="",
                         top_1_score=None,
                         top_3_sections="",
+                        retrieval_check_applicable=retrieval_check_applicable(
+                            expected_relevant_section(question)
+                        ),
                         expected_section_in_top_3=False,
                         confidence="",
                         confidence_reason="",
@@ -277,12 +285,15 @@ def build_row(
     expected_section = expected_relevant_section(question)
     usage = answer_result.get("usage", {})
     source_coverage = answer_result.get("source_coverage", {})
+    check_applicable = retrieval_check_applicable(expected_section)
 
     return EvaluationRow(
         run_label=run_label,
         question_id=question["id"],
         question=question["question"],
         topic=question.get("topic", ""),
+        case_type=question.get("case_type", ""),
+        expected_behavior=question.get("expected_behavior", ""),
         expected_relevant_section=expected_section,
         retrieval_method=retrieval_method,
         answer_method=answer_result.get("method", ""),
@@ -291,7 +302,10 @@ def build_row(
         top_1_section=top_source.get("section", ""),
         top_1_score=top_source.get("score"),
         top_3_sections=top_3_sections,
-        expected_section_in_top_3=section_matches(expected_section, top_3_sections),
+        retrieval_check_applicable=check_applicable,
+        expected_section_in_top_3=(
+            section_matches(expected_section, top_3_sections) if check_applicable else False
+        ),
         confidence=answer_result.get("confidence", ""),
         confidence_reason=answer_result.get("confidence_reason", ""),
         prompt_profile=answer_result.get("prompt_profile", ""),
@@ -316,6 +330,11 @@ def section_matches(expected_section: str, retrieved_sections: str) -> bool:
         return False
 
     return normalize_text(expected_section) in normalize_text(retrieved_sections)
+
+
+def retrieval_check_applicable(expected_section: str) -> bool:
+    normalized = normalize_text(expected_section)
+    return bool(normalized) and normalized not in {"no_relevant_source", "none", "n/a"}
 
 
 def expected_relevant_section(question: dict[str, str]) -> str:
@@ -356,9 +375,10 @@ def build_method_summary(rows: list[EvaluationRow]) -> list[dict[str, Any]]:
     methods = sorted({row.retrieval_method for row in rows})
     for method in methods:
         method_rows = [row for row in rows if row.retrieval_method == method]
+        applicable_rows = [row for row in method_rows if row.retrieval_check_applicable]
         total = len(method_rows)
         errors = sum(1 for row in method_rows if row.error)
-        section_hits = sum(1 for row in method_rows if row.expected_section_in_top_3)
+        section_hits = sum(1 for row in applicable_rows if row.expected_section_in_top_3)
         latencies = [row.latency_seconds for row in method_rows if row.latency_seconds is not None]
         summaries.append(
             {
@@ -366,9 +386,12 @@ def build_method_summary(rows: list[EvaluationRow]) -> list[dict[str, Any]]:
                 "run_label": method_rows[0].run_label if method_rows else "",
                 "prompt_profile": method_rows[0].prompt_profile if method_rows else "",
                 "questions": total,
+                "retrieval_check_questions": len(applicable_rows),
                 "errors": errors,
                 "expected_section_top3_hits": section_hits,
-                "expected_section_top3_rate": round(section_hits / total, 4) if total else "",
+                "expected_section_top3_rate": (
+                    round(section_hits / len(applicable_rows), 4) if applicable_rows else ""
+                ),
                 "avg_latency_seconds": round(sum(latencies) / len(latencies), 3) if latencies else "",
                 "avg_source_coverage_ratio": _avg_optional(
                     row.source_coverage_ratio for row in method_rows
@@ -389,12 +412,13 @@ def print_overview(rows: list[EvaluationRow]) -> None:
     methods = sorted({row.retrieval_method for row in rows})
     for method in methods:
         method_rows = [row for row in rows if row.retrieval_method == method]
+        applicable_rows = [row for row in method_rows if row.retrieval_check_applicable]
         total = len(method_rows)
         errors = sum(1 for row in method_rows if row.error)
-        section_hits = sum(1 for row in method_rows if row.expected_section_in_top_3)
+        section_hits = sum(1 for row in applicable_rows if row.expected_section_in_top_3)
         avg_latency = sum(row.latency_seconds for row in method_rows) / max(total, 1)
         print(
-            f"{method}: {section_hits}/{total} expected sections in top 3, "
+            f"{method}: {section_hits}/{len(applicable_rows)} expected sections in top 3, "
             f"{errors} errors, avg {avg_latency:.2f}s"
         )
 
