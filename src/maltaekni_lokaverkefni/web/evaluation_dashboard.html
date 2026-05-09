@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="is">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Réttarvísir - Yfirlit mats</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080a09;
+        --panel: #121714;
+        --panel-2: #191f1b;
+        --text: #f0f2ed;
+        --muted: #aab0a7;
+        --line: #2d342f;
+        --gold: #d7b56d;
+        --green: #28c6b2;
+        --red: #ef8c7b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 12% 4%, rgba(40, 198, 178, 0.12), transparent 26%),
+          radial-gradient(circle at 84% 10%, rgba(215, 181, 109, 0.1), transparent 22%),
+          linear-gradient(135deg, #080a09, #111512 56%, #090b0a);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 30px 0 40px;
+      }
+
+      header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 22px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(30px, 5vw, 52px);
+        line-height: 1;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .button {
+        min-height: 40px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .button.primary {
+        border-color: rgba(215, 181, 109, 0.65);
+        color: var(--gold);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .card,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+          rgba(18, 23, 20, 0.94);
+      }
+
+      .card {
+        min-height: 112px;
+        padding: 16px;
+      }
+
+      .label {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .value {
+        margin-top: 10px;
+        font-size: 28px;
+        font-weight: 800;
+      }
+
+      .panel {
+        overflow: hidden;
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-head h2 {
+        font-size: 18px;
+      }
+
+      .notice {
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border: 1px solid rgba(215, 181, 109, 0.28);
+        border-radius: 8px;
+        background: rgba(215, 181, 109, 0.08);
+        color: #ead9af;
+        line-height: 1.45;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--gold);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      td {
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .metric-good {
+        color: var(--green);
+      }
+
+      .metric-bad {
+        color: var(--red);
+      }
+
+      .error {
+        color: var(--red);
+      }
+
+      @media (max-width: 980px) {
+        header {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .panel {
+          overflow-x: auto;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <p class="muted">Réttarvísir</p>
+          <h1>Yfirlit mats</h1>
+        </div>
+        <nav class="actions">
+          <a class="button" href="/">Opna spjall</a>
+          <a class="button primary" href="/evaluation">Opna mannlegt mat</a>
+        </nav>
+      </header>
+
+      <p class="notice">
+        Þetta yfirlit notar þegar vistuð matsgögn. Það keyrir ekki ný LLM-köll og kostar því ekki tokena.
+        Ef kennari prófar keyrslu með LLM ætti að gera það einu sinni sem dæmi, ekki endurtaka stórar keyrslur að óþörfu.
+      </p>
+
+      <section id="cards" class="grid"></section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Aðferðir</h2>
+            <p id="paths" class="muted"></p>
+          </div>
+          <p class="muted">Sjálfvirkar tölur + mannlegt mat þegar það er til.</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Aðferð</th>
+              <th>Top 3</th>
+              <th>Heimildanotkun</th>
+              <th>Töf</th>
+              <th>Tokenar</th>
+              <th>Kostnaður</th>
+              <th>Mannlegt mat</th>
+              <th>Villur</th>
+            </tr>
+          </thead>
+          <tbody id="methodRows"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const cards = document.querySelector("#cards");
+      const methodRows = document.querySelector("#methodRows");
+      const paths = document.querySelector("#paths");
+
+      loadDashboard();
+
+      async function loadDashboard() {
+        try {
+          const response = await fetch("/api/evaluation/dashboard");
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Na ekki i matsgogn.");
+          }
+          const payload = await response.json();
+          renderCards(payload.overall);
+          renderMethods(payload.methods);
+          paths.textContent = payload.summary_path;
+        } catch (error) {
+          cards.innerHTML = `<article class="card"><p class="error">${escapeHtml(error.message)}</p></article>`;
+        }
+      }
+
+      function renderCards(overall) {
+        const items = [
+          ["Raðir", overall.rows],
+          ["Spurningar", overall.questions],
+          ["Aðferðir", overall.methods],
+          ["Keyrsla", (overall.run_labels || []).join(", ") || "-"],
+          ["Prompt", (overall.prompt_profiles || []).join(", ") || "-"],
+          ["Mannlegt mat", overall.review_count],
+          ["Tokenar", formatInteger(overall.total_tokens)],
+        ];
+        cards.innerHTML = items.map(([label, value]) => `
+          <article class="card">
+            <p class="label">${escapeHtml(label)}</p>
+            <p class="value">${escapeHtml(String(value ?? "-"))}</p>
+          </article>
+        `).join("");
+      }
+
+      function renderMethods(methods) {
+        methodRows.innerHTML = methods.map((method) => {
+          const rate = method.expected_section_top3_rate;
+          const top3 = rate === null ? "-" : `${method.expected_section_top3_hits}/${method.rows} (${Math.round(rate * 100)}%)`;
+          const human = [
+            ["heimildir", method.avg_retrieval_relevance_1_5],
+            ["svar", method.avg_answer_correctness_1_5],
+            ["stuðningur", method.avg_source_support_1_5],
+            ["skýrleiki", method.avg_clarity_1_5],
+          ].filter(([, value]) => value !== null).map(([label, value]) => `${label}: ${formatNumber(value)}`).join("<br>");
+
+          return `
+            <tr>
+              <td>
+                <strong>${escapeHtml(method.retrieval_method)}</strong><br>
+                <span class="muted">${escapeHtml(method.prompt_profile || "-")} · ${escapeHtml(method.llm_model || "engin LLM")}</span>
+              </td>
+              <td class="${rate >= 0.75 ? "metric-good" : ""}">${escapeHtml(top3)}</td>
+              <td>${formatPercent(method.avg_source_coverage_ratio)}</td>
+              <td>${formatNumber(method.avg_latency_seconds)}s</td>
+              <td>
+                samtals: ${formatInteger(method.total_tokens)}<br>
+                inn: ${formatInteger(method.total_prompt_tokens)} · út: ${formatInteger(method.total_output_tokens)}
+              </td>
+              <td>${formatCost(method.estimated_cost_usd)}</td>
+              <td>${human || `<span class="muted">${method.human_reviews} möt vistuð</span>`}</td>
+              <td class="${method.errors ? "metric-bad" : "metric-good"}">${method.errors}</td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      function formatInteger(value) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number.toLocaleString("is-IS") : "-";
+      }
+
+      function formatNumber(value) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number.toFixed(2) : "-";
+      }
+
+      function formatPercent(value) {
+        const number = Number(value);
+        return Number.isFinite(number) ? `${Math.round(number * 100)}%` : "-";
+      }
+
+      function formatCost(value) {
+        const number = Number(value);
+        if (!Number.isFinite(number) || number === 0) return "-";
+        return `$${number.toFixed(6)}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+    </script>
+  </body>
+</html>

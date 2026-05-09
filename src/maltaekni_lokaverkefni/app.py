@@ -6,7 +6,7 @@ import csv
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -74,6 +74,11 @@ def evaluation_review():
     return FileResponse(WEB_DIR / "evaluation.html")
 
 
+@app.get("/evaluation/dashboard")
+def evaluation_dashboard():
+    return FileResponse(WEB_DIR / "evaluation_dashboard.html")
+
+
 @app.get("/api/status", response_model=StatusResponse)
 def status():
     if CHUNKS_PATH.exists():
@@ -139,6 +144,27 @@ def latest_evaluation():
         "review_path": str(EVALUATION_REVIEW_PATH),
         "rows": rows,
         "reviews": reviews,
+    }
+
+
+@app.get("/api/evaluation/dashboard")
+def evaluation_dashboard_data():
+    if not EVALUATION_SUMMARY_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Missing reports/evaluation/evaluation_summary_latest.csv. "
+                "Run evaluate_methods.py first."
+            ),
+        )
+
+    rows = _load_evaluation_rows()
+    review_rows = _load_evaluation_review_rows()
+    return {
+        "summary_path": str(EVALUATION_SUMMARY_PATH),
+        "review_path": str(EVALUATION_REVIEW_PATH),
+        "overall": _dashboard_overall(rows, review_rows),
+        "methods": _dashboard_by_method(rows, review_rows),
     }
 
 
@@ -224,6 +250,123 @@ def _write_evaluation_reviews(rows: list[dict]) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow({field: row.get(field, "") for field in fieldnames})
+
+
+def _dashboard_overall(
+    rows: list[dict[str, str]],
+    review_rows: list[dict[str, str]],
+) -> dict[str, Any]:
+    total = len(rows)
+    return {
+        "rows": total,
+        "methods": len({row.get("retrieval_method", "") for row in rows if row.get("retrieval_method")}),
+        "questions": len({row.get("question_id", "") for row in rows if row.get("question_id")}),
+        "run_labels": sorted({row.get("run_label", "") for row in rows if row.get("run_label")}),
+        "prompt_profiles": sorted(
+            {row.get("prompt_profile", "") for row in rows if row.get("prompt_profile")}
+        ),
+        "errors": sum(1 for row in rows if row.get("error")),
+        "review_count": len(review_rows),
+        "total_tokens": _sum_number(row.get("total_tokens") for row in rows),
+        "estimated_cost_usd": _round_number(
+            _sum_number(row.get("estimated_cost_usd") for row in rows)
+        ),
+    }
+
+
+def _dashboard_by_method(
+    rows: list[dict[str, str]],
+    review_rows: list[dict[str, str]],
+) -> list[dict[str, Any]]:
+    methods = sorted({row.get("retrieval_method", "") for row in rows if row.get("retrieval_method")})
+    method_reviews: dict[str, list[dict[str, str]]] = {}
+    for review in review_rows:
+        method = review.get("retrieval_method", "")
+        if method:
+            method_reviews.setdefault(method, []).append(review)
+
+    summaries = []
+    for method in methods:
+        method_rows = [row for row in rows if row.get("retrieval_method") == method]
+        reviews = method_reviews.get(method, [])
+        total = len(method_rows)
+        expected_hits = sum(
+            1
+            for row in method_rows
+            if str(row.get("expected_section_in_top_3", "")).lower() == "true"
+        )
+        summaries.append(
+            {
+                "retrieval_method": method,
+                "run_label": _first_value(row.get("run_label", "") for row in method_rows),
+                "prompt_profile": _first_value(row.get("prompt_profile", "") for row in method_rows),
+                "llm_model": _first_value(row.get("llm_model", "") for row in method_rows),
+                "rows": total,
+                "errors": sum(1 for row in method_rows if row.get("error")),
+                "expected_section_top3_hits": expected_hits,
+                "expected_section_top3_rate": round(expected_hits / total, 4) if total else None,
+                "avg_source_coverage_ratio": _avg_number(
+                    row.get("source_coverage_ratio") for row in method_rows
+                ),
+                "avg_latency_seconds": _avg_number(row.get("latency_seconds") for row in method_rows),
+                "total_prompt_tokens": _sum_number(row.get("prompt_tokens") for row in method_rows),
+                "total_output_tokens": _sum_number(row.get("output_tokens") for row in method_rows),
+                "total_thought_tokens": _sum_number(row.get("thought_tokens") for row in method_rows),
+                "total_tokens": _sum_number(row.get("total_tokens") for row in method_rows),
+                "estimated_cost_usd": _round_number(
+                    _sum_number(row.get("estimated_cost_usd") for row in method_rows)
+                ),
+                "human_reviews": len(reviews),
+                "avg_retrieval_relevance_1_5": _avg_number(
+                    review.get("retrieval_relevance_1_5") for review in reviews
+                ),
+                "avg_answer_correctness_1_5": _avg_number(
+                    review.get("answer_correctness_1_5") for review in reviews
+                ),
+                "avg_source_support_1_5": _avg_number(
+                    review.get("source_support_1_5") for review in reviews
+                ),
+                "avg_clarity_1_5": _avg_number(review.get("clarity_1_5") for review in reviews),
+            }
+        )
+    return summaries
+
+
+def _sum_number(values: Any) -> float | int:
+    numbers = [_to_number(value) for value in values]
+    valid_numbers = [value for value in numbers if value is not None]
+    total = sum(valid_numbers)
+    return int(total) if float(total).is_integer() else total
+
+
+def _avg_number(values: Any) -> float | None:
+    numbers = [_to_number(value) for value in values]
+    valid_numbers = [value for value in numbers if value is not None]
+    if not valid_numbers:
+        return None
+
+    return round(sum(valid_numbers) / len(valid_numbers), 3)
+
+
+def _round_number(value: float | int) -> float:
+    return round(float(value), 8)
+
+
+def _to_number(value: Any) -> float | None:
+    if value in {None, ""}:
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _first_value(values: Any) -> str:
+    for value in values:
+        if value:
+            return str(value)
+    return ""
 
 
 def _review_key(question_id: str, retrieval_method: str) -> str:

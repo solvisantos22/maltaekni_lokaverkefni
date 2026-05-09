@@ -287,6 +287,18 @@
         padding: 10px 14px;
       }
 
+      .sidebar-link {
+        display: inline-flex;
+        justify-content: center;
+        width: 100%;
+        margin-top: 14px;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        text-decoration: none;
+      }
+
       .action.primary {
         border-color: rgba(215, 181, 109, 0.55);
         background: rgba(215, 181, 109, 0.16);
@@ -331,6 +343,8 @@
           <div class="bar"><span id="progressBar"></span></div>
           <p id="savedState" class="muted">Vistað staðbundið í reports/evaluation.</p>
         </div>
+
+        <a class="sidebar-link" href="/evaluation/dashboard">Yfirlit mats</a>
 
         <div class="field">
           <label for="notes">Athugasemdir</label>

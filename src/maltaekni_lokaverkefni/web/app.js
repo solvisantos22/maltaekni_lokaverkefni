@@ -216,9 +216,13 @@ async function typeAnswer(target, text) {
 function appendMeta(target, result) {
   const meta = document.createElement("div");
   meta.className = "meta";
+  const usageText = formatUsage(result.usage || {});
+  const coverageText = formatSourceCoverage(result.source_coverage || {});
   meta.innerHTML = `
     <span>Traust: ${escapeHtml(result.confidence)} · Aðferð: ${escapeHtml(result.method)}</span>
     <span>${escapeHtml(result.confidence_reason || "")}</span>
+    ${coverageText ? `<span>${escapeHtml(coverageText)}</span>` : ""}
+    ${usageText ? `<span>${escapeHtml(usageText)}</span>` : ""}
   `;
   target.append(meta);
 }
@@ -250,8 +254,34 @@ function formatScore(score) {
   return Number(score).toFixed(4);
 }
 
+function formatUsage(usage) {
+  const totalTokens = Number(usage.total_tokens);
+  if (!Number.isFinite(totalTokens) || totalTokens <= 0) return "";
+
+  const inputTokens = Number(usage.prompt_tokens);
+  const outputTokens = Number(usage.output_tokens);
+  const parts = [`Tokenar: ${totalTokens.toLocaleString("is-IS")}`];
+  if (Number.isFinite(inputTokens)) parts.push(`inn ${inputTokens.toLocaleString("is-IS")}`);
+  if (Number.isFinite(outputTokens)) parts.push(`út ${outputTokens.toLocaleString("is-IS")}`);
+
+  const estimatedCost = Number(usage.estimated_cost_usd);
+  if (Number.isFinite(estimatedCost) && estimatedCost > 0) {
+    parts.push(`~$${estimatedCost.toFixed(6)}`);
+  }
+
+  return parts.join(" · ");
+}
+
+function formatSourceCoverage(sourceCoverage) {
+  const cited = Number(sourceCoverage.cited_source_count);
+  const total = Number(sourceCoverage.source_count);
+  if (!Number.isFinite(cited) || !Number.isFinite(total) || total <= 0) return "";
+
+  return `Heimildanotkun: ${cited}/${total} heimildir vísaðar í svarinu`;
+}
+
 function escapeHtml(value) {
-  return value
+  return String(value)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")

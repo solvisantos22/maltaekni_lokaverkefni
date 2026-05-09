@@ -10,9 +10,9 @@ from typing import Any
 import httpx
 
 try:
-    from .prompts import SYSTEM_PROMPT, build_answer_prompt
+    from .prompts import build_answer_prompt, get_prompt_profile, get_system_prompt
 except ImportError:  # Allows direct script execution during early experiments.
-    from prompts import SYSTEM_PROMPT, build_answer_prompt
+    from prompts import build_answer_prompt, get_prompt_profile, get_system_prompt
 
 try:
     from dotenv import load_dotenv
@@ -50,9 +50,12 @@ class AnswerResult:
     sources: list[SourceReference]
     system_prompt: str
     user_prompt: str
+    prompt_profile: str
     confidence: str
     confidence_reason: str
     method: str
+    usage: dict[str, Any]
+    source_coverage: dict[str, Any]
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -61,9 +64,12 @@ class AnswerResult:
             "sources": [source.__dict__ for source in self.sources],
             "system_prompt": self.system_prompt,
             "user_prompt": self.user_prompt,
+            "prompt_profile": self.prompt_profile,
             "confidence": self.confidence,
             "confidence_reason": self.confidence_reason,
             "method": self.method,
+            "usage": self.usage,
+            "source_coverage": self.source_coverage,
         }
 
 
@@ -75,6 +81,8 @@ def generate_grounded_answer(
     """Generate a citation-grounded answer from retrieval contract output."""
     question = retrieval_result.get("question", "")
     chunks = retrieval_result.get("chunks", [])[:max_sources]
+    prompt_profile = get_prompt_profile()
+    system_prompt = get_system_prompt(prompt_profile)
     user_prompt = build_answer_prompt(question, chunks, max_chunks=max_sources)
     question_terms = _content_terms(question)
     sources = [
@@ -87,67 +95,81 @@ def generate_grounded_answer(
             question=question,
             answer=UNCERTAIN_ANSWER,
             sources=[],
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             user_prompt=user_prompt,
+            prompt_profile=prompt_profile,
             confidence="low",
             confidence_reason="Engar heimildir fundust fyrir spurninguna.",
             method=method,
+            usage={},
+            source_coverage={
+                "cited_source_count": 0,
+                "source_count": 0,
+                "coverage_ratio": 0,
+                "cited_source_ids": [],
+                "uncited_source_ids": [],
+            },
         )
 
-    llm_answer, llm_method = _build_llm_answer(SYSTEM_PROMPT, user_prompt)
+    llm_answer, llm_method, usage = _build_llm_answer(system_prompt, user_prompt)
     if llm_answer:
         answer = _ensure_source_line(llm_answer, sources)
         method = llm_method
     else:
         answer = _build_extractive_answer(question, sources)
+        usage = {}
 
     confidence, confidence_reason = _estimate_confidence(
         sources=sources,
         answer=answer,
         method=method,
     )
+    source_coverage = _source_coverage(answer, sources)
 
     return AnswerResult(
         question=question,
         answer=answer,
         sources=sources,
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=system_prompt,
         user_prompt=user_prompt,
+        prompt_profile=prompt_profile,
         confidence=confidence,
         confidence_reason=confidence_reason,
         method=method,
+        usage=usage,
+        source_coverage=source_coverage,
     )
 
 
-def _build_llm_answer(system_prompt: str, user_prompt: str) -> tuple[str, str]:
+def _build_llm_answer(system_prompt: str, user_prompt: str) -> tuple[str, str, dict[str, Any]]:
     """Call the configured LLM provider for a grounded Icelandic answer."""
     if load_dotenv is not None:
         load_dotenv()
 
     provider = os.getenv("LLM_PROVIDER", "auto").strip().lower()
     if provider in {"none", "off", "disabled"}:
-        return "", ""
+        return "", "", {}
 
     if provider not in {"auto", "gemini", "openai"}:
         provider = "auto"
 
     if provider in {"auto", "gemini"}:
-        answer = _build_gemini_answer(system_prompt, user_prompt)
+        answer, usage = _build_gemini_answer(system_prompt, user_prompt)
         if _is_incomplete_llm_answer(answer):
-            answer = _build_gemini_answer(
+            answer, usage = _build_gemini_answer(
                 system_prompt,
                 user_prompt,
                 max_output_tokens=max(4096, _llm_max_output_tokens()),
             )
         if answer:
-            return answer, f"gemini:{_gemini_model()}"
+            return answer, f"gemini:{_gemini_model()}", usage
 
     if provider in {"auto", "openai"}:
-        answer = _build_openai_answer(system_prompt, user_prompt)
+        answer, usage = _build_openai_answer(system_prompt, user_prompt)
         if answer:
-            return answer, f"openai:{_openai_model()}"
+            return answer, f"openai:{_openai_model()}", usage
 
-    return "", ""
+    return "", "", {}
 
 
 def _build_gemini_answer(
@@ -155,11 +177,11 @@ def _build_gemini_answer(
     user_prompt: str,
     *,
     max_output_tokens: int | None = None,
-) -> str:
+) -> tuple[str, dict[str, Any]]:
     """Call Gemini to turn retrieved chunks into a grounded Icelandic answer."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        return ""
+        return "", {}
 
     payload = {
         "systemInstruction": {
@@ -194,16 +216,16 @@ def _build_gemini_answer(
             response.raise_for_status()
             response_data = response.json()
     except (httpx.HTTPError, ValueError):
-        return ""
+        return "", {}
 
-    return _extract_gemini_text(response_data).strip()
+    return _extract_gemini_text(response_data).strip(), _extract_gemini_usage(response_data)
 
 
-def _build_openai_answer(system_prompt: str, user_prompt: str) -> str:
+def _build_openai_answer(system_prompt: str, user_prompt: str) -> tuple[str, dict[str, Any]]:
     """Call OpenAI to turn retrieved chunks into a grounded Icelandic answer."""
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        return ""
+        return "", {}
 
     payload = {
         "model": _openai_model(),
@@ -227,9 +249,9 @@ def _build_openai_answer(system_prompt: str, user_prompt: str) -> str:
             response.raise_for_status()
             response_data = response.json()
     except (httpx.HTTPError, ValueError):
-        return ""
+        return "", {}
 
-    return _extract_openai_text(response_data).strip()
+    return _extract_openai_text(response_data).strip(), _extract_openai_usage(response_data)
 
 
 def _gemini_model() -> str:
@@ -274,6 +296,23 @@ def _extract_gemini_text(response_data: dict[str, Any]) -> str:
     return "\n".join(text_parts)
 
 
+def _extract_gemini_usage(response_data: dict[str, Any]) -> dict[str, Any]:
+    """Normalize Gemini usage metadata for evaluation reports."""
+    usage_metadata = response_data.get("usageMetadata", {})
+    prompt_tokens = _optional_int(usage_metadata.get("promptTokenCount"))
+    output_tokens = _optional_int(usage_metadata.get("candidatesTokenCount"))
+    thought_tokens = _optional_int(usage_metadata.get("thoughtsTokenCount"))
+    total_tokens = _optional_int(usage_metadata.get("totalTokenCount"))
+    return _usage_payload(
+        provider="gemini",
+        model=_gemini_model(),
+        prompt_tokens=prompt_tokens,
+        output_tokens=output_tokens,
+        thought_tokens=thought_tokens,
+        total_tokens=total_tokens,
+    )
+
+
 def _is_incomplete_llm_answer(answer: str) -> bool:
     """Detect obviously truncated model text before it is shown to the user."""
     stripped = answer.strip()
@@ -302,6 +341,67 @@ def _extract_openai_text(response_data: dict[str, Any]) -> str:
     return "\n".join(text_parts)
 
 
+def _extract_openai_usage(response_data: dict[str, Any]) -> dict[str, Any]:
+    """Normalize OpenAI Responses API usage metadata for evaluation reports."""
+    usage = response_data.get("usage", {})
+    prompt_tokens = _optional_int(usage.get("input_tokens"))
+    output_tokens = _optional_int(usage.get("output_tokens"))
+    total_tokens = _optional_int(usage.get("total_tokens"))
+    return _usage_payload(
+        provider="openai",
+        model=_openai_model(),
+        prompt_tokens=prompt_tokens,
+        output_tokens=output_tokens,
+        thought_tokens=None,
+        total_tokens=total_tokens,
+    )
+
+
+def _usage_payload(
+    *,
+    provider: str,
+    model: str,
+    prompt_tokens: int | None,
+    output_tokens: int | None,
+    thought_tokens: int | None,
+    total_tokens: int | None,
+) -> dict[str, Any]:
+    return {
+        "provider": provider,
+        "model": model,
+        "prompt_tokens": prompt_tokens,
+        "output_tokens": output_tokens,
+        "thought_tokens": thought_tokens,
+        "total_tokens": total_tokens,
+        "estimated_cost_usd": _estimate_cost_usd(
+            provider=provider,
+            prompt_tokens=prompt_tokens,
+            output_tokens=output_tokens,
+            thought_tokens=thought_tokens,
+        ),
+    }
+
+
+def _estimate_cost_usd(
+    *,
+    provider: str,
+    prompt_tokens: int | None,
+    output_tokens: int | None,
+    thought_tokens: int | None,
+) -> float | None:
+    """Estimate cost only when local per-million-token rates are configured."""
+    prefix = provider.upper()
+    input_rate = _optional_float(os.getenv(f"{prefix}_INPUT_COST_PER_1M"))
+    output_rate = _optional_float(os.getenv(f"{prefix}_OUTPUT_COST_PER_1M"))
+    if input_rate is None and output_rate is None:
+        return None
+
+    input_cost = ((prompt_tokens or 0) / 1_000_000) * (input_rate or 0)
+    output_billable_tokens = (output_tokens or 0) + (thought_tokens or 0)
+    output_cost = (output_billable_tokens / 1_000_000) * (output_rate or 0)
+    return round(input_cost + output_cost, 8)
+
+
 def _ensure_source_line(answer: str, sources: list[SourceReference]) -> str:
     """Keep the UI citation contract even if the model omits the final source line."""
     if re.search(r"Heimildir:\s*\[\d+\]", answer):
@@ -319,6 +419,24 @@ def _ensure_source_line(answer: str, sources: list[SourceReference]) -> str:
 
     source_line = ", ".join(f"[{citation_id}]" for citation_id in cited_ids)
     return f"{answer.rstrip()}\n\nHeimildir: {source_line}"
+
+
+def _source_coverage(answer: str, sources: list[SourceReference]) -> dict[str, Any]:
+    source_ids = {source.citation_id for source in sources}
+    cited_ids = {
+        int(match)
+        for match in re.findall(r"\[(\d+)\]", answer)
+        if int(match) in source_ids
+    }
+    uncited_ids = source_ids - cited_ids
+    source_count = len(source_ids)
+    return {
+        "cited_source_count": len(cited_ids),
+        "source_count": source_count,
+        "coverage_ratio": round(len(cited_ids) / source_count, 4) if source_count else 0,
+        "cited_source_ids": sorted(cited_ids),
+        "uncited_source_ids": sorted(uncited_ids),
+    }
 
 
 def _source_from_chunk(
@@ -538,5 +656,12 @@ def _estimate_confidence(
 def _optional_float(value: Any) -> float | None:
     try:
         return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_int(value: Any) -> int | None:
+    try:
+        return int(value)
     except (TypeError, ValueError):
         return None

@@ -46,6 +46,11 @@ LLM_MAX_OUTPUT_TOKENS=4096
 the app falls back to the local extractive answer generator so the demo still runs
 without credentials.
 
+The app records LLM usage metadata when the provider returns it. Evaluation rows
+include input, output, thinking, and total token counts. Dollar estimates are only
+calculated when optional per-million-token rates are set in `.env`, so the code
+does not depend on hardcoded pricing.
+
 ## Evaluation
 
 Run the evaluation questions across retrieval methods without using the UI:
@@ -60,11 +65,22 @@ The summary includes `expected_relevant_section` and
 `expected_section_in_top_3` for the automatic retrieval check.
 It also stores `confidence_reason`, which explains the answer confidence in
 terms of source strength and citation coverage.
+`source_coverage_ratio` records how many retrieved source chunks were actually
+cited in the generated answer.
+Each run also writes `evaluation_method_summary_latest.csv`, an aggregate table
+by retrieval method for the report.
 
 For a quick smoke test:
 
 ```powershell
 python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --no-llm --limit 2
+```
+
+For model or prompt comparisons, label each run and override the settings from
+the command line instead of editing `.env`:
+
+```powershell
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --run-label gemini-strict --llm-provider gemini --gemini-model gemini-3-flash-preview --prompt-profile strict
 ```
 
 After running an evaluation, open the local review UI:
@@ -75,6 +91,9 @@ http://127.0.0.1:8000/evaluation
 
 The review UI saves human scores to
 `reports/evaluation/evaluation_review_latest.csv`.
+The dashboard at `http://127.0.0.1:8000/evaluation/dashboard` summarizes the
+latest automatic metrics, token usage, and human review averages without making
+new LLM calls.
 
 The main app also includes an `Aðferð` button with a short explanation of the
 retrieval, Gemini answer generation, citations, and disclaimer.
