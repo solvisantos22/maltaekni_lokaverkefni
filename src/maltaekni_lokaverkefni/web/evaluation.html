@@ -33,6 +33,7 @@
       }
 
       button,
+      select,
       input,
       textarea {
         font: inherit;
@@ -95,6 +96,7 @@
         font-size: 13px;
       }
 
+      select,
       input,
       textarea {
         width: 100%;
@@ -250,6 +252,31 @@
         font-size: 14px;
       }
 
+      .score-help,
+      .rubric {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .score-help {
+        margin-top: -4px;
+      }
+
+      .rubric {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid rgba(215, 181, 109, 0.18);
+        border-radius: 8px;
+        background: rgba(215, 181, 109, 0.06);
+      }
+
+      .rubric strong {
+        color: var(--gold);
+      }
+
       .buttons {
         display: flex;
         gap: 6px;
@@ -351,7 +378,10 @@
 
         <div class="field">
           <label for="evaluator">Matsaðili</label>
-          <input id="evaluator" value="Sölvi" />
+          <select id="evaluator">
+            <option value="Sölvi">Sölvi</option>
+            <option value="Jóhannes">Jóhannes</option>
+          </select>
         </div>
 
         <div class="progress">
@@ -363,6 +393,11 @@
         <p class="demo-note">Sýnidæmi: þessi gögn eru tilbúin fyrir kynningu og kosta enga tokena.</p>
 
         <a id="dashboardLink" class="sidebar-link" href="/evaluation/dashboard">Yfirlit mats</a>
+
+        <div class="rubric">
+          <strong>Sama mat fyrir báða matsaðila</strong>
+          <span>Sölvi og Jóhannes gefa hvor sína 1-5 einkunn fyrir sömu fjögur atriði. Mælaborðið sýnir svo meðaltal vistaðra einkunna.</span>
+        </div>
 
         <div class="field">
           <label for="notes">Athugasemdir</label>
@@ -414,10 +449,10 @@
 
     <script>
       const scoreFields = [
-        ["retrieval_relevance_1_5", "Réttmæti heimilda"],
-        ["answer_correctness_1_5", "Réttleiki svars"],
-        ["source_support_1_5", "Stuðningur heimilda"],
-        ["clarity_1_5", "Skýrleiki"],
+        ["retrieval_relevance_1_5", "Réttmæti heimilda", "Eru heimildirnar sem komu upp í leitinni viðeigandi fyrir spurninguna?"],
+        ["answer_correctness_1_5", "Réttleiki svars", "Er svarið rétt miðað við heimildirnar sem eru sýndar?"],
+        ["source_support_1_5", "Stuðningur heimilda", "Eru fullyrðingar í svarinu studdar með tilvísunum og textabrotum?"],
+        ["clarity_1_5", "Skýrleiki", "Er íslenskan skýr, gagnleg og skiljanleg fyrir neytanda?"],
       ];
 
       let rows = [];
@@ -438,7 +473,8 @@
         document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er ekki vistuð.";
       }
 
-      evaluatorInput.value = localStorage.getItem("evaluationEvaluator") || "Sölvi";
+      const savedEvaluator = localStorage.getItem("evaluationEvaluator") || "Sölvi";
+      evaluatorInput.value = ["Sölvi", "Jóhannes"].includes(savedEvaluator) ? savedEvaluator : "Sölvi";
       evaluatorInput.addEventListener("change", () => {
         localStorage.setItem("evaluationEvaluator", evaluatorInput.value.trim() || "Sölvi");
         renderActiveRow();
@@ -514,10 +550,13 @@
 
       function renderScores() {
         scoreGroups.innerHTML = "";
-        for (const [field, label] of scoreFields) {
+        for (const [field, label, helpText] of scoreFields) {
           const group = document.createElement("div");
           group.className = "score-group";
-          group.innerHTML = `<div class="score-row"><span>${label}</span><div class="buttons"></div></div>`;
+          group.innerHTML = `
+            <div class="score-row"><span>${label}</span><div class="buttons"></div></div>
+            <p class="score-help">${helpText}</p>
+          `;
           const buttons = group.querySelector(".buttons");
           for (let value = 1; value <= 5; value += 1) {
             const button = document.createElement("button");

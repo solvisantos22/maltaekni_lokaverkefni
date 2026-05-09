@@ -120,6 +120,13 @@
         font-weight: 800;
       }
 
+      .card-help {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
       .panel {
         overflow: hidden;
       }
@@ -144,6 +151,28 @@
         background: rgba(215, 181, 109, 0.08);
         color: #ead9af;
         line-height: 1.45;
+      }
+
+      .explain {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding: 16px;
+        border: 1px solid rgba(40, 198, 178, 0.24);
+        border-radius: 8px;
+        background: rgba(40, 198, 178, 0.06);
+      }
+
+      .explain h2 {
+        margin: 0;
+        color: var(--green);
+        font-size: 16px;
+      }
+
+      .explain p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
       }
 
       table {
@@ -222,6 +251,12 @@
         Ef kennari prófar keyrslu með LLM ætti að gera það einu sinni sem dæmi, ekki endurtaka stórar keyrslur að óþörfu.
       </p>
 
+      <section class="explain">
+        <h2>Hvað er verið að mæla?</h2>
+        <p>Top 3 mælir hvort væntur lagakafli fannst meðal þriggja efstu heimilda. Heimildanotkun sýnir hversu stór hluti sóttra heimilda var vísað í svarinu. Vistaðar yfirferðir eru fjöldi mannlegra matsblaða, ekki einkunn.</p>
+        <p>Sölvi og Jóhannes gefa sömu fjórar 1-5 einkunnir: réttmæti heimilda, réttleika svars, stuðning heimilda og skýrleika. Taflan sýnir meðaltal vistaðra einkunna fyrir hverja leitaraðferð.</p>
+      </section>
+
       <section id="cards" class="grid"></section>
 
       <section class="panel">
@@ -230,7 +265,7 @@
             <h2>Aðferðir</h2>
             <p id="paths" class="muted"></p>
           </div>
-          <p class="muted">Sjálfvirkar tölur + mannlegt mat þegar það er til.</p>
+          <p class="muted">Sjálfvirkar tölur + meðaleinkunnir frá Sölva og Jóhannesi þegar þær eru til.</p>
         </div>
         <table>
           <thead>
@@ -241,7 +276,7 @@
               <th>Töf</th>
               <th>Tokenar</th>
               <th>Kostnaður</th>
-              <th>Mannlegt mat</th>
+              <th>Meðaleinkunnir (1-5)</th>
               <th>Villur</th>
             </tr>
           </thead>
@@ -279,19 +314,20 @@
 
       function renderCards(overall) {
         const items = [
-          ["Raðir", overall.rows],
-          ["Spurningar", overall.questions],
-          ["Top-3 próf", overall.retrieval_check_questions],
-          ["Aðferðir", overall.methods],
-          ["Keyrsla", (overall.run_labels || []).join(", ") || "-"],
-          ["Prompt", (overall.prompt_profiles || []).join(", ") || "-"],
-          ["Mannlegt mat", overall.review_count],
-          ["Tokenar", formatInteger(overall.total_tokens)],
+          ["Matsraðir", overall.rows, "Ein röð er ein spurning keyrð með einni leitaraðferð."],
+          ["Spurningar", overall.questions, "Fjöldi ólíkra spurninga í matssettinu."],
+          ["Top-3 próf", overall.retrieval_check_questions, "Raðir þar sem við eigum von á ákveðnum lagakafla."],
+          ["Leitaraðferðir", overall.methods, "Fjöldi retrieval-aðferða sem voru bornar saman."],
+          ["Keyrsla", (overall.run_labels || []).join(", ") || "-", "Nafn á þessari matskeyrslu."],
+          ["Prompt", (overall.prompt_profiles || []).join(", ") || "-", "Hvaða prompt-stilling var notuð."],
+          ["Vistaðar yfirferðir", overall.review_count, "Fjöldi mannlegra matsblaða sem hefur verið vistaður."],
+          ["Tokenar", formatInteger(overall.total_tokens), "Heildarfjöldi tokena ef LLM skilaði notkunartölum."],
         ];
-        cards.innerHTML = items.map(([label, value]) => `
+        cards.innerHTML = items.map(([label, value, help]) => `
           <article class="card">
             <p class="label">${escapeHtml(label)}</p>
             <p class="value">${escapeHtml(String(value ?? "-"))}</p>
+            <p class="card-help">${escapeHtml(help)}</p>
           </article>
         `).join("");
       }
@@ -301,11 +337,11 @@
           const rate = method.expected_section_top3_rate;
           const top3 = rate === null ? "-" : `${method.expected_section_top3_hits}/${method.retrieval_check_questions} (${Math.round(rate * 100)}%)`;
           const human = [
-            ["heimildir", method.avg_retrieval_relevance_1_5],
-            ["svar", method.avg_answer_correctness_1_5],
-            ["stuðningur", method.avg_source_support_1_5],
-            ["skýrleiki", method.avg_clarity_1_5],
-          ].filter(([, value]) => value !== null).map(([label, value]) => `${label}: ${formatNumber(value)}`).join("<br>");
+            ["Réttmæti heimilda", method.avg_retrieval_relevance_1_5],
+            ["Réttleiki svars", method.avg_answer_correctness_1_5],
+            ["Stuðningur heimilda", method.avg_source_support_1_5],
+            ["Skýrleiki", method.avg_clarity_1_5],
+          ].filter(([, value]) => value !== null).map(([label, value]) => `${label}: ${formatNumber(value)}/5`).join("<br>");
 
           return `
             <tr>
@@ -321,7 +357,10 @@
                 inn: ${formatInteger(method.total_prompt_tokens)} · út: ${formatInteger(method.total_output_tokens)}
               </td>
               <td>${formatCost(method.estimated_cost_usd)}</td>
-              <td>${human || `<span class="muted">${method.human_reviews} möt vistuð</span>`}</td>
+              <td>
+                ${human || `<span class="muted">Engar einkunnir vistaðar</span>`}
+                <br><span class="muted">${method.human_reviews} vistaðar yfirferðir</span>
+              </td>
               <td class="${method.errors ? "metric-bad" : "metric-good"}">${method.errors}</td>
             </tr>
           `;
