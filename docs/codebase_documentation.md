@@ -195,5 +195,3 @@ python -m src.maltaekni_lokaverkefni.export_report_tables
   compare retrieval methods under the same answer-generation setup.
 - Evaluation artifacts are saved before human review, so manual scoring never
   triggers new LLM calls.
-- The demo evaluation files under `docs/demo_evaluation/` exist only to show the
-  review workflow without spending tokens or requiring a full evaluation run.

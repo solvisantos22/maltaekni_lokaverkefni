@@ -333,29 +333,22 @@
       const methodRows = document.querySelector("#methodRows");
       const paths = document.querySelector("#paths");
       const datasetLine = document.querySelector("#datasetLine");
-      const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
       const reviewLink = document.querySelector("#reviewLink");
-      if (demoMode) reviewLink.href = "/evaluation?demo=1";
 
       loadDashboard();
 
       async function loadDashboard() {
-        // demo=1 switches the backend to small committed demo artifacts.
         try {
-          const response = await fetch(`/api/evaluation/dashboard${demoMode ? "?demo=1" : ""}`);
+          const response = await fetch("/api/evaluation/dashboard");
           if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || "Na ekki i matsgogn.");
           }
           const payload = await response.json();
-          document.body.classList.toggle("demo-mode", Boolean(payload.is_demo));
           renderCards(payload.overall);
           renderMethods(payload.methods);
-          datasetLine.textContent = payload.is_demo
-            ? `Sýnidæmi · ekki raunveruleg niðurstaða · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`
-            : `Raunkeyrsla · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`;
+          datasetLine.textContent = `Raunkeyrsla · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`;
           paths.textContent = `Samantekt: ${payload.summary_path} · Mannlegt mat: ${payload.review_path}`;
-          if (payload.is_demo) reviewLink.href = "/evaluation?demo=1";
         } catch (error) {
           cards.innerHTML = `<article class="card"><p class="error">${escapeHtml(error.message)}</p></article>`;
         }

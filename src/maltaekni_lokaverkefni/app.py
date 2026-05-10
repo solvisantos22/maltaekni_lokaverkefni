@@ -32,10 +32,6 @@ EVALUATION_SUMMARY_PATH = EVALUATION_DIR / "evaluation_summary_latest.csv"
 EVALUATION_DETAILS_PATH = EVALUATION_DIR / "evaluation_details_latest.jsonl"
 EVALUATION_REVIEW_PATH = EVALUATION_DIR / "evaluation_review_latest.csv"
 EVALUATION_REVIEW_GLOB = "evaluation_review_*.csv"
-DEMO_EVALUATION_DIR = PROJECT_ROOT / "docs" / "demo_evaluation"
-DEMO_EVALUATION_SUMMARY_PATH = DEMO_EVALUATION_DIR / "evaluation_summary_demo.csv"
-DEMO_EVALUATION_DETAILS_PATH = DEMO_EVALUATION_DIR / "evaluation_details_demo.jsonl"
-DEMO_EVALUATION_REVIEW_PATH = DEMO_EVALUATION_DIR / "evaluation_review_demo.csv"
 WEB_DIR = Path(__file__).resolve().parent / "web"
 
 if load_dotenv is not None:
@@ -148,15 +144,15 @@ def ask(request: AskRequest):
 
 
 @app.get("/api/evaluation/latest")
-def latest_evaluation(demo: bool = False):
+def latest_evaluation():
     """Return per-row evaluation data with sources and saved human reviews."""
-    paths = _evaluation_paths(demo=demo)
+    paths = _evaluation_paths()
     if not paths["summary"].exists():
         raise HTTPException(
             status_code=404,
             detail=(
                 "Missing reports/evaluation/evaluation_summary_latest.csv. "
-                "Run evaluate_methods.py first or open /evaluation?demo=1."
+                "Run evaluate_methods.py first."
             ),
         )
 
@@ -170,8 +166,6 @@ def latest_evaluation(demo: bool = False):
         row["sources"] = details.get(key, {}).get("answer_result", {}).get("sources", [])
 
     return {
-        "mode": paths["mode"],
-        "is_demo": paths["mode"] == "demo",
         "summary_path": str(paths["summary"]),
         "details_path": str(paths["details"]),
         "review_path": _format_review_paths(paths["review"]),
@@ -181,23 +175,21 @@ def latest_evaluation(demo: bool = False):
 
 
 @app.get("/api/evaluation/dashboard")
-def evaluation_dashboard_data(demo: bool = False):
+def evaluation_dashboard_data():
     """Return aggregate metrics used by the dashboard page."""
-    paths = _evaluation_paths(demo=demo)
+    paths = _evaluation_paths()
     if not paths["summary"].exists():
         raise HTTPException(
             status_code=404,
             detail=(
                 "Missing reports/evaluation/evaluation_summary_latest.csv. "
-                "Run evaluate_methods.py first or open /evaluation/dashboard?demo=1."
+                "Run evaluate_methods.py first."
             ),
         )
 
     rows = _load_evaluation_rows(paths["summary"])
     review_rows = _load_evaluation_review_rows(paths["review"])
     return {
-        "mode": paths["mode"],
-        "is_demo": paths["mode"] == "demo",
         "summary_path": str(paths["summary"]),
         "review_path": _format_review_paths(paths["review"]),
         "overall": _dashboard_overall(rows, review_rows),
@@ -232,18 +224,9 @@ def save_evaluation_review(review: EvaluationReviewRequest):
     return {"saved": True, "review": review_row, "review_path": str(review_path)}
 
 
-def _evaluation_paths(*, demo: bool = False) -> dict[str, Path | list[Path] | str]:
-    """Choose real evaluation artifacts when present, otherwise demo artifacts."""
-    if demo or not EVALUATION_SUMMARY_PATH.exists():
-        return {
-            "mode": "demo",
-            "summary": DEMO_EVALUATION_SUMMARY_PATH,
-            "details": DEMO_EVALUATION_DETAILS_PATH,
-            "review": DEMO_EVALUATION_REVIEW_PATH,
-        }
-
+def _evaluation_paths() -> dict[str, Path | list[Path]]:
+    """Return the real evaluation artifact paths used by the UI."""
     return {
-        "mode": "real",
         "summary": EVALUATION_SUMMARY_PATH,
         "details": EVALUATION_DETAILS_PATH,
         "review": _evaluation_review_paths(),
