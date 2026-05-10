@@ -285,7 +285,7 @@
       </header>
 
       <p class="notice">
-        Þetta yfirlit er hluti af kennara- og verkefnayfirferðinni. Það les vistuð matsgögn og keyrir ekki ný LLM-köll. Í venjulegu framleiðsluumhverfi væri svona innra matsmælaborð ekki hluti af almennu notendaviðmóti.
+        Þetta yfirlit er sett hér til að gefa þér einfalda leið til að skoða matsgögnin. Í venjulegu framleiðsluumhverfi væri svona innra matsmælaborð ekki hluti af almennu notendaviðmóti.
       </p>
 
       <section class="explain">
@@ -306,7 +306,7 @@
               <p id="paths"></p>
             </details>
           </div>
-          <p class="muted">Sjálfvirkar tölur + meðaleinkunnir frá Sölva og Jóhannesi þegar þær eru til.</p>
+          <p class="muted">Sjálfvirkar tölur og meðaleinkunnir úr handvirku mati Sölva og Jóhannesar.</p>
         </div>
         <table>
           <thead>
@@ -338,6 +338,8 @@
       loadDashboard();
 
       async function loadDashboard() {
+        // This endpoint reads saved evaluation files only. Opening the
+        // dashboard never starts a new model call or changes review data.
         try {
           const response = await fetch("/api/evaluation/dashboard");
           if (!response.ok) {
