@@ -40,3 +40,4 @@ data/processed/*.json
 data/processed/embedding_cache/*
 !data/raw/.gitkeep
 
+reports/main.*
