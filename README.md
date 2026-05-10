@@ -192,7 +192,8 @@ Each source card includes a short reason for why that text was selected.
 
 The app is deployable as a Python web service. The repository includes
 `render.yaml` for Render, which installs dependencies, regenerates the processed
-law chunks, and starts FastAPI with Uvicorn.
+law chunks, and starts FastAPI with Uvicorn. The deployment pins Python 3.12 so
+the NLP dependencies resolve consistently on Render.
 
 Secrets are configured in the hosting dashboard, not in Git:
 
