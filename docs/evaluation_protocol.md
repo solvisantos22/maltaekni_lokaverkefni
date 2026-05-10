@@ -1,13 +1,14 @@
 # Evaluation Protocol
 
-This document defines the final evaluation setup before running paid LLM tests.
-The goal is to avoid changing prompts, models, or metrics after spending tokens.
+This document describes the evaluation setup used for the final experiments.
+The protocol fixes the dataset, retrieval methods, answer model, metrics, and
+human review criteria so the reported results are reproducible.
 
 ## Dataset
 
 Evaluation questions live in `docs/evaluation_questions.csv`.
 
-The current set has 20 questions. The set is intentionally smaller than the
+The final set has 20 questions. The set is intentionally smaller than the
 earlier 30-question version because the final matrix includes several retrieval
 methods, and every method-question pair also needs human review.
 
@@ -32,11 +33,11 @@ section score.
 
 ## Fixed Test Matrix
 
-Primary paid evaluation:
+Final paid evaluation:
 
 | Setting | Value |
 |---|---|
-| Retrieval methods | `tfidf`, `bm25`, `icebert`, `bge-m3`, `rrf-icebert-bm25`, `rrf-bge-m3-bm25`, `rrf-bge-m3-bm25-rerank` |
+| Retrieval methods | `tfidf`, `bm25`, `rrf-icebert-bm25`, `rrf-bge-m3-bm25`, `rrf-bge-m3-bm25-rerank` |
 | LLM provider | `gemini` |
 | LLM model | `gemini-3-flash-preview` |
 | Prompt profile | `strict` |
@@ -44,7 +45,7 @@ Primary paid evaluation:
 | Questions | all rows in `docs/evaluation_questions.csv` |
 | Run label | `gemini-strict-final` |
 
-Optional prompt comparison, only if token budget allows:
+Optional prompt comparison design:
 
 | Setting | Value |
 |---|---|
@@ -56,8 +57,8 @@ Optional prompt comparison, only if token budget allows:
 | Questions | first 10 representative questions |
 | Run labels | `gemini-balanced-sample`, `gemini-strict-sample` |
 
-Do not rerun the full paid matrix unless the code, prompt, or data changes in a
-way that must be reflected in the report.
+The full paid matrix is treated as a saved experimental artifact. Re-running it
+changes the report inputs and may incur additional token cost.
 
 ## Commands
 
@@ -67,10 +68,10 @@ No-token smoke test:
 python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --no-llm --limit 4 --run-label smoke-no-llm
 ```
 
-Primary paid run:
+Final paid run:
 
 ```powershell
-python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 icebert bge-m3 rrf-icebert-bm25 rrf-bge-m3-bm25 rrf-bge-m3-bm25-rerank --llm-provider gemini --gemini-model gemini-3-flash-preview --prompt-profile strict --run-label gemini-strict-final
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 rrf-icebert-bm25 rrf-bge-m3-bm25 rrf-bge-m3-bm25-rerank --llm-provider gemini --gemini-model gemini-3-flash-preview --prompt-profile strict --run-label gemini-strict-final
 ```
 
 Optional prompt comparison:
@@ -82,9 +83,8 @@ python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --lim
 
 ## Automatic Metrics
 
-The evaluation script saves one row per question and retrieval method.
-
-Report these automatic metrics:
+The evaluation script saves one row per question and retrieval method. The
+automatic metrics recorded for the report are:
 
 - `expected_section_in_top_3`: whether the expected legal section appears in the top 3 retrieved chunks.
 - `expected_section_top3_rate`: aggregate hit rate over rows where a legal section is expected.
@@ -97,14 +97,13 @@ Report these automatic metrics:
 The script also writes `reports/evaluation/evaluation_method_summary_latest.csv`
 for report-ready aggregate tables.
 
-After the final run and human review, export the report tables with:
+The final run and human review artifacts are converted to report tables with:
 
 ```powershell
 python -m src.maltaekni_lokaverkefni.export_report_tables
 ```
 
-The exporter writes clean CSV tables to `reports/evaluation/report_tables/`.
-These tables are intended for direct use in the written report:
+The exporter writes clean CSV tables to `reports/evaluation/report_tables/`:
 
 - retrieval-method comparison
 - latency, token, and cost comparison
@@ -114,14 +113,14 @@ These tables are intended for direct use in the written report:
 
 ## Human Evaluation
 
-After a run, open:
+Manual review page:
 
 ```text
 http://127.0.0.1:8000/evaluation
 ```
 
-Sölvi and Jóhannes should each score all rows, or at minimum the final selected
-method on all questions plus a comparison sample from the other methods.
+Sölvi and Jóhannes score the same saved answer rows so the report can compare
+automatic metrics with independent human judgments.
 
 Human scores use a 1-5 scale:
 
@@ -132,7 +131,7 @@ Human scores use a 1-5 scale:
 | `source_support_1_5` | Were the answer claims supported by citations? |
 | `clarity_1_5` | Was the Icelandic clear and useful for a consumer? |
 
-Use the notes field for recurring failure modes:
+The notes field captures recurring failure modes:
 
 - wrong legal article
 - right article but incomplete answer
@@ -143,7 +142,7 @@ Use the notes field for recurring failure modes:
 
 ## Dashboard
 
-After running evaluation, open:
+Dashboard page:
 
 ```text
 http://127.0.0.1:8000/evaluation/dashboard
@@ -162,6 +161,5 @@ In the report, present results in this order:
 4. Error analysis with concrete examples.
 5. Final method choice and limitations.
 
-The final product does not need to be perfect. The report should explain which
-methods worked better, where the system failed, and why those failures are
-reasonable for the current data and model setup.
+The report explains which methods worked better, where the system failed, and
+why those failures are reasonable for the final data and model setup.
