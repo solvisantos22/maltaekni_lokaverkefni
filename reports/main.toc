@@ -3,11 +3,11 @@
 \contentsline {section}{Inngangur}{1}{section*.3}%
 \contentsline {section}{Bakgrunnur}{1}{section*.4}%
 \contentsline {section}{Umræður}{1}{section*.5}%
-\contentsline {section}{Næstu skref}{1}{section*.6}%
-\contentsline {section}{Hvað fór úrskeiðis}{1}{section*.7}%
-\contentsline {section}{Samstarf}{1}{section*.8}%
-\contentsline {chapter}{Skjölun}{2}{chapter*.9}%
-\contentsline {section}{Bakendi}{2}{section*.10}%
-\contentsline {chapter}{Viðauki}{3}{appendix*.11}%
-\contentsline {section}{Skilgreiningar}{3}{section*.12}%
-\contentsline {chapter}{Heimildaskrá}{4}{section*.12}%
+\contentsline {section}{Næstu skref}{2}{section*.10}%
+\contentsline {section}{Hvað fór úrskeiðis}{2}{section*.11}%
+\contentsline {section}{Samstarf}{2}{section*.12}%
+\contentsline {chapter}{Skjölun}{3}{chapter*.13}%
+\contentsline {section}{Bakendi}{3}{section*.14}%
+\contentsline {chapter}{Viðauki}{4}{appendix*.15}%
+\contentsline {section}{Skilgreiningar}{4}{section*.16}%
+\contentsline {chapter}{Heimildaskrá}{5}{section*.16}%

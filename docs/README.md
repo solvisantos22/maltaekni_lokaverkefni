@@ -10,5 +10,3 @@ are part of the final submission.
 - `evaluation_questions.csv`: fixed 20-question evaluation set.
 - `methodology_summary.md`: report-oriented summary of the project method and
   limitations.
-- `demo_evaluation/`: small committed dataset that demonstrates the evaluation
-  UI without requiring a new LLM run.

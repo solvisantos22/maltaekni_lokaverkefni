@@ -161,6 +161,90 @@ Réttarvísir er íslenskt spurningarsvörunarkerfi sem nýtir spunagreind með 
 
 \section{Umræður}
 
+Tafla \ref{tab:retrieval-results} sýnir sjálfvirkt mat á því hvort vænt heimildargrein fannst meðal þriggja efstu niðurstaðna. Tafla \ref{tab:human-scores} sýnir meðaleinkunnir úr handvirku mati og tafla \ref{tab:cost-latency} sýnir keyrslutíma, token-notkun og áætlaðan kostnað fyrir hverja aðferð.
+
+\begin{table}[H]
+\centering
+\caption{Sjálfvirkt mat á heimt eftir aðferð.}
+\label{tab:retrieval-results}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Aðferð & Spurningar & Metnar & Hitt í top-3 & Hlutfall & Meðal heimildaþekja & Villur \\
+\midrule
+\texttt{bm25} & 20 & 18 & 8 & 0.4444 & 0.7167 & 0 \\
+\texttt{rrf-bge-m3-bm25} & 20 & 18 & 13 & 0.7222 & 0.6167 & 0 \\
+\texttt{rrf-bge-m3-bm25-rerank} & 20 & 18 & 12 & 0.6667 & 0.7333 & 0 \\
+\texttt{rrf-icebert-bm25} & 20 & 18 & 5 & 0.2778 & 0.7000 & 0 \\
+\texttt{tfidf} & 20 & 18 & 7 & 0.3889 & 0.8000 & 0 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Handvirkt mat á svörum eftir aðferð.}
+\label{tab:human-scores}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Aðferð & Fjöldi mata & Heimt & Réttleiki & Stuðningur & Skýrleiki & Heildarmeðaltal \\
+\midrule
+\texttt{bm25} & 40 & 2.925 & 3.825 & 4.100 & 4.150 & 3.7500 \\
+\texttt{rrf-bge-m3-bm25} & 40 & 3.550 & 4.000 & 4.025 & 4.125 & 3.9250 \\
+\texttt{rrf-bge-m3-bm25-rerank} & 40 & 3.700 & 4.000 & 4.225 & 4.275 & 4.0500 \\
+\texttt{rrf-icebert-bm25} & 40 & 2.650 & 3.475 & 4.050 & 4.125 & 3.5750 \\
+\texttt{tfidf} & 40 & 2.825 & 3.725 & 4.350 & 4.175 & 3.7687 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Kostnaður, token-notkun og keyrslutími.}
+\label{tab:cost-latency}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Aðferð & Meðaltími (s) & Prompt & Svar & Hugsun & Samtals & Kostnaður USD \\
+\midrule
+\texttt{bm25} & 5.0432 & 33171 & 3377 & 16202 & 52750 & \$ 0.0753225 \\
+\texttt{rrf-bge-m3-bm25} & 6.0034 & 27846 & 3693 & 19177 & 50716 & 0.0825330 \\
+\texttt{rrf-bge-m3-bm25-rerank} & 11.8109 & 39918 & 3711 & 14818 & 58447 & 0.0755460 \\
+\texttt{rrf-icebert-bm25} & 5.2928 & 34892 & 3429 & 16194 & 54515 & 0.0763150 \\
+\texttt{tfidf} & 5.4487 & 32760 & 3568 & 17097 & 53425 & 0.0783750 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Samanburður á meðaleinkunn milli matsmanna.}
+\label{tab:inter-reviewer}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Aðferð & Jóhannes fjöldi & Jóhannes meðaltal & Sölvi fjöldi & Sölvi meðaltal & Munur \\
+\midrule
+\texttt{bm25} & 20 & 4.1875 & 20 & 3.3125 & 0.8750 \\
+\texttt{rrf-bge-m3-bm25} & 20 & 4.3250 & 20 & 3.5250 & 0.8000 \\
+\texttt{rrf-bge-m3-bm25-rerank} & 20 & 4.4125 & 20 & 3.6875 & 0.7250 \\
+\texttt{rrf-icebert-bm25} & 20 & 4.0250 & 20 & 3.1250 & 0.9000 \\
+\texttt{tfidf} & 20 & 4.1250 & 20 & 3.4125 & 0.7125 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+
+
 \section{Næstu skref}
 
 \section{Hvað fór úrskeiðis}
@@ -200,27 +284,9 @@ Réttarvísir er íslenskt spurningarsvörunarkerfi sem nýtir spunagreind með 
 
 \addcontentsline{toc}{chapter}{Heimildaskrá}
 \begin{thebibliography}{99}
-    \bibitem{rna-seq}
-    Kukurba, K. R., \& Montgomery, S. B. (2015). \textit{RNA sequencing and analysis}. Cold Spring Harbor Protocols.
-
-    \bibitem{transcriptome}
-Caudai, C., Galizia, A., Geraci, F., Le Pera, L., Morea, V., Salerno, E., Via, A., \& Colombo, T. (2021). \textit{AI applications in functional genomics}. Computational and Structural Biotechnology Journal, 19, 5762–5790.
-
-\bibitem{fastq}
-Cock, P. J. A., Fields, C. J., Goto, N., Heuer, M. L., \& Rice, P. M. (2010).
-\textit{The Sanger FASTQ file format for sequences with quality scores, and the Solexa/Illumina FASTQ variants}. Nucleic Acids Research 38(6):1767-71.    
-
-\bibitem{wass}
-Wasserman, L. (2004). \textit{All of statistics: A concise course in statistical inference}. Springer.
-
-\bibitem{lag}
-Lagrange multiplier. (n.d.). In Wikipedia. Retrieved March 29, 2026, from \href{https://en.wikipedia.org/wiki/Lagrange_multiplier}{https://en.wikipedia.org/wiki/Lagrange\_multiplier}
-
-\bibitem{kallisto}
-Bray, N. L., Pimentel, H., Melsted, P., \& Pachter, L. (2016). \textit{Near-optimal probabilistic RNA-seq quantification}. Nature Biotechnology, 34(5), 525–527.
-
+   
 \bibitem{equiv}
-? \textit{Stopporð}. Retrieved March 30, 2026, from \url{https://github.com/atlijas/icelandic-stop-words/blob/master/all_stop_words.txt}
+Atli Jasonarson. (2019, 17. október) \textit{Icelandic Stop Words}. [GitHub kóðageymsla]. GitHub. \url{https://github.com/atlijas/icelandic-stop-words/blob/master/all_stop_words.txt}
 
 
 \end{thebibliography}

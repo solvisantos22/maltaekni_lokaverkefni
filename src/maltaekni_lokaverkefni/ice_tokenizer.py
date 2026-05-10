@@ -59,9 +59,6 @@ class IceTokenizer:
     def __lemmatize(self, text: str) -> list[str]:
         """Return lemmas for incoming Icelandic text.
 
-        The original text should still be kept for display and citations. Use
-        this output only for searchable/indexed text.
-
         Reynir exposes sentence-level lemmas when parsing succeeds. If a
         sentence has no lemma analysis, the tokenizer falls back to lowercased
         token text so retrieval can still index the source instead of dropping

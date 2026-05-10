@@ -1,0 +1,6 @@
+﻿retrieval_method,questions,retrieval_check_questions,expected_section_top3_hits,expected_section_top3_rate,avg_source_coverage_ratio,errors
+bm25,20,18,8,0.4444,0.7167,0
+rrf-bge-m3-bm25,20,18,13,0.7222,0.6167,0
+rrf-bge-m3-bm25-rerank,20,18,12,0.6667,0.7333,0
+rrf-icebert-bm25,20,18,5,0.2778,0.7,0
+tfidf,20,18,7,0.3889,0.8,0

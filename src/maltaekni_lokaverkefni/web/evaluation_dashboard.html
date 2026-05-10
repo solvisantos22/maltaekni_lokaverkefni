@@ -327,38 +327,35 @@
     </main>
 
     <script>
+      // Dashboard page for saved evaluation artifacts. The backend returns
+      // already-aggregated metrics, so this script only fetches and renders.
       const cards = document.querySelector("#cards");
       const methodRows = document.querySelector("#methodRows");
       const paths = document.querySelector("#paths");
       const datasetLine = document.querySelector("#datasetLine");
-      const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
       const reviewLink = document.querySelector("#reviewLink");
-      if (demoMode) reviewLink.href = "/evaluation?demo=1";
 
       loadDashboard();
 
       async function loadDashboard() {
         try {
-          const response = await fetch(`/api/evaluation/dashboard${demoMode ? "?demo=1" : ""}`);
+          const response = await fetch("/api/evaluation/dashboard");
           if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || "Na ekki i matsgogn.");
           }
           const payload = await response.json();
-          document.body.classList.toggle("demo-mode", Boolean(payload.is_demo));
           renderCards(payload.overall);
           renderMethods(payload.methods);
-          datasetLine.textContent = payload.is_demo
-            ? `Sýnidæmi · ekki raunveruleg niðurstaða · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`
-            : `Raunkeyrsla · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`;
+          datasetLine.textContent = `Raunkeyrsla · ${payload.overall.rows} matsraðir · ${payload.overall.methods} leitaraðferðir`;
           paths.textContent = `Samantekt: ${payload.summary_path} · Mannlegt mat: ${payload.review_path}`;
-          if (payload.is_demo) reviewLink.href = "/evaluation?demo=1";
         } catch (error) {
           cards.innerHTML = `<article class="card"><p class="error">${escapeHtml(error.message)}</p></article>`;
         }
       }
 
       function renderCards(overall) {
+        // Top cards are high-level run metadata and totals across all methods.
         const items = [
           ["Matsraðir", overall.rows, "Ein röð er ein spurning keyrð með einni leitaraðferð."],
           ["Spurningar", overall.questions, "Fjöldi ólíkra spurninga í matssettinu."],
@@ -379,6 +376,8 @@
       }
 
       function renderMethods(methods) {
+        // Each row combines automatic retrieval metrics, LLM usage, latency,
+        // cost, and any human review averages saved for that method.
         methodRows.innerHTML = methods.map((method) => {
           const rate = method.expected_section_top3_rate;
           const top3 = rate === null ? "-" : `${method.expected_section_top3_hits}/${method.retrieval_check_questions} (${Math.round(rate * 100)}%)`;
@@ -429,12 +428,14 @@
       }
 
       function formatCost(value) {
+        // Zero or missing cost means no usable LLM price metadata was available.
         const number = Number(value);
         if (!Number.isFinite(number) || number === 0) return "-";
         return `$${number.toFixed(6)}`;
       }
 
       function escapeHtml(value) {
+        // All backend strings are escaped before insertion into template HTML.
         return String(value)
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")

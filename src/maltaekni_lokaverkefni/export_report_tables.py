@@ -10,9 +10,15 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -28,6 +34,9 @@ SCORE_FIELDS = [
 
 
 def main() -> None:
+    if load_dotenv is not None:
+        load_dotenv(PROJECT_ROOT / ".env")
+
     parser = argparse.ArgumentParser(description="Export report-ready evaluation tables.")
     parser.add_argument(
         "--evaluation-dir",
@@ -138,7 +147,7 @@ def build_cost_latency_table(rows: list[dict[str, str]]) -> list[dict[str, Any]]
                 "total_output_tokens": total(row.get("output_tokens") for row in method_rows),
                 "total_thought_tokens": total(row.get("thought_tokens") for row in method_rows),
                 "total_tokens": total(row.get("total_tokens") for row in method_rows),
-                "estimated_cost_usd": total(row.get("estimated_cost_usd") for row in method_rows),
+                "estimated_cost_usd": total(estimated_cost(row) for row in method_rows),
             }
         )
     return sorted(table, key=lambda row: row["retrieval_method"])
@@ -330,6 +339,29 @@ def total(values: Any) -> float | int | str:
         return ""
     summed = sum(numbers)
     return int(summed) if summed.is_integer() else round(summed, 8)
+
+
+def estimated_cost(row: dict[str, str]) -> float | str:
+    """Use saved cost when present, otherwise estimate from token counts and env rates."""
+    saved_cost = float_or_none(row.get("estimated_cost_usd"))
+    if saved_cost is not None:
+        return saved_cost
+
+    provider = (row.get("llm_provider") or "").strip().upper()
+    if not provider:
+        return ""
+
+    input_rate = float_or_none(os.getenv(f"{provider}_INPUT_COST_PER_1M"))
+    output_rate = float_or_none(os.getenv(f"{provider}_OUTPUT_COST_PER_1M"))
+    if input_rate is None and output_rate is None:
+        return ""
+
+    prompt_tokens = float_or_none(row.get("prompt_tokens")) or 0
+    output_tokens = float_or_none(row.get("output_tokens")) or 0
+    thought_tokens = float_or_none(row.get("thought_tokens")) or 0
+    input_cost = (prompt_tokens / 1_000_000) * (input_rate or 0)
+    output_cost = ((output_tokens + thought_tokens) / 1_000_000) * (output_rate or 0)
+    return round(input_cost + output_cost, 8)
 
 
 def ratio(numerator: int, denominator: int) -> float | str:

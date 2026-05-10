@@ -409,22 +409,6 @@
         text-decoration: none;
       }
 
-      .demo-note {
-        display: none;
-        margin-top: 14px;
-        padding: 12px;
-        border: 1px solid rgba(40, 198, 178, 0.34);
-        border-radius: 8px;
-        background: rgba(40, 198, 178, 0.08);
-        color: var(--green);
-        font-size: 13px;
-        line-height: 1.45;
-      }
-
-      body.demo-mode .demo-note {
-        display: block;
-      }
-
       .action.primary {
         border-color: rgba(215, 181, 109, 0.55);
         background: rgba(215, 181, 109, 0.16);
@@ -482,10 +466,6 @@
           <div class="bar"><span id="progressBar"></span></div>
           <p id="savedState" class="muted saved-state">Vistað staðbundið í reports/evaluation.</p>
         </div>
-
-        <p class="demo-note">
-          Sýnidæmi: þetta eru ekki raunverulegar niðurstöður úr lokamati. Gögnin eru aðeins hér til að sýna hvernig matsferlið, stigagjöfin og heimildayfirferðin virka án þess að keyra Gemini eða eyða tokenum.
-        </p>
 
         <a id="dashboardLink" class="sidebar-link" href="/evaluation/dashboard">Yfirlit mats</a>
         <a class="sidebar-link" href="/?skipWelcome=1#chatPanel">Til baka í spjall</a>
@@ -550,6 +530,9 @@
     </div>
 
     <script>
+      // Human review page for saved evaluation rows. It shows one
+      // question/method result at a time and stores reviewer scores as CSV via
+      // /api/evaluation/review.
       const scoreFields = [
         ["retrieval_relevance_1_5", "Réttmæti heimilda", "Eru heimildirnar sem komu upp í leitinni viðeigandi fyrir spurninguna?"],
         ["answer_correctness_1_5", "Réttleiki svars", "Er svarið rétt miðað við heimildirnar sem eru sýndar?"],
@@ -561,19 +544,10 @@
       let reviews = {};
       let activeIndex = 0;
       let scores = {};
-      const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
-      let activeDemoMode = demoMode;
 
       const evaluatorInput = document.querySelector("#evaluator");
       const notesInput = document.querySelector("#notes");
       const scoreGroups = document.querySelector("#scoreGroups");
-      const dashboardLink = document.querySelector("#dashboardLink");
-
-      if (demoMode) {
-        document.body.classList.add("demo-mode");
-        dashboardLink.href = "/evaluation/dashboard?demo=1";
-        document.querySelector("#savedState").textContent = "Sýnidæmi: þetta er ekki raunverulegt mat og vistast ekki.";
-      }
 
       const savedEvaluator = localStorage.getItem("evaluationEvaluator") || "Sölvi";
       evaluatorInput.value = ["Sölvi", "Jóhannes"].includes(savedEvaluator) ? savedEvaluator : "Sölvi";
@@ -592,24 +566,18 @@
       loadEvaluation();
 
       async function loadEvaluation() {
+        // The API joins summary rows with detailed source traces and existing
+        // human reviews so this page can render and update one row at a time.
         try {
-          const response = await fetch(`/api/evaluation/latest${demoMode ? "?demo=1" : ""}`);
+          const response = await fetch("/api/evaluation/latest");
           if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || "Næ ekki í matsgögn.");
           }
           const payload = await response.json();
-          activeDemoMode = demoMode || payload.is_demo;
-          if (activeDemoMode) {
-            document.body.classList.add("demo-mode");
-            dashboardLink.href = "/evaluation/dashboard?demo=1";
-            document.querySelector("#savedState").textContent = "Sýnidæmi: þetta er ekki raunverulegt mat og vistast ekki.";
-          }
           rows = payload.rows;
           reviews = payload.reviews || {};
-          document.querySelector("#datasetState").textContent = payload.is_demo
-            ? `Sýnidæmi · ekki raunveruleg niðurstaða · ${rows.length} matsraðir`
-            : `Raunkeyrsla · ${rows.length} matsraðir`;
+          document.querySelector("#datasetState").textContent = `Raunkeyrsla · ${rows.length} matsraðir`;
           document.querySelector("#paths").textContent =
             `Samantekt: ${payload.summary_path} · Ítarlegt: ${payload.details_path} · Mannlegt mat: ${payload.review_path}`;
           renderActiveRow();
@@ -621,6 +589,8 @@
       }
 
       function renderActiveRow() {
+        // Rehydrate saved scores for the selected evaluator, then render the
+        // question, answer, metadata pills, score controls, and sources.
         if (!rows.length) return;
 
         const row = rows[activeIndex];
@@ -653,6 +623,7 @@
       }
 
       function renderScores() {
+        // Scores are stored in memory until the reviewer clicks save.
         scoreGroups.innerHTML = "";
         for (const [field, label, helpText] of scoreFields) {
           const group = document.createElement("div");
@@ -678,6 +649,8 @@
       }
 
       function renderSources(row) {
+        // Prefer full source traces from JSONL; fall back to summary columns
+        // when only the flattened CSV is available.
         const sourceRoot = document.querySelector("#sources");
         const sources = row.sources?.length
           ? row.sources
@@ -700,11 +673,6 @@
 
       async function saveReview() {
         if (!rows.length) return;
-        if (activeDemoMode) {
-          document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er aðeins til að skoða matsflæðið.";
-          document.querySelector("#savedState").classList.remove("error");
-          return;
-        }
 
         const row = rows[activeIndex];
         const evaluator = evaluatorInput.value.trim() || "Sölvi";
@@ -737,6 +705,7 @@
       }
 
       function move(delta) {
+        // Clamp navigation so previous/next buttons cannot leave the dataset.
         activeIndex = Math.min(rows.length - 1, Math.max(0, activeIndex + delta));
         renderActiveRow();
       }
@@ -751,10 +720,13 @@
       }
 
       function expectedSectionFound(row) {
+        // Accept the old expected_hint_in_top_3 column for older evaluation CSVs.
         return row.expected_section_in_top_3 === "True" || row.expected_hint_in_top_3 === "True";
       }
 
       function escapeHtml(value) {
+        // Scores and saved notes are local, but evaluation text can contain
+        // arbitrary source content, so always escape before HTML insertion.
         return String(value)
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")

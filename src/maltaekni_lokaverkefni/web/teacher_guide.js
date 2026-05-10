@@ -1,4 +1,8 @@
+// Floating checklist used during project/teacher review. The guide is injected
+// into every web page that includes this script, and its UI state is persisted
+// locally so reviewers can move between pages without losing progress.
 (function () {
+  // localStorage keys are namespaced so they do not collide with app state.
   const collapsedKey = "rettarvisirTeacherGuideCollapsed";
   const checkedKey = "rettarvisirTeacherGuideChecked";
   const positionKey = "rettarvisirTeacherGuidePosition";
@@ -78,6 +82,7 @@
   let suppressBubbleClick = false;
 
   function readJson(key, fallback) {
+    // Invalid stored JSON should not break the page; fall back silently.
     try {
       return JSON.parse(localStorage.getItem(key) || "null") || fallback;
     } catch {
@@ -90,6 +95,8 @@
   }
 
   function setCollapsed(collapsed, options = {}) {
+    // Preserve the current top-right corner when switching between the large
+    // checklist and compact bubble, so collapsing does not visually jump.
     const previous = collapsed ? guide : bubble;
     const previousRect = previous.getBoundingClientRect();
     guide.hidden = collapsed;
@@ -138,6 +145,7 @@
   }
 
   function clampPosition(left, top, element) {
+    // Keep the floating guide visible after dragging or viewport resize.
     const margin = 8;
     const width = element.offsetWidth || 280;
     const height = element.offsetHeight || 220;
@@ -148,6 +156,8 @@
   }
 
   function beginDrag(event, element, options = {}) {
+    // Dragging the full guide should ignore controls so links and checkboxes
+    // still behave normally. The compact bubble is itself draggable.
     if (!options.allowControls && event.target.closest("button, a, input, label")) return;
     const rect = element.getBoundingClientRect();
     dragState = {
@@ -182,6 +192,8 @@
     const next = clampPosition(rect.left, rect.top, element);
     writeJson(positionKey, next);
     if (element === bubble && dragState.moved) {
+      // A pointerup after dragging the bubble would otherwise also trigger the
+      // click handler and reopen the full checklist.
       suppressBubbleClick = true;
       window.setTimeout(() => {
         suppressBubbleClick = false;
@@ -221,6 +233,8 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     document.body.append(guide, bubble);
+    // Show the full guide once per browser tab, then respect the persisted
+    // collapsed state for subsequent page loads.
     if (sessionStorage.getItem(sessionStartedKey) !== "1") {
       sessionStorage.setItem(sessionStartedKey, "1");
       setCollapsed(false, { useDefaultPosition: true });

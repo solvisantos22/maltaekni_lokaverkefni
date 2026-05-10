@@ -17,6 +17,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
 from .answer_generator import generate_grounded_answer
 from .retriever import build_retriever
 
@@ -28,18 +33,19 @@ EVALUATION_SUMMARY_PATH = EVALUATION_DIR / "evaluation_summary_latest.csv"
 EVALUATION_DETAILS_PATH = EVALUATION_DIR / "evaluation_details_latest.jsonl"
 EVALUATION_REVIEW_PATH = EVALUATION_DIR / "evaluation_review_latest.csv"
 EVALUATION_REVIEW_GLOB = "evaluation_review_*.csv"
-DEMO_EVALUATION_DIR = PROJECT_ROOT / "docs" / "demo_evaluation"
-DEMO_EVALUATION_SUMMARY_PATH = DEMO_EVALUATION_DIR / "evaluation_summary_demo.csv"
-DEMO_EVALUATION_DETAILS_PATH = DEMO_EVALUATION_DIR / "evaluation_details_demo.jsonl"
-DEMO_EVALUATION_REVIEW_PATH = DEMO_EVALUATION_DIR / "evaluation_review_demo.csv"
 WEB_DIR = Path(__file__).resolve().parent / "web"
 ACCESS_TOKEN_ENV = "APP_ACCESS_TOKEN"
+
+if load_dotenv is not None:
+    load_dotenv(PROJECT_ROOT / ".env")
 
 app = FastAPI(title="Réttarvísir")
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
 
 class AskRequest(BaseModel):
+    """Request body for one RAG question from the chat UI."""
+
     question: str = Field(min_length=1, max_length=1000)
     method: Literal[
         "tfidf",
@@ -54,6 +60,8 @@ class AskRequest(BaseModel):
 
 
 class StatusResponse(BaseModel):
+    """Readiness payload returned by /api/status."""
+
     ready: bool
     chunks_path: str
     message: str
@@ -61,6 +69,8 @@ class StatusResponse(BaseModel):
 
 
 class EvaluationReviewRequest(BaseModel):
+    """One human review row for a question and retrieval-method pair."""
+
     question_id: str
     retrieval_method: str
     evaluator: str = Field(min_length=1, max_length=80)
@@ -73,26 +83,31 @@ class EvaluationReviewRequest(BaseModel):
 
 @lru_cache(maxsize=8)
 def _load_retriever(method: str):
+    """Build and cache retrievers so repeated web requests avoid re-indexing."""
     return build_retriever(method, chunks_path=CHUNKS_PATH)
 
 
 @app.get("/")
 def index():
+    """Serve the main chat interface."""
     return FileResponse(WEB_DIR / "index.html")
 
 
 @app.get("/evaluation")
 def evaluation_review():
+    """Serve the human evaluation review interface."""
     return FileResponse(WEB_DIR / "evaluation.html")
 
 
 @app.get("/evaluation/dashboard")
 def evaluation_dashboard():
+    """Serve the aggregate evaluation dashboard."""
     return FileResponse(WEB_DIR / "evaluation_dashboard.html")
 
 
 @app.get("/api/status", response_model=StatusResponse)
 def status():
+    """Report whether processed chunks are available for retrieval."""
     if CHUNKS_PATH.exists():
         return StatusResponse(
             ready=True,
@@ -113,11 +128,8 @@ def status():
 
 
 @app.post("/api/ask")
-def ask(
-    request: AskRequest,
-    x_app_access_token: str | None = Header(default=None),
-):
-    verify_access_token(x_app_access_token)
+def ask(request: AskRequest):
+    """Run retrieval and answer generation for one user question."""
     if not CHUNKS_PATH.exists():
         raise HTTPException(
             status_code=503,
@@ -156,14 +168,15 @@ def verify_access_token(provided_token: str | None) -> None:
 
 
 @app.get("/api/evaluation/latest")
-def latest_evaluation(demo: bool = False):
-    paths = _evaluation_paths(demo=demo)
+def latest_evaluation():
+    """Return per-row evaluation data with sources and saved human reviews."""
+    paths = _evaluation_paths()
     if not paths["summary"].exists():
         raise HTTPException(
             status_code=404,
             detail=(
                 "Missing reports/evaluation/evaluation_summary_latest.csv. "
-                "Run evaluate_methods.py first or open /evaluation?demo=1."
+                "Run evaluate_methods.py first."
             ),
         )
 
@@ -177,8 +190,6 @@ def latest_evaluation(demo: bool = False):
         row["sources"] = details.get(key, {}).get("answer_result", {}).get("sources", [])
 
     return {
-        "mode": paths["mode"],
-        "is_demo": paths["mode"] == "demo",
         "summary_path": str(paths["summary"]),
         "details_path": str(paths["details"]),
         "review_path": _format_review_paths(paths["review"]),
@@ -188,22 +199,21 @@ def latest_evaluation(demo: bool = False):
 
 
 @app.get("/api/evaluation/dashboard")
-def evaluation_dashboard_data(demo: bool = False):
-    paths = _evaluation_paths(demo=demo)
+def evaluation_dashboard_data():
+    """Return aggregate metrics used by the dashboard page."""
+    paths = _evaluation_paths()
     if not paths["summary"].exists():
         raise HTTPException(
             status_code=404,
             detail=(
                 "Missing reports/evaluation/evaluation_summary_latest.csv. "
-                "Run evaluate_methods.py first or open /evaluation/dashboard?demo=1."
+                "Run evaluate_methods.py first."
             ),
         )
 
     rows = _load_evaluation_rows(paths["summary"])
     review_rows = _load_evaluation_review_rows(paths["review"])
     return {
-        "mode": paths["mode"],
-        "is_demo": paths["mode"] == "demo",
         "summary_path": str(paths["summary"]),
         "review_path": _format_review_paths(paths["review"]),
         "overall": _dashboard_overall(rows, review_rows),
@@ -213,6 +223,7 @@ def evaluation_dashboard_data(demo: bool = False):
 
 @app.post("/api/evaluation/review")
 def save_evaluation_review(review: EvaluationReviewRequest):
+    """Create or update one evaluator's scores for an evaluation row."""
     EVALUATION_DIR.mkdir(parents=True, exist_ok=True)
     review_path = _review_path_for_evaluator(review.evaluator)
     reviews = _load_evaluation_review_rows(review_path)
@@ -237,17 +248,9 @@ def save_evaluation_review(review: EvaluationReviewRequest):
     return {"saved": True, "review": review_row, "review_path": str(review_path)}
 
 
-def _evaluation_paths(*, demo: bool = False) -> dict[str, Path | list[Path] | str]:
-    if demo or not EVALUATION_SUMMARY_PATH.exists():
-        return {
-            "mode": "demo",
-            "summary": DEMO_EVALUATION_SUMMARY_PATH,
-            "details": DEMO_EVALUATION_DETAILS_PATH,
-            "review": DEMO_EVALUATION_REVIEW_PATH,
-        }
-
+def _evaluation_paths() -> dict[str, Path | list[Path]]:
+    """Return the real evaluation artifact paths used by the UI."""
     return {
-        "mode": "real",
         "summary": EVALUATION_SUMMARY_PATH,
         "details": EVALUATION_DETAILS_PATH,
         "review": _evaluation_review_paths(),
@@ -255,6 +258,7 @@ def _evaluation_paths(*, demo: bool = False) -> dict[str, Path | list[Path] | st
 
 
 def _load_evaluation_rows(path: Path) -> list[dict[str, str]]:
+    """Load the flattened evaluation summary CSV for UI display."""
     with path.open("r", encoding="utf-8-sig", newline="") as file:
         rows = list(csv.DictReader(file))
     for row in rows:
@@ -263,6 +267,7 @@ def _load_evaluation_rows(path: Path) -> list[dict[str, str]]:
 
 
 def _load_evaluation_details(path: Path) -> dict[str, dict]:
+    """Load JSONL traces keyed by question id and retrieval method."""
     if not path.exists():
         return {}
 
@@ -279,6 +284,7 @@ def _load_evaluation_details(path: Path) -> dict[str, dict]:
 
 
 def _evaluation_review_paths() -> list[Path]:
+    """Return committed evaluator-specific review CSVs, falling back to latest."""
     review_paths = sorted(
         path
         for path in EVALUATION_DIR.glob(EVALUATION_REVIEW_GLOB)
@@ -292,16 +298,19 @@ def _evaluation_review_paths() -> list[Path]:
 
 
 def _review_path_for_evaluator(evaluator: str) -> Path:
+    """Map an evaluator name to the CSV file where their reviews are stored."""
     return EVALUATION_DIR / f"evaluation_review_{_evaluator_slug(evaluator)}.csv"
 
 
 def _evaluator_slug(evaluator: str) -> str:
+    """Convert a human evaluator name into a filesystem-safe lowercase slug."""
     normalized = unicodedata.normalize("NFKD", evaluator).encode("ascii", "ignore").decode("ascii")
     slug = re.sub(r"[^a-z0-9]+", "_", normalized.lower()).strip("_")
     return slug or "unknown"
 
 
 def _format_review_paths(path: Path | list[Path]) -> str:
+    """Format one or more review paths for the evaluation UI metadata line."""
     if isinstance(path, list):
         if not path:
             return str(EVALUATION_DIR / EVALUATION_REVIEW_GLOB)
@@ -312,6 +321,7 @@ def _format_review_paths(path: Path | list[Path]) -> str:
 def _load_evaluation_reviews(
     path: Path | list[Path] | None = None,
 ) -> dict[str, dict[str, dict[str, str]]]:
+    """Load reviews grouped by evaluation row key and evaluator name."""
     reviews: dict[str, dict[str, dict[str, str]]] = {}
     for row in _load_evaluation_review_rows(path):
         row_key = row.get("row_key", "")
@@ -325,6 +335,7 @@ def _load_evaluation_reviews(
 def _load_evaluation_review_rows(
     path: Path | list[Path] | None = None,
 ) -> list[dict[str, str]]:
+    """Load raw review CSV rows from one path, many paths, or all review files."""
     paths = _evaluation_review_paths() if path is None else path
     if isinstance(paths, Path):
         paths = [paths]
@@ -339,6 +350,7 @@ def _load_evaluation_review_rows(
 
 
 def _write_evaluation_reviews(rows: list[dict], path: Path) -> None:
+    """Persist review rows with a stable column order for later aggregation."""
     fieldnames = [
         "row_key",
         "question_id",
@@ -361,6 +373,7 @@ def _dashboard_overall(
     rows: list[dict[str, str]],
     review_rows: list[dict[str, str]],
 ) -> dict[str, Any]:
+    """Compute dashboard-level counts, token totals, and cost estimates."""
     total = len(rows)
     return {
         "rows": total,
@@ -375,7 +388,7 @@ def _dashboard_overall(
         "review_count": len(review_rows),
         "total_tokens": _sum_number(row.get("total_tokens") for row in rows),
         "estimated_cost_usd": _round_number(
-            _sum_number(row.get("estimated_cost_usd") for row in rows)
+            _sum_number(_estimated_cost(row) for row in rows)
         ),
     }
 
@@ -384,6 +397,7 @@ def _dashboard_by_method(
     rows: list[dict[str, str]],
     review_rows: list[dict[str, str]],
 ) -> list[dict[str, Any]]:
+    """Aggregate retrieval, answer, review, latency, token, and cost metrics by method."""
     methods = sorted({row.get("retrieval_method", "") for row in rows if row.get("retrieval_method")})
     method_reviews: dict[str, list[dict[str, str]]] = {}
     for review in review_rows:
@@ -424,7 +438,7 @@ def _dashboard_by_method(
                 "total_thought_tokens": _sum_number(row.get("thought_tokens") for row in method_rows),
                 "total_tokens": _sum_number(row.get("total_tokens") for row in method_rows),
                 "estimated_cost_usd": _round_number(
-                    _sum_number(row.get("estimated_cost_usd") for row in method_rows)
+                    _sum_number(_estimated_cost(row) for row in method_rows)
                 ),
                 "human_reviews": len(reviews),
                 "avg_retrieval_relevance_1_5": _avg_number(
@@ -443,6 +457,7 @@ def _dashboard_by_method(
 
 
 def _sum_number(values: Any) -> float | int:
+    """Sum parseable numeric values while ignoring blanks and invalid strings."""
     numbers = [_to_number(value) for value in values]
     valid_numbers = [value for value in numbers if value is not None]
     total = sum(valid_numbers)
@@ -450,6 +465,7 @@ def _sum_number(values: Any) -> float | int:
 
 
 def _avg_number(values: Any) -> float | None:
+    """Average parseable numeric values, returning None when no values exist."""
     numbers = [_to_number(value) for value in values]
     valid_numbers = [value for value in numbers if value is not None]
     if not valid_numbers:
@@ -459,10 +475,12 @@ def _avg_number(values: Any) -> float | None:
 
 
 def _round_number(value: float | int) -> float:
+    """Round dashboard numbers to a stable precision for JSON responses."""
     return round(float(value), 8)
 
 
 def _to_number(value: Any) -> float | None:
+    """Parse CSV values into floats, treating empty cells as missing."""
     if value in {None, ""}:
         return None
 
@@ -472,7 +490,31 @@ def _to_number(value: Any) -> float | None:
         return None
 
 
+def _estimated_cost(row: dict[str, str]) -> float | None:
+    """Use saved cost when present, otherwise estimate it from tokens and env rates."""
+    saved_cost = _to_number(row.get("estimated_cost_usd"))
+    if saved_cost is not None:
+        return saved_cost
+
+    provider = (row.get("llm_provider") or "").strip().upper()
+    if not provider:
+        return None
+
+    input_rate = _to_number(os.getenv(f"{provider}_INPUT_COST_PER_1M"))
+    output_rate = _to_number(os.getenv(f"{provider}_OUTPUT_COST_PER_1M"))
+    if input_rate is None and output_rate is None:
+        return None
+
+    prompt_tokens = _to_number(row.get("prompt_tokens")) or 0
+    output_tokens = _to_number(row.get("output_tokens")) or 0
+    thought_tokens = _to_number(row.get("thought_tokens")) or 0
+    input_cost = (prompt_tokens / 1_000_000) * (input_rate or 0)
+    output_cost = ((output_tokens + thought_tokens) / 1_000_000) * (output_rate or 0)
+    return round(input_cost + output_cost, 8)
+
+
 def _retrieval_check_applicable(row: dict[str, str]) -> bool:
+    """Return whether a row has a concrete expected source section to check."""
     explicit = str(row.get("retrieval_check_applicable", "")).lower()
     if explicit in {"true", "false"}:
         return explicit == "true"
@@ -482,6 +524,7 @@ def _retrieval_check_applicable(row: dict[str, str]) -> bool:
 
 
 def _first_value(values: Any) -> str:
+    """Return the first non-empty value from an iterable."""
     for value in values:
         if value:
             return str(value)
@@ -489,10 +532,12 @@ def _first_value(values: Any) -> str:
 
 
 def _review_key(question_id: str, retrieval_method: str) -> str:
+    """Build the shared key used to join summaries, details, and reviews."""
     return f"{question_id}::{retrieval_method}"
 
 
 def main():
+    """Run the FastAPI app with Uvicorn for local development."""
     import uvicorn
 
     uvicorn.run(
