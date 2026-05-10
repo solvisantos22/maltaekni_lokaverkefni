@@ -1,3 +1,12 @@
+"""Retrieval backends used by the RAG app and evaluation pipeline.
+
+The retriever is intentionally method-switchable so the report can compare
+lexical search, embedding search, reciprocal rank fusion, and reranking under
+the same input/output contract. Every method returns the same ranked chunk
+shape, which keeps answer generation, the UI, and evaluation independent from
+the retrieval implementation.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -53,17 +62,19 @@ class Retriever:
 
     Explanation:
         Retriever indexes processed Chunk objects and returns the most relevant
-        chunks for a user question. It supports lexical retrieval, embedding
-        retrieval, and reciprocal rank fusion between BM25 and embeddings.
+        chunks for a user question. It supports TF-IDF, BM25, direct embedding
+        retrieval, reciprocal rank fusion between BM25 and embeddings, and an
+        optional reranker after first-stage retrieval.
 
     Attributes:
         chunks: Chunk objects currently indexed by the retriever.
         method: Retrieval method name.
-        ice_tokenizer: Icelandic tokenizer used before lexical and embedding retrieval.
+        ice_tokenizer: Icelandic tokenizer used before lexical retrieval.
         tokenized_chunks: Tokenized chunk texts used by BM25.
         bm25: BM25Okapi index when method uses BM25.
         embedder: Embedding encoder when method uses embeddings.
         embedding_matrix: Normalized embedding matrix for chunks.
+        reranker: Cross-encoder reranker when using a rerank method.
         vectorizer: TfidfVectorizer when method is "tfidf".
         chunk_matrix: TF-IDF matrix when method is "tfidf".
 
@@ -274,7 +285,7 @@ class Retriever:
         return self.cache_dir / f"{method}-{self.chunk_fingerprint}.npz"
 
     def __fingerprint_chunks(self, chunks: list[Chunk]) -> str:
-        """Build a stable fingerprint for cache invalidation."""
+        """Build a stable fingerprint for embedding cache invalidation."""
         digest = hashlib.sha256()
         digest.update(b"raw-embedding-input-v1")
         digest.update(b"\0")
@@ -312,7 +323,7 @@ class Retriever:
         return self.ice_tokenizer.lemmatIce(searchable_text)
 
     def __rrf_scores(self, ranked_score_lists, rank_constant: int, *, candidate_k: int):
-        """Fuse only the top candidates from each score list."""
+        """Fuse only top candidates so low-ranked noise does not dominate."""
         fused = np.zeros(len(self.chunks), dtype=float)
         for scores in ranked_score_lists:
             ranked_indexes = np.argsort(scores)[::-1][:candidate_k]

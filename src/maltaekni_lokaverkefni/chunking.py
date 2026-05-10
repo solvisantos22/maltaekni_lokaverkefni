@@ -27,7 +27,9 @@ class Chunker():
         Chunker takes cleaned Document objects and splits them into smaller
         Chunk objects that can be indexed by the retriever. For Althingi laws,
         the current strategy is one chunk per legal article, using lines such as
-        "26. gr. Úrræði neytanda vegna galla." as section boundaries.
+        "26. gr. Úrræði neytanda vegna galla." as section boundaries. This
+        preserves citation-friendly legal sections while keeping retrieval
+        inputs small enough for ranking and answer generation.
 
     Attributes:
         documents: Documents waiting to be chunked.
@@ -48,7 +50,7 @@ class Chunker():
     
 
     def chunk_documents(self):
-        """Chunk a document using the best simple strategy for its source."""
+        """Chunk every loaded document using the strategy for its source."""
         for document in self.documents:
             self.__chunk_document(document)
             
@@ -142,7 +144,7 @@ def save_chunks(chunks: list[Chunk], path: Path):
 
 
 def searchable_text_for_chunk(chunk: Chunk) -> str:
-    """Build the same indexed text representation used by the retriever."""
+    """Build indexed text with repeated section headings for retrieval weight."""
     return "\n".join(
         [
             chunk.title,

@@ -1,3 +1,11 @@
+"""Fetch curated legal source pages and normalize them into Documents.
+
+The rest of the pipeline expects source material in a small, source-agnostic
+`Document` shape. This module owns the first step: downloading curated Althingi
+Lagasafn pages, extracting only the law text, and writing
+`data/processed/documents.json` when run as a script.
+"""
+
 from __future__ import annotations
 
 from html.parser import HTMLParser
@@ -14,7 +22,6 @@ except ImportError:  # Allows direct script execution during early experiments.
     from types_classes import Document
 
 
-
 class FetchData:
     """
     Fetch and parse one curated source page into a Document.
@@ -26,8 +33,8 @@ class FetchData:
 
     Attributes:
         url: URL of the page being fetched.
-        source: Normalized source name, currently "althingi" or
-            "neytendastofa".
+        source: Normalized source name. Currently only "althingi" is
+            implemented.
         timeout_seconds: Network timeout used when fetching the page.
         parsed: Clean text extracted from the downloaded HTML.
         html: Raw downloaded HTML.
@@ -40,26 +47,22 @@ class FetchData:
     """
     
     url: str | None = None
-    source: str| None = None
-    timeout_seconds: int| None = None
-    parsed: str| None = None
-    html: str| None = None
+    source: str | None = None
+    timeout_seconds: int | None = None
+    parsed: str | None = None
+    html: str | None = None
     title: str | None = None
     doc_id: str | None = None
     
-    def fetch(self, url: str, timeout_seconds: int = 60):
+    def fetch(self, url: str, timeout_seconds: int = 60) -> None:
         """Download a supported source URL and store the raw HTML."""
-        if 'althingi' in url:
-            self.source = 'althingi'
+        if "althingi" in url:
+            self.source = "althingi"
         else:
             raise ValueError(f"only urls from althingi supported, got {url}")
-        
         self.url = url
         self.timeout_seconds = timeout_seconds
-    
         self.html = self.__download_html()
-        
-
 
     def __download_html(self) -> str:
         """Download HTML for self.url and decode it to text."""
@@ -85,12 +88,9 @@ class FetchData:
             raise RuntimeError(f"Could not fetch {self.url}: {error.reason}") from error
 
 
-    def __parse(self):
-        """
-        Parse self.html with the parser that matches self.source.
-        """
-        
-        if self.source == 'althingi':
+    def __parse(self) -> None:
+        """Parse self.html with the parser that matches self.source."""
+        if self.source == "althingi":
             parser = _AlthingiParser()
         else:
             raise NotImplementedError("Only Althingi parsing is implemented for now")
@@ -111,35 +111,36 @@ class FetchData:
             self.parsed = parsed
             
     
-    def __get_title_from_parsed(self) -> str:
+    def __get_title_from_parsed(self) -> None:
         """Infer a document title from the parsed text."""
         lines = [line.strip() for line in self.parsed.splitlines() if line.strip()]
-        for line in lines:
-            if line.startswith("Lög um "):
-                self.title = line
-
-        self.title = lines[0] if lines else "Óþekktur titill"
+        self.title = next(
+            (line for line in lines if line.startswith("Lög um ")),
+            lines[0] if lines else "Óþekktur titill",
+        )
     
-    def __get_document_id_from_url(self) -> int:
+    def __get_document_id_from_url(self) -> None:
         """Infer a stable document identifier from the page URL."""
         matches = re.findall(r'[0-9]+\.html', self.url)
-        self.doc_id = matches[0] 
+        if not matches:
+            raise ValueError(f"Could not infer document id from {self.url}")
+        self.doc_id = matches[0]
     
-    def data(self):
+    def data(self) -> Document:
         """Return the fetched page as a parsed Document object."""
         if not self.parsed:
-           self.__parse()
+            self.__parse()
         if not self.title:
-           self.__get_title_from_parsed()
+            self.__get_title_from_parsed()
         if not self.doc_id:
-           self.__get_document_id_from_url()
+            self.__get_document_id_from_url()
         
         return Document(
-            url = self.url,
-            source = self.source,
-            title = self.title,
-            text = self.parsed,
-            document_id = self.doc_id
+            url=self.url,
+            source=self.source,
+            title=self.title,
+            text=self.parsed,
+            document_id=self.doc_id,
         )
           
 

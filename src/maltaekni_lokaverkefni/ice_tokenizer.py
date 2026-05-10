@@ -15,8 +15,10 @@ class IceTokenizer:
     Explanation:
         IceTokenizer provides a small project-specific interface around the
         tokenizer and Reynir libraries. It can tokenize raw Icelandic text or
-        lemmatize it so TF-IDF retrieval can compare normalized word forms
-        instead of only exact surface forms.
+        lemmatize it so lexical retrieval can compare normalized word forms
+        instead of only exact surface forms. The original text is never changed
+        for display; these normalized tokens are only used for indexing and
+        matching.
 
     Attributes:
         greynir: Reynir parser instance used for Icelandic morphological
@@ -60,9 +62,10 @@ class IceTokenizer:
         The original text should still be kept for display and citations. Use
         this output only for searchable/indexed text.
 
-        Reynir token analyses expose candidate meanings in token.val. The first
-        item in the first analysis tuple is the lemma, for example "Mig" maps
-        to "ég".
+        Reynir exposes sentence-level lemmas when parsing succeeds. If a
+        sentence has no lemma analysis, the tokenizer falls back to lowercased
+        token text so retrieval can still index the source instead of dropping
+        it completely.
         """
 
         lemmas = []

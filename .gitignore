@@ -30,6 +30,12 @@ Thumbs.db
 *.pptx
 *.zip
 
+# Local planning notes that are no longer part of the final submission docs
+docs/answer_prompt.md
+docs/mock_retrieval_result.json
+docs/retrieval_contract.md
+docs/solvi_next_steps.md
+
 # Data and model artifacts stay local by default
 data/raw/*
 data/processed/*.json
