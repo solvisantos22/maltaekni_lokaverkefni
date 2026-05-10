@@ -31,8 +31,8 @@ The main technical documentation is in `docs/codebase_documentation.md`. It
 explains the full pipeline, module responsibilities, generated artifacts,
 retrieval methods, answer generation, web endpoints, and evaluation workflow.
 
-Teacher-facing local run instructions are available in Icelandic in
-`docs/kennara_leidbeiningar.pdf`.
+Teacher-facing local run instructions can be generated locally from the
+maintainers' Markdown handout and shared outside Git as a PDF.
 
 ## Environment
 
