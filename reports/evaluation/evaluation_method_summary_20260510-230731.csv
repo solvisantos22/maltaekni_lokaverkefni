@@ -1,0 +1,2 @@
+﻿retrieval_method,run_label,prompt_profile,questions,retrieval_check_questions,errors,expected_section_top3_hits,expected_section_top3_rate,avg_latency_seconds,avg_source_coverage_ratio,total_prompt_tokens,total_output_tokens,total_thought_tokens,total_tokens,estimated_cost_usd
+bm25,deadline-smoke,balanced,2,2,0,1,0.5,0.042,0.5,,,,,

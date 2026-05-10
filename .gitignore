@@ -25,7 +25,6 @@ Thumbs.db
 .idea/
 
 # Local course handouts and generated exports
-*.pdf
 *.docx
 *.pptx
 *.zip
@@ -40,8 +39,4 @@ docs/solvi_next_steps.md
 data/processed/*.json
 data/processed/embedding_cache/*
 !data/raw/.gitkeep
-!data/processed/.gitkeep
-!reports/figures/.gitkeep
-!reports/evaluation/.gitkeep
-!reports/evaluation/evaluation_review_*.csv
-reports/evaluation/evaluation_review_latest.csv
+

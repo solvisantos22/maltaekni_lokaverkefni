@@ -175,7 +175,7 @@ Verkefnið var því byggt sem RAG-kerfi \cite{rag}. Fyrst eru íslenskar neyten
 Vinnuferlið skiptist því í gagnaöflun, hreinsun, bútun eftir lagagreinum, samanburð heimtaraðferða, svörun með mállíkani og mat á niðurstöðum. Meginmarkmið verkefnisins var ekki að búa til fullkomið lögfræðilegt ráðgjafarkerfi, heldur að kanna hvaða aðferðir henta best fyrir íslenska lagalega spurningarsvörun þegar heimildirnar eru takmarkaðar, orðalagið sérhæft og svörin þurfa að vera rekjanleg. Megináskorunin var því ekki aðeins að finna texta sem innihélt sömu orð og spurningin, heldur að tengja daglegt mál notenda við sérhæft lagamál þar sem sömu hugtök geta verið orðuð á ólíkan hátt.
 
 \section{Niðurstöður}
-8 lagabálkar af síðu Alþingis (\cite{2003}-\cite{2018}) voru valdir sem grunnskjöl RAG-kerfisins. Valið byggði á þeim lögum sem Neytendastofa nefnir í umfjöllun sinni um neytendarétt \cite{neytendastofa}. Hverjum lagabálki var síðan skipt niður í búta eftir greinum laganna.
+Átta lagabálkar úr Lagasafni Alþingis voru valdir sem grunnskjöl RAG-kerfisins \cite{2003,2002,2011,2013a,2013b,2016a,2016b,2018}. Valið byggði á þeim lögum sem Neytendastofa nefnir í umfjöllun sinni um neytendarétt \cite{neytendastofa}.
 
 
 Gagnasafn með 20 mismunandi spurningum var smíðað til þess að prófa virkni kerfisins. Spurningarnar voru gerðar til þess að líkja eftir því inntaki sem kerfið gæti fengið ef það yrði sett í notkun, og innihélt því gagnasettið hversdagslegar, lagalegar, ótvíræðar og óviðkomandi spurningar. Fyrir hverja spurningu var einnig valin sú grein úr lagasafni Alþingis sem var talin mest viðeigandi auk þess sem áætluð útkoma kerfisins var skrifuð niður. 
@@ -301,6 +301,8 @@ Helsta vandamálið var að heimt úr lagatextum reyndist viðkvæm fyrir orðav
 
 Annað vandamál var að ekki var raunhæft að gera kerfið „fullkomið“ innan umfangs verkefnisins. Neytendaréttur er vítt svið og mörg svör krefjast túlkunar, aðstæðubundinna undantekninga og varfærni. Þess vegna var lögð áhersla á rekjanleg svör með heimildum, samanburð á heimtaraðferðum og handvirkt mat, frekar en að halda því fram að kerfið gæti komið í stað lögfræðilegrar ráðgjafar.
 
+Tæknilega séð voru einnig áskoranir í kringum keyrsluumhverfi og þyngri taugalegar aðferðir. Aðferðir sem nota stærri líkön geta gefið betri heimt, en þær eru dýrari í keyrslu og erfiðari í uppsetningu.
+
 \section{Samstarf}
 \subsection{Framlag Sölva}
 
@@ -308,13 +310,41 @@ Annað vandamál var að ekki var raunhæft að gera kerfið „fullkomið“ in
 
 Ég útfærði stóran hluta af spjallviðmótinu, þar sem notandi getur skrifað spurningu á íslensku, valið leitaraðferð og fengið svar í samtalsformi. Ég vann einnig að því hvernig heimildirnar birtast með svarinu, þannig að notandinn sjái hvaða textabrot voru notuð, hvaðan þau komu og hvaða vægi þau fengu í leitinni. Þetta var eitt af því sem mér fannst skipta mestu máli, vegna þess að lögfræðileg svör frá mállíkani geta ekki verið sannfærandi eingöngu vegna þess að þau hljóma vel. Notandinn þarf að geta rakið svarið til heimilda.
 
-Ég vann einnig að matsferlinu og framsetningu niðurstaðna. Þar tók ég þátt í að móta handvirka matið, útfæra matsviðmótið og tengja vistaðar einkunnir við mælaborð og töflur. Að lokum vann ég að því að setja niðurstöðurnar fram í skýrslunni, bæði með töflum og texta sem skýrir muninn á aðferðum, handvirku mati og misræmi milli matsmanna.
+Ég vann einnig að tengingu kerfisins við mállíkanið sem býr til svörin. Þar þurfti að tengja saman heimtarkerfið og svarsmíðina þannig að líkanið fengi aðeins þau heimildabrot sem valin voru af leitaraðferðinni. Ég vann að stillingum fyrir LLM-köllin, umhverfisbreytum, vali á Gemini-líkani, hugsunarstillingu og takmörkun á svarlengd. Markmiðið var að kerfið gæti notað mállíkan til að móta eðlileg íslensk svör, en samt halda svarinu bundnu við heimildirnar sem fundust.
+
+Ég bar einnig ábyrgð á stórum hluta prompting-stefnunnar. Þar vann ég að því hvernig fyrirmælin til mállíkansins ættu að vera orðuð, hvaða upplýsingar ættu að fylgja með heimildabrotunum og hvernig ætti að þrýsta á líkanið að svara varlega. Sérstaklega lagði ég áherslu á að líkanið ætti að vísa í heimildir, forðast óstuddar fullyrðingar, viðurkenna þegar heimildir væru veikar og svara á góðri íslensku sem væri gagnlegt fyrir venjulegan notanda.
+
+Þessi hluti tengdist einnig mati verkefnisins, því LLM-köllin skráðu token-notkun, keyrslutíma og áætlaðan kostnað. Það gerði okkur kleift að bera ekki aðeins saman gæði aðferðanna, heldur einnig hvað þær kostuðu í keyrslu. Mér fannst þetta mikilvægt þar sem raunhæft RAG-kerfi þarf ekki bara að gefa góð svör, heldur líka vera hagkvæmt í rekstri.
+
+Ég vann að útliti og flæði forritsins, meðal annars dökku þema, upphafsskjá, leiðsögn í gegnum viðmótið, hliðarstiku með aðferðavali og aðferðaglugga sem útskýrir hvernig kerfið svarar. Þessi hluti var hugsaður sem leið til að gera verkefnið skiljanlegra fyrir þann sem prófar það. Sama á við um leiðbeiningarnar fyrir kennara, þar sem markmiðið var að sýna helstu eiginleika verkefnisins án þess að þurfa fyrst að lesa allan kóðann eða skjölunina.
+
+Annað stórt framlag mitt var matsviðmótið. Ég vann að því að hægt væri að fara yfir keyrð svör í sérstöku viðmóti og gefa þeim einkunnir án þess að keyra mállíkanið aftur. Þar voru svör metin út frá heimt, réttleika, heimildastuðningi og skýrleika. Þetta var mikilvægt vegna þess að RAG-kerfi er ekki nægilega vel metið með einni tölu. Kerfið getur fundið rétta heimild en samt svarað óskýrt, eða svarað skýrt en byggt á of veikum heimildum.
+
+Ég tók líka þátt í að móta spurningasafnið. Þar lagði ég áherslu á að spurningarnar væru ekki allar orðaðar eins og lagatextinn sjálfur. Við vildum prófa bæði spurningar með lagalegum hugtökum, eins og \textit{söluhlutur}, og spurningar með daglegri orðanotkun, eins og \textit{vara} eða \textit{hlutur}. Þetta reyndist mikilvægt, því verkefnið sýndi vel að heimtaraðferðirnar bregðast misvel við þegar notandi notar ekki nákvæmlega sama orðalag og kemur fyrir í lögunum.
+
+Að lokum vann ég að hluta skjölunar og framsetningar verkefnisins. Ég framkvæmdi einnig mitt handvirka mat á svörunum og tók þátt í umræðu um hvernig ætti að túlka niðurstöðurnar.
+
 
 \subsection{Framlag Jóhannesar}
 
-Ég, Jóhannes Reykdal Einarsson, vann mest í þeim hlutum verkefnisins sem sneru að gagnaöflun, heimt, úrvinnslu texta, greypingum og endurröðun. Í upphafi verkefnisins þurfti að ákveða hvaða heimildir ættu að mynda grunn kerfisins og hvernig væri hægt að gera þær nothæfar fyrir RAG-kerfi. Ég vann því að því að sækja lagatexta af vef Alþingis, hreinsa HTML-skjölin og skipta þeim niður í búta eftir greinum, þannig að hver heimild væri bæði nægilega afmörkuð fyrir leit og rekjanleg fyrir notanda.
+Ég, Jóhannes Reykdal Einarsson, vann mest í þeim hlutum verkefnisins sem snéru að gagnaöflun, hreinsun heimilda, bútun lagatexta, íslenskri textavinnslu, heimtaraðferðum, greypingum, endurröðun og sjálfvirku mati. Frá byrjun fannst mér mikilvægt að kerfið byggði á skýru og rekjanlegu gagnasafni, þannig að hvert svar væri ekki aðeins búið til af mállíkani heldur tengt við ákveðna lagagrein, ákveðinn bút og ákveðna vefslóð. Þess vegna vann ég mikið í grunnpípunni sem breytir hráum lagatextum í nothæfar heimildir fyrir RAG-kerfið.
 
-Ég útfærði einnig meginhluta heimtarkerfisins. Þar bar ég saman orðtíðniaðferðir eins og TF-IDF og BM25 við greypingaraðferðir með IceBERT og BGE-M3. Þar að auki útfærði ég RRF-samruna milli BM25 og greypinga og bætti síðar við endurröðunarlíkani sem endurraðar efstu niðurstöðum RRF. Þar sem íslenskur lagatexti inniheldur margar beygingarmyndir vann ég einnig að lemmun, stopporðalista og skyndiminni fyrir lemmaða búta svo að keyrslur yrðu hraðari og stöðugri.
+Ég vann að því að velja og sækja lagatexta úr Lagasafni Alþingis sem tengdust neytendarétti. Þar þurfti að sækja HTML-síður, finna þann hluta síðunnar sem innihélt raunverulegan lagatexta og hreinsa burt leiðarkerfi, aukatexta, neðanmálsgreinar og aðrar upplýsingar sem hefðu truflað leitina. Ég útfærði gagnaskipanina fyrir skjölin þannig að hvert skjal héldi utan um titil, uppruna, vefslóð, auðkenni og hreinsaðan texta. Þetta var grunnurinn að því að kerfið gæti síðar sýnt heimildir með svörunum á rekjanlegan hátt.
+
+Stór hluti af mínu framlagi var síðan bútunin. Ég vann að því að skipta lagatextunum niður eftir lagagreinum í stað þess að nota fasta stafafjölda eða tilviljanakennda textaglugga. Þetta skipti miklu máli vegna þess að í lögum er greinin náttúruleg merkingareining. Ef búturinn er of stór verður heimtin ónákvæm, en ef hann er of lítill tapast lagalegt samhengi. Með því að halda greinarnúmeri, titli, texta og vefslóð með hverjum bút varð hægt að nota sama gagnasafn bæði fyrir leit, svörun, heimildabirtingu og mat.
+
+Ég vann einnig að íslensku textavinnslunni sem liggur undir orðaleitaraðferðunum. Þar útfærði ég tókun og lemmun með íslenskum málvinnsluverkfærum og tengdi það við stopporðalista og skyndiminni fyrir lemmaða búta. Þetta var mikilvægt vegna þess að íslenskur lagatexti inniheldur margar beygingarmyndir. Án lemmunar geta orð eins og \textit{vara}, \textit{vöru} og \textit{vörunnar} litið út eins og ólík hugtök fyrir einfaldar leitaraðferðir. Með þessu urðu TF-IDF og BM25 sanngjarnari samanburður við taugalegu aðferðirnar.
+
+Meginhluti bakendavinnunnar hjá mér var heimtarkerfið sjálft. Ég útfærði sameiginlegt viðmót þar sem allar leitaraðferðir skila sömu gerð af niðurstöðu, óháð því hvort notuð er TF-IDF, BM25, IceBERT, BGE-M3, RRF-samruni eða endurröðun. Þetta gerði okkur kleift að prófa ólíkar aðferðir án þess að breyta vefviðmóti eða matskóða. Ég vann einnig að því að setja upp greypingar með IceBERT og BGE-M3, vista greypingafylki í skyndiminni og tryggja að sömu bútar væru bornir saman á stöðugan hátt milli keyrsla.
+
+Ég útfærði RRF-samrunann þar sem niðurstöður úr BM25 og greypingaleit eru sameinaðar áður en efstu bútar eru valdir. Hugmyndin þar var að nýta styrkleika beggja nálgana: BM25 finnur oft rétta grein þegar spurningin notar sama orðalag og lögin, en greypingar geta betur ráðið við spurningar sem eru orðaðar á daglegu máli. Ég bætti einnig við endurröðunarlíkani sem tekur efstu niðurstöður úr RRF og raðar þeim aftur með þver-kóðara (e. cross encoder).
+
+Ég vann ásamt Sölva að sjálfvirku matskeyrslunum og tilraunauppsetningunni. Þar setti ég upp keyrslur þar sem sama spurningasafn er prófað á öllum heimtaraðferðunum, niðurstöður eru vistaðar í CSV og JSONL skrár og hægt er að endurnýta sömu svör í handvirku mati án þess að kalla aftur á mállíkanið. Ég útfærði einnig mælikvarða eins og hvort vænt lagagrein birtist meðal þriggja efstu niðurstaðna, hvaða heimildir voru notaðar í svari, keyrslutíma, villur og aðrar upplýsingar sem þurfti fyrir samanburðinn í skýrslunni.
+
+Að lokum vann ég að því að flytja matsniðurstöðurnar yfir í töflur sem hægt var að nota í skýrslunni. Þar þurfti að sameina sjálfvirka matið, handvirku einkunnirnar frá báðum matsmönnum, samanburð milli matsmanna, kostnað, tókanotkun og keyrslutíma. Ég framkvæmdi einnig mitt handvirka mat á svörunum og tók þátt í að túlka hvers vegna BGE-M3 og endurröðun stóðu sig betur en IceBERT og einfaldari orðaleitaraðferðirnar. Fyrir mér var stærsti hluti verkefnisins því að byggja rannsóknargrunninn undir kerfið: gögnin, heimtina, tilraunirnar og mælingarnar sem gerðu niðurstöðurnar mögulegar.
+
+
+
 
 
 
