@@ -6,13 +6,12 @@ import csv
 import json
 import os
 import re
-import secrets
 import unicodedata
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -34,7 +33,6 @@ EVALUATION_DETAILS_PATH = EVALUATION_DIR / "evaluation_details_latest.jsonl"
 EVALUATION_REVIEW_PATH = EVALUATION_DIR / "evaluation_review_latest.csv"
 EVALUATION_REVIEW_GLOB = "evaluation_review_*.csv"
 WEB_DIR = Path(__file__).resolve().parent / "web"
-ACCESS_TOKEN_ENV = "APP_ACCESS_TOKEN"
 
 if load_dotenv is not None:
     load_dotenv(PROJECT_ROOT / ".env")
@@ -65,7 +63,6 @@ class StatusResponse(BaseModel):
     ready: bool
     chunks_path: str
     message: str
-    access_required: bool = False
 
 
 class EvaluationReviewRequest(BaseModel):
@@ -113,13 +110,11 @@ def status():
             ready=True,
             chunks_path=str(CHUNKS_PATH),
             message="ready",
-            access_required=access_token_required(),
         )
 
     return StatusResponse(
         ready=False,
         chunks_path=str(CHUNKS_PATH),
-        access_required=access_token_required(),
         message=(
             "Run: python src\\maltaekni_lokaverkefni\\fetch_sources.py "
             "and python src\\maltaekni_lokaverkefni\\chunking.py"
@@ -146,25 +141,6 @@ def ask(request: AskRequest):
         max_sources=request.top_k,
     )
     return answer_result.to_dict()
-
-
-def access_token_required() -> bool:
-    """Return whether deployed users must provide the shared access token."""
-    return bool(os.getenv(ACCESS_TOKEN_ENV, "").strip())
-
-
-def verify_access_token(provided_token: str | None) -> None:
-    """Reject costly endpoints when APP_ACCESS_TOKEN is configured."""
-    expected_token = os.getenv(ACCESS_TOKEN_ENV, "").strip()
-    if not expected_token:
-        return
-
-    if not provided_token or not secrets.compare_digest(provided_token, expected_token):
-        raise HTTPException(
-            status_code=401,
-            detail="Access token is missing or invalid.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
 
 @app.get("/api/evaluation/latest")

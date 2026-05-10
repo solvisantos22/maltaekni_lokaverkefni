@@ -153,3 +153,17 @@ This writes CSV files to `reports/evaluation/report_tables/`:
 The main app also includes an `Aðferð` button with a short explanation of the
 retrieval, Gemini answer generation, citations, and disclaimer.
 Each source card includes a short reason for why that text was selected.
+
+## External Review
+
+The project is designed to run locally from the repository. For teacher review,
+the Gemini key is provided privately as a temporary demo key and is never
+committed to Git. The local `.env` file contains:
+
+```text
+GEMINI_API_KEY=...
+```
+
+After review, the temporary key is revoked. The repository keeps only
+`.env.example`, which documents the required environment variables without
+including secrets.
