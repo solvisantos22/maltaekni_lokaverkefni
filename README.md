@@ -8,7 +8,8 @@ Authors: Sölvi and Jóhannes
 
 Réttarvísir is a local Icelandic consumer-rights RAG prototype. It retrieves
 legal source chunks, generates grounded Icelandic answers with citations, and
-includes a no-token evaluation demo UI.
+includes saved-results evaluation and review screens that do not trigger new
+LLM calls.
 
 ## Structure
 
@@ -17,7 +18,7 @@ includes a no-token evaluation demo UI.
 - `src/maltaekni_lokaverkefni/web/`: static HTML, CSS, and JavaScript for the
   chat UI, evaluation dashboard, and manual review screens.
 - `docs/`: final technical documentation, evaluation protocol, evaluation
-  questions, methodology notes, and demo evaluation data.
+  questions, methodology notes, and teacher-facing run instructions.
 - `reports/evaluation/`: saved automatic evaluation outputs, human review CSVs,
   and exported report tables.
 - `data/processed/`: regenerated source documents, chunks, lemma caches, and
@@ -29,6 +30,9 @@ includes a no-token evaluation demo UI.
 The main technical documentation is in `docs/codebase_documentation.md`. It
 explains the full pipeline, module responsibilities, generated artifacts,
 retrieval methods, answer generation, web endpoints, and evaluation workflow.
+
+Teacher-facing local run instructions are available in Icelandic in
+`docs/kennara_leidbeiningar.pdf`.
 
 ## Environment
 

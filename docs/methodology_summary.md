@@ -49,8 +49,8 @@ LLM answer generator. Gemini 3 Flash is used as the main answer model because it
 is relatively cheap and strong enough for Icelandic answer generation. The
 prompt instructs the model to answer only from the retrieved sources, write in
 clear Icelandic, and cite source IDs next to supported claims. If no LLM key is
-available, the app falls back to an extractive answer generator so the demo can
-still run without API calls.
+available, the app falls back to an extractive answer generator so the local app
+can still run without API calls.
 
 ## Citation Grounding
 

@@ -8,5 +8,6 @@ are part of the final submission.
 - `evaluation_protocol.md`: evaluation dataset, retrieval methods, automatic
   metrics, and human review criteria.
 - `evaluation_questions.csv`: fixed 20-question evaluation set.
+- `kennara_leidbeiningar.pdf`: Icelandic local run instructions for the teacher.
 - `methodology_summary.md`: report-oriented summary of the project method and
   limitations.
