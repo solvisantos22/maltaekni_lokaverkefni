@@ -188,7 +188,3 @@ http://127.0.0.1:8000/evaluation/dashboard?demo=1
 The main app also includes an `Aðferð` button with a short explanation of the
 retrieval, Gemini answer generation, citations, and disclaimer.
 Each source card includes a short reason for why that text was selected.
-
-## Notes
-
-The local PDF handouts are intentionally ignored so the public GitHub repository starts clean.
