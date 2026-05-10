@@ -1,5 +1,8 @@
-"""
-Defines classes for our documents, chunks and eclauationrows
+"""Shared data shapes passed between pipeline stages.
+
+`Document` is the cleaned page-level source format, `Chunk` is the article-level
+retrieval format, and `EvaluationRow` is the flattened CSV schema used for
+automatic evaluation and report tables.
 """
 
 
@@ -7,7 +10,7 @@ from dataclasses import asdict, dataclass
 
 @dataclass(frozen=True)
 class Document:
-    """One cleaned source document before chunking."""
+    """One cleaned source document before article-based chunking."""
     document_id: str
     text: str
     source: str
@@ -17,7 +20,7 @@ class Document:
 
 @dataclass(frozen=True)
 class Chunk:
-    """One searchable chunk matching the retrieval contract metadata."""
+    """One searchable source chunk returned by retrievers and cited in answers."""
     chunk_id: str
     text: str
     source: str
@@ -30,7 +33,7 @@ class Chunk:
     
 @dataclass(frozen=True)
 class EvaluationRow:
-    """One question/method evaluation result."""
+    """One reportable result for a question, retrieval method, and answer run."""
     run_label: str
     question_id: str
     question: str

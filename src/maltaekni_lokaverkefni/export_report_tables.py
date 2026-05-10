@@ -67,11 +67,13 @@ def main() -> None:
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read one CSV artifact as dictionaries."""
     with path.open("r", encoding="utf-8-sig", newline="") as file:
         return list(csv.DictReader(file))
 
 
 def read_review_rows(evaluation_dir: Path) -> list[dict[str, str]]:
+    """Load all committed human review CSVs except the legacy latest file."""
     paths = sorted(
         path
         for path in evaluation_dir.glob("evaluation_review_*.csv")
@@ -84,6 +86,7 @@ def read_review_rows(evaluation_dir: Path) -> list[dict[str, str]]:
 
 
 def read_details(path: Path) -> dict[str, dict[str, Any]]:
+    """Load JSONL evaluation traces keyed by question id and retrieval method."""
     if not path.exists():
         return {}
 
@@ -101,6 +104,7 @@ def read_details(path: Path) -> dict[str, dict[str, Any]]:
 
 
 def build_retrieval_table(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    """Aggregate automatic top-3 retrieval metrics by method."""
     table = []
     for method, method_rows in grouped(rows, "retrieval_method").items():
         applicable = [row for row in method_rows if is_true(row.get("retrieval_check_applicable"))]
@@ -120,6 +124,7 @@ def build_retrieval_table(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
 
 
 def build_cost_latency_table(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    """Aggregate runtime, token, and optional cost metrics by method."""
     table = []
     for method, method_rows in grouped(rows, "retrieval_method").items():
         table.append(
@@ -140,6 +145,7 @@ def build_cost_latency_table(rows: list[dict[str, str]]) -> list[dict[str, Any]]
 
 
 def build_human_scores_table(review_rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    """Aggregate manual 1-5 review scores by retrieval method."""
     table = []
     for method, method_reviews in grouped(review_rows, "retrieval_method").items():
         row = {
@@ -156,6 +162,7 @@ def build_human_scores_table(review_rows: list[dict[str, str]]) -> list[dict[str
 
 
 def build_inter_reviewer_table(review_rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    """Compare per-method average scores between evaluators."""
     by_method_evaluator: dict[str, dict[str, list[dict[str, str]]]] = defaultdict(lambda: defaultdict(list))
     for review in review_rows:
         by_method_evaluator[review.get("retrieval_method", "")][review.get("evaluator", "")].append(review)
@@ -182,6 +189,7 @@ def build_qualitative_cases(
     review_rows: list[dict[str, str]],
     details: dict[str, dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """Pick representative strong, weak, miss, and error cases for discussion."""
     review_scores = build_review_score_index(review_rows)
     enriched = []
     for row in rows:

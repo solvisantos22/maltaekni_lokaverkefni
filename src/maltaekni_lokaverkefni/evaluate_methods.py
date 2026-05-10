@@ -209,6 +209,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_questions(path: Path) -> list[dict[str, str]]:
+    """Load non-empty evaluation questions from the project CSV schema."""
     with path.open("r", encoding="utf-8-sig", newline="") as file:
         return [
             row
@@ -218,6 +219,7 @@ def load_questions(path: Path) -> list[dict[str, str]]:
 
 
 def disable_llm_calls() -> None:
+    """Force answer generation to use the local fallback for a no-token run."""
     os.environ["LLM_PROVIDER"] = "none"
     os.environ.pop("GEMINI_API_KEY", None)
     os.environ.pop("OPENAI_API_KEY", None)
@@ -243,6 +245,7 @@ def build_row(
     latency_seconds: float,
     run_label: str,
 ) -> EvaluationRow:
+    """Flatten one retrieval and answer result into the report CSV schema."""
     sources = answer_result.get("sources", [])
     top_source = sources[0] if sources else {}
     top_3_sections = " | ".join(source.get("section", "") for source in sources[:3])
@@ -290,6 +293,7 @@ def build_row(
 
 
 def section_matches(expected_section: str, retrieved_sections: str) -> bool:
+    """Return whether the expected legal section appears in retrieved top-k."""
     if not expected_section:
         return False
 
@@ -297,6 +301,7 @@ def section_matches(expected_section: str, retrieved_sections: str) -> bool:
 
 
 def retrieval_check_applicable(expected_section: str) -> bool:
+    """Skip top-k source scoring for no-source or intentionally open cases."""
     normalized = normalize_text(expected_section)
     return bool(normalized) and normalized not in {"no_relevant_source", "none", "n/a"}
 
@@ -307,10 +312,12 @@ def expected_relevant_section(question: dict[str, str]) -> str:
 
 
 def normalize_text(text: str) -> str:
+    """Normalize whitespace and casing for forgiving section-name matching."""
     return " ".join(text.casefold().split())
 
 
 def write_summary(path: Path, rows: list[EvaluationRow]) -> None:
+    """Write flattened evaluation rows as a UTF-8 CSV."""
     with path.open("w", encoding="utf-8-sig", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=list(asdict(rows[0]).keys()))
         writer.writeheader()
@@ -318,6 +325,7 @@ def write_summary(path: Path, rows: list[EvaluationRow]) -> None:
 
 
 def write_dict_rows(path: Path, rows: list[dict[str, Any]]) -> None:
+    """Write a non-empty list of dictionaries as a UTF-8 CSV."""
     if not rows:
         return
 
@@ -328,6 +336,7 @@ def write_dict_rows(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def write_details(path: Path, details: list[dict[str, Any]]) -> None:
+    """Write full per-case traces as JSONL for later inspection."""
     with path.open("w", encoding="utf-8") as file:
         for item in details:
             file.write(json.dumps(item, ensure_ascii=False) + "\n")
@@ -373,6 +382,7 @@ def build_method_summary(rows: list[EvaluationRow]) -> list[dict[str, Any]]:
 
 
 def print_overview(rows: list[EvaluationRow]) -> None:
+    """Print a compact command-line summary after a run finishes."""
     methods = sorted({row.retrieval_method for row in rows})
     for method in methods:
         method_rows = [row for row in rows if row.retrieval_method == method]

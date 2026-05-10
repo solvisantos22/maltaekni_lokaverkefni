@@ -20,6 +20,12 @@ includes a no-token evaluation demo UI.
 - `reports/figures/`: generated figures, not committed by default
 - `docs/`: project notes and non-private documentation
 
+## Documentation
+
+The main technical documentation is in `docs/codebase_documentation.md`. It
+explains the full pipeline, module responsibilities, generated artifacts,
+retrieval methods, answer generation, web endpoints, and evaluation workflow.
+
 ## Setup
 
 ```powershell
