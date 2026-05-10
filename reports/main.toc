@@ -8,7 +8,7 @@
 \contentsline {section}{Hvað fór úrskeiðis}{5}{section*.12}%
 \contentsline {section}{Samstarf}{5}{section*.13}%
 \contentsline {subsection}{Framlag Sölva}{5}{section*.14}%
-\contentsline {subsection}{Framlag Jóhannesar}{5}{section*.15}%
-\contentsline {chapter}{Viðauki}{7}{appendix*.16}%
-\contentsline {section}{Skýringarmynd fyrir líkan}{7}{section*.17}%
-\contentsline {chapter}{Heimildaskrá}{8}{figure.caption.18}%
+\contentsline {subsection}{Framlag Jóhannesar}{6}{section*.15}%
+\contentsline {chapter}{Viðauki}{8}{appendix*.16}%
+\contentsline {section}{Skýringarmynd fyrir líkan}{8}{section*.17}%
+\contentsline {chapter}{Heimildaskrá}{9}{figure.caption.18}%
