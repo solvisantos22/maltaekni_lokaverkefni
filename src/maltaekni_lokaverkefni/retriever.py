@@ -49,7 +49,7 @@ SUPPORTED_METHODS = {
     *RERANK_METHODS,
 }
 DEFAULT_STOP_WORDS_PATH = (
-    Path(__file__).resolve().parents[2] / "data" / "processed" / "all_stop_words.txt"
+    Path(__file__).resolve().parents[2] / "data" / "raw" / "all_stop_words.txt"
 )
 DEFAULT_LEMMA_CACHE_PATH = (
     Path(__file__).resolve().parents[2] / "data" / "processed" / "chunk_lemmas.json"
@@ -425,7 +425,7 @@ def build_retriever(method, chunks_path: Path = Path("data/processed/chunks.json
     retriever = Retriever(
         method,
         cache_dir=chunks_path.parent / "embedding_cache",
-        stop_words_path=chunks_path.parent / "all_stop_words.txt",
+        stop_words_path=DEFAULT_STOP_WORDS_PATH,
         lemma_cache_path=chunks_path.parent / "chunk_lemmas.json",
     )
     retriever.fit(chunks)

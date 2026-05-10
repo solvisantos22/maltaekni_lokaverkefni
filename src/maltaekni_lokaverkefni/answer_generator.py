@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 import os
+from pathlib import Path
 import re
 from typing import Any
 
@@ -23,6 +25,7 @@ except ImportError:  # dotenv is helpful locally, but environment variables are 
 UNCERTAIN_ANSWER = (
     "Ég finn ekki nægar upplýsingar í heimildunum til að svara þessu örugglega."
 )
+STOP_WORDS_PATH = Path(__file__).resolve().parents[2] / "data" / "raw" / "all_stop_words.txt"
 
 
 @dataclass(frozen=True)
@@ -584,31 +587,24 @@ def _split_sentences(text: str) -> list[str]:
 
 
 def _content_terms(text: str) -> set[str]:
-    stopwords = {
-        "að",
-        "af",
-        "á",
-        "ég",
-        "ef",
-        "ekki",
-        "en",
-        "er",
-        "fyrir",
-        "get",
-        "hvað",
-        "í",
-        "með",
-        "og",
-        "sem",
-        "til",
-        "um",
-        "við",
-        "það",
-    }
+    stopwords = _load_stop_words()
     return {
         token
         for token in re.findall(r"[^\W\d_]+", text.lower(), flags=re.UNICODE)
         if len(token) > 2 and token not in stopwords
+    }
+
+
+@lru_cache(maxsize=1)
+def _load_stop_words() -> set[str]:
+    """Load shared Icelandic stopwords used by lightweight answer heuristics."""
+    if not STOP_WORDS_PATH.exists():
+        return set()
+
+    return {
+        line.strip().casefold()
+        for line in STOP_WORDS_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
     }
 
 

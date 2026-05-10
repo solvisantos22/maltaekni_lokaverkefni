@@ -37,7 +37,6 @@ docs/retrieval_contract.md
 docs/solvi_next_steps.md
 
 # Data and model artifacts stay local by default
-data/raw/*
 data/processed/*.json
 data/processed/embedding_cache/*
 reports/figures/*
