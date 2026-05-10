@@ -1,0 +1,6 @@
+﻿retrieval_method,johannes_review_count,johannes_overall_avg,solvi_review_count,solvi_overall_avg,absolute_avg_difference
+bm25,20,4.1875,20,3.3125,0.875
+rrf-bge-m3-bm25,20,4.325,20,3.525,0.8
+rrf-bge-m3-bm25-rerank,20,4.4125,20,3.6875,0.725
+rrf-icebert-bm25,20,4.025,20,3.125,0.9
+tfidf,20,4.125,20,3.4125,0.7125

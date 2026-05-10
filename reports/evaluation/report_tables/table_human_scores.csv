@@ -1,0 +1,6 @@
+﻿retrieval_method,review_count,avg_retrieval_relevance_1_5,avg_answer_correctness_1_5,avg_source_support_1_5,avg_clarity_1_5,overall_human_avg
+bm25,40,2.925,3.825,4.1,4.15,3.75
+rrf-bge-m3-bm25,40,3.55,4.0,4.025,4.125,3.925
+rrf-bge-m3-bm25-rerank,40,3.7,4.0,4.225,4.275,4.05
+rrf-icebert-bm25,40,2.65,3.475,4.05,4.125,3.575
+tfidf,40,2.825,3.725,4.35,4.175,3.7687

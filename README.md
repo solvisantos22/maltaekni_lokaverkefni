@@ -22,6 +22,7 @@ includes a no-token evaluation demo UI.
   and exported report tables.
 - `data/processed/`: regenerated source documents, chunks, lemma caches, and
   embedding caches.
+- `data/raw`: list containing icelandic stopwords
 
 ## Documentation
 
@@ -36,7 +37,6 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python -m ipykernel install --user --name maltaekni-lokaverkefni --display-name "Python (maltaekni-lokaverkefni)"
 ```
 
 ## Local App
@@ -57,19 +57,12 @@ Direct chat URL without the welcome screen:
 http://127.0.0.1:8000/?skipWelcome=1
 ```
 
-Alternative port example:
-
-```powershell
-python -m uvicorn src.maltaekni_lokaverkefni.app:app --host 127.0.0.1 --port 8001
-```
-
 The main app sidebar links to the evaluation dashboard and human review screens.
-The committed demo dataset demonstrates the evaluation UI without running a new
-evaluation or spending tokens:
+There you can see the evaluated cases.
 
 ```text
-http://127.0.0.1:8000/evaluation?demo=1
-http://127.0.0.1:8000/evaluation/dashboard?demo=1
+http://127.0.0.1:8000/evaluation
+http://127.0.0.1:8000/evaluation/dashboard
 ```
 
 Live retrieval requires `data/processed/chunks.json`. The source and chunk files
@@ -143,26 +136,6 @@ Manual review UI:
 http://127.0.0.1:8000/evaluation
 ```
 
-The review UI saves human scores to one CSV per evaluator, for example
-`reports/evaluation/evaluation_review_solvi.csv` and
-`reports/evaluation/evaluation_review_johannes.csv`. These review CSVs are
-part of the final evaluation artifacts, so Sölvi and Jóhannes can review on
-separate machines and then combine the files before writing the report.
-The dashboard at `http://127.0.0.1:8000/evaluation/dashboard` summarizes the
-latest automatic metrics, token usage, and all committed human review files
-without making new LLM calls.
-Example Git workflow for one evaluator file:
-
-```powershell
-git add reports/evaluation/evaluation_review_solvi.csv
-git commit -m "Add Solvi human evaluation reviews"
-git pull --rebase origin main
-git push origin main
-```
-
-Jóhannes follows the same workflow with
-`reports/evaluation/evaluation_review_johannes.csv`.
-
 Report-table export:
 
 ```powershell
@@ -176,14 +149,3 @@ This writes CSV files to `reports/evaluation/report_tables/`:
 - `table_human_scores.csv`: average 1-5 human scores by method
 - `table_inter_reviewer.csv`: Sölvi/Jóhannes comparison
 - `qualitative_cases.csv`: suggested examples for the error-analysis section
-
-Demo evaluation URLs:
-
-```text
-http://127.0.0.1:8000/evaluation?demo=1
-http://127.0.0.1:8000/evaluation/dashboard?demo=1
-```
-
-The main app also includes an `Aðferð` button with a short explanation of the
-retrieval, Gemini answer generation, citations, and disclaimer.
-Each source card includes a short reason for why that text was selected.

@@ -1,3 +1,5 @@
+// Main chat UI for Réttarvísir. This file owns the onboarding screens, guided
+// tour, question submission, typed answer animation, and source rendering.
 const messages = document.querySelector("#messages");
 const sourceList = document.querySelector("#sourceList");
 const form = document.querySelector("#askForm");
@@ -65,6 +67,8 @@ topKInput.addEventListener("input", () => {
 });
 
 welcomeScroll.addEventListener("scroll", () => {
+  // The intro animation updates several CSS variables, so throttle it to one
+  // update per animation frame while the user scrolls.
   if (welcomeFrame !== null) return;
   welcomeFrame = window.requestAnimationFrame(() => {
     updateWelcomeIntro();
@@ -142,6 +146,8 @@ form.addEventListener("submit", async (event) => {
   const pending = appendMessage("assistant", "Sæki heimildir...");
 
   try {
+    // /api/ask returns an AnswerResult dictionary: answer text, sources,
+    // confidence metadata, retrieval method, and optional token/cost usage.
     const response = await fetch("/api/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -171,6 +177,7 @@ form.addEventListener("submit", async (event) => {
 });
 
 async function checkStatus() {
+  // The status badge only checks whether processed chunks exist on the server.
   try {
     const response = await fetch("/api/status");
     const status = await response.json();
@@ -186,6 +193,8 @@ async function checkStatus() {
 }
 
 function appendMessage(role, text) {
+  // Render one chat bubble and return the wrapper so callers can update it
+  // later, for example replacing "Sæki heimildir..." with the real answer.
   const section = document.createElement("section");
   section.className = `message ${role}`;
 
@@ -206,6 +215,7 @@ function appendMessage(role, text) {
 }
 
 async function typeAnswer(target, text) {
+  // A small typing effect makes LLM responses easier to follow in the demo UI.
   const paragraph = document.createElement("p");
   target.append(paragraph);
 
@@ -217,6 +227,8 @@ async function typeAnswer(target, text) {
 }
 
 function appendMeta(target, result) {
+  // Confidence, citation coverage, and token usage are shown below the answer
+  // but kept separate from the answer text itself.
   const meta = document.createElement("div");
   meta.className = "meta";
   const usageText = formatUsage(result.usage || {});
@@ -231,6 +243,8 @@ function appendMeta(target, result) {
 }
 
 function renderSources(sources) {
+  // Source cards mirror the backend citation ids so the answer can refer to
+  // [1], [2], etc. without hiding the underlying legal text.
   if (!sources.length) {
     sourceList.innerHTML = '<p class="empty">Engar heimildir fundust.</p>';
     return;
@@ -258,6 +272,8 @@ function formatScore(score) {
 }
 
 function formatUsage(usage) {
+  // Token fields are optional because extractive fallback answers do not call
+  // an LLM and some providers may omit usage metadata.
   const totalTokens = Number(usage.total_tokens);
   if (!Number.isFinite(totalTokens) || totalTokens <= 0) return "";
 
@@ -301,6 +317,8 @@ function wait(ms) {
 }
 
 function updateWelcomeIntro() {
+  // Convert scroll position into one active scene plus continuous opacity,
+  // vertical offset, scale, and blur values for neighboring scenes.
   const maxScroll = Math.max(1, welcomeScroll.scrollHeight - welcomeScroll.clientHeight);
   const progress = welcomeScroll.scrollTop / maxScroll;
   const lastIndex = Math.max(1, welcomeScenes.length - 1);
@@ -370,6 +388,8 @@ function openMethodology() {
 }
 
 function renderTourStep() {
+  // Position the spotlight around the target control and move the explanatory
+  // card to a visible side of the highlighted element.
   const step = tourSteps[activeTourIndex];
   const target = document.querySelector(step.selector);
   if (!target) return;
@@ -418,6 +438,8 @@ function positionTourCard(rect) {
 }
 
 window.addEventListener("load", () => {
+  // Query parameters let evaluation links jump straight into the app or open
+  // the methodology modal without requiring manual navigation.
   if (window.lucide) window.lucide.createIcons();
   if (openMethodologyOnLoad) {
     closeWelcome();

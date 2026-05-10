@@ -327,6 +327,8 @@
     </main>
 
     <script>
+      // Dashboard page for saved evaluation artifacts. The backend returns
+      // already-aggregated metrics, so this script only fetches and renders.
       const cards = document.querySelector("#cards");
       const methodRows = document.querySelector("#methodRows");
       const paths = document.querySelector("#paths");
@@ -338,6 +340,7 @@
       loadDashboard();
 
       async function loadDashboard() {
+        // demo=1 switches the backend to small committed demo artifacts.
         try {
           const response = await fetch(`/api/evaluation/dashboard${demoMode ? "?demo=1" : ""}`);
           if (!response.ok) {
@@ -359,6 +362,7 @@
       }
 
       function renderCards(overall) {
+        // Top cards are high-level run metadata and totals across all methods.
         const items = [
           ["Matsraðir", overall.rows, "Ein röð er ein spurning keyrð með einni leitaraðferð."],
           ["Spurningar", overall.questions, "Fjöldi ólíkra spurninga í matssettinu."],
@@ -379,6 +383,8 @@
       }
 
       function renderMethods(methods) {
+        // Each row combines automatic retrieval metrics, LLM usage, latency,
+        // cost, and any human review averages saved for that method.
         methodRows.innerHTML = methods.map((method) => {
           const rate = method.expected_section_top3_rate;
           const top3 = rate === null ? "-" : `${method.expected_section_top3_hits}/${method.retrieval_check_questions} (${Math.round(rate * 100)}%)`;
@@ -429,12 +435,14 @@
       }
 
       function formatCost(value) {
+        // Zero or missing cost means no usable LLM price metadata was available.
         const number = Number(value);
         if (!Number.isFinite(number) || number === 0) return "-";
         return `$${number.toFixed(6)}`;
       }
 
       function escapeHtml(value) {
+        // All backend strings are escaped before insertion into template HTML.
         return String(value)
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")

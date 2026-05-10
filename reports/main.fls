@@ -478,6 +478,14 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-sc-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-sc-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-BoldItalic-tlf-t1.tfm
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/txfonts/t1xtt.tfm
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/vf/public/newtx/ntxmi.vf
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/NewTXMI.tfm
@@ -500,9 +508,6 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/vf/public/newtx/ntxsy7.vf
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/txsys.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/txex-bar.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/newtx/ntx-Italic-tlf-t1.tfm
-INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
-INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
-INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/newtx/t1ntxtt.fd
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/txfonts/t1xtt.tfm
 INPUT main.aux
 INPUT ./main.out
@@ -514,5 +519,6 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/txexs.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/txsys.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/ztmb.pfb
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/ztmbi.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/ztmr.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/newtx/ztmri.pfb

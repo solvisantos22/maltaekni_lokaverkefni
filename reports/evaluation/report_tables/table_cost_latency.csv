@@ -1,0 +1,6 @@
+﻿retrieval_method,run_label,prompt_profile,llm_model,avg_latency_seconds,total_prompt_tokens,total_output_tokens,total_thought_tokens,total_tokens,estimated_cost_usd
+bm25,gemini-strict-final,strict,gemini-3-flash-preview,5.0432,33171,3377,16202,52750,0.0753225
+rrf-bge-m3-bm25,gemini-strict-final,strict,gemini-3-flash-preview,6.0034,27846,3693,19177,50716,0.082533
+rrf-bge-m3-bm25-rerank,gemini-strict-final,strict,gemini-3-flash-preview,11.8109,39918,3711,14818,58447,0.075546
+rrf-icebert-bm25,gemini-strict-final,strict,gemini-3-flash-preview,5.2928,34892,3429,16194,54515,0.076315
+tfidf,gemini-strict-final,strict,gemini-3-flash-preview,5.4487,32760,3568,17097,53425,0.078375

@@ -550,6 +550,9 @@
     </div>
 
     <script>
+      // Human review page for saved evaluation rows. It shows one
+      // question/method result at a time and stores reviewer scores as CSV via
+      // /api/evaluation/review.
       const scoreFields = [
         ["retrieval_relevance_1_5", "Réttmæti heimilda", "Eru heimildirnar sem komu upp í leitinni viðeigandi fyrir spurninguna?"],
         ["answer_correctness_1_5", "Réttleiki svars", "Er svarið rétt miðað við heimildirnar sem eru sýndar?"],
@@ -592,6 +595,8 @@
       loadEvaluation();
 
       async function loadEvaluation() {
+        // The API joins summary rows with detailed source traces and existing
+        // human reviews so this page can render and update one row at a time.
         try {
           const response = await fetch(`/api/evaluation/latest${demoMode ? "?demo=1" : ""}`);
           if (!response.ok) {
@@ -621,6 +626,8 @@
       }
 
       function renderActiveRow() {
+        // Rehydrate saved scores for the selected evaluator, then render the
+        // question, answer, metadata pills, score controls, and sources.
         if (!rows.length) return;
 
         const row = rows[activeIndex];
@@ -653,6 +660,7 @@
       }
 
       function renderScores() {
+        // Scores are stored in memory until the reviewer clicks save.
         scoreGroups.innerHTML = "";
         for (const [field, label, helpText] of scoreFields) {
           const group = document.createElement("div");
@@ -678,6 +686,8 @@
       }
 
       function renderSources(row) {
+        // Prefer full source traces from JSONL; fall back to summary columns
+        // when only the flattened CSV is available.
         const sourceRoot = document.querySelector("#sources");
         const sources = row.sources?.length
           ? row.sources
@@ -699,6 +709,7 @@
       }
 
       async function saveReview() {
+        // Demo mode is intentionally read-only so public demo data stays stable.
         if (!rows.length) return;
         if (activeDemoMode) {
           document.querySelector("#savedState").textContent = "Sýnidæmi: stigagjöf er aðeins til að skoða matsflæðið.";
@@ -737,6 +748,7 @@
       }
 
       function move(delta) {
+        // Clamp navigation so previous/next buttons cannot leave the dataset.
         activeIndex = Math.min(rows.length - 1, Math.max(0, activeIndex + delta));
         renderActiveRow();
       }
@@ -751,10 +763,13 @@
       }
 
       function expectedSectionFound(row) {
+        // Accept the old expected_hint_in_top_3 column for older evaluation CSVs.
         return row.expected_section_in_top_3 === "True" || row.expected_hint_in_top_3 === "True";
       }
 
       function escapeHtml(value) {
+        // Scores and saved notes are local, but evaluation text can contain
+        // arbitrary source content, so always escape before HTML insertion.
         return String(value)
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")
