@@ -1,8 +1,14 @@
-# Docs
+# Documentation
 
-Use this folder for project notes and documentation that can safely live in the repository.
+This directory contains the project documentation and evaluation materials that
+are part of the final submission.
 
-- `evaluation_questions.csv`: final evaluation question set.
-- `evaluation_protocol.md`: fixed test matrix, metrics, and human review protocol.
-- `codebase_documentation.md`: end-to-end explanation of the codebase and generated artifacts.
-- `demo_evaluation/`: committed no-token demo data for the evaluation UI.
+- `codebase_documentation.md`: technical overview of the pipeline, modules,
+  generated artifacts, web endpoints, and evaluation workflow.
+- `evaluation_protocol.md`: evaluation dataset, retrieval methods, automatic
+  metrics, and human review criteria.
+- `evaluation_questions.csv`: fixed 20-question evaluation set.
+- `methodology_summary.md`: report-oriented summary of the project method and
+  limitations.
+- `demo_evaluation/`: small committed dataset that demonstrates the evaluation
+  UI without requiring a new LLM run.
