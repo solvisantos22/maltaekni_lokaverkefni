@@ -40,11 +40,9 @@ docs/solvi_next_steps.md
 data/raw/*
 data/processed/*.json
 data/processed/embedding_cache/*
-models/*
 reports/figures/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
-!models/.gitkeep
 !reports/figures/.gitkeep
 !reports/evaluation/.gitkeep
 !reports/evaluation/evaluation_review_*.csv

@@ -22,7 +22,6 @@ includes a no-token evaluation demo UI.
   and exported report tables.
 - `data/processed/`: regenerated source documents, chunks, lemma caches, and
   embedding caches.
-- `notebooks/`: optional exploratory work.
 
 ## Documentation
 
