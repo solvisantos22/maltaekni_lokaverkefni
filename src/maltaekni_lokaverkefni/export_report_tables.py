@@ -126,6 +126,11 @@ def build_retrieval_table(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
                 "expected_section_top3_hits": hits,
                 "expected_section_top3_rate": ratio(hits, len(applicable)),
                 "avg_source_coverage_ratio": avg(row.get("source_coverage_ratio") for row in method_rows),
+                "avg_source_coverage_ratio_answered": avg(
+                    row.get("source_coverage_ratio")
+                    for row in method_rows
+                    if not is_abstention(row)
+                ),
                 "errors": sum(1 for row in method_rows if row.get("error")),
             }
         )
@@ -317,6 +322,11 @@ def row_key(question_id: str, method: str) -> str:
 
 def is_true(value: Any) -> bool:
     return str(value).strip().lower() == "true"
+
+
+def is_abstention(row: dict[str, str]) -> bool:
+    """Return whether the answer explicitly says the sources are insufficient."""
+    return "ég finn ekki nægar upplýsingar" in row.get("answer", "").casefold()
 
 
 def float_or_none(value: Any) -> float | None:

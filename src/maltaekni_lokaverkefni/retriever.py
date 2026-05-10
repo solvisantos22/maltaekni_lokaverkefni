@@ -91,14 +91,18 @@ class Retriever:
         stop_words_path: Path | None = DEFAULT_STOP_WORDS_PATH,
         lemma_cache_path: Path | None = DEFAULT_LEMMA_CACHE_PATH,
         rrf_candidate_k: int = 50,
+        rerank_candidate_k: int = 20,
     ):
         """Initialize an unfitted retriever for a supported retrieval method."""
         if rrf_candidate_k < 1:
             raise ValueError("rrf_candidate_k must be at least 1")
+        if rerank_candidate_k < 1:
+            raise ValueError("rerank_candidate_k must be at least 1")
 
         self.chunks: list[Chunk] = []
         self.method = method
         self.rrf_candidate_k = rrf_candidate_k
+        self.rerank_candidate_k = rerank_candidate_k
         self.ice_tokenizer = IceTokenizer()
         self.stop_words = self.__load_stop_words(stop_words_path)
         self.lemma_cache = self.__load_lemma_cache(lemma_cache_path)
@@ -245,7 +249,7 @@ class Retriever:
         rrf_scores = self.__search_rrf(question)
         candidate_indexes = [
             index
-            for index in np.argsort(rrf_scores)[::-1][:self.rrf_candidate_k]
+            for index in np.argsort(rrf_scores)[::-1][:self.rerank_candidate_k]
             if rrf_scores[index] > 0
         ]
         reranked_scores = np.zeros(len(self.chunks), dtype=float)
