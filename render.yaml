@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: rettarvisir
+    runtime: python
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python -m src.maltaekni_lokaverkefni.fetch_sources &&
+      python -m src.maltaekni_lokaverkefni.chunking
+    startCommand: >-
+      uvicorn src.maltaekni_lokaverkefni.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-3-flash-preview
+      - key: GEMINI_THINKING_LEVEL
+        value: low
+      - key: LLM_MAX_OUTPUT_TOKENS
+        value: "4096"
+      - key: PROMPT_PROFILE
+        value: strict
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: APP_ACCESS_TOKEN
+        sync: false

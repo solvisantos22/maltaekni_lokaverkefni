@@ -456,7 +456,8 @@ output {
 
 .welcome-overlay,
 .tour-overlay,
-.methodology-overlay {
+.methodology-overlay,
+.access-overlay {
   position: fixed;
   inset: 0;
   z-index: 30;
@@ -498,19 +499,22 @@ output {
 
 .welcome-overlay.hidden,
 .tour-overlay.hidden,
-.methodology-overlay.hidden {
+.methodology-overlay.hidden,
+.access-overlay.hidden {
   display: none;
 }
 
 .tour-card,
-.methodology-card {
+.methodology-card,
+.access-card {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(21, 26, 24, 0.96);
   box-shadow: var(--shadow);
 }
 
-.methodology-overlay {
+.methodology-overlay,
+.access-overlay {
   display: grid;
   place-items: center;
   padding: 18px;
@@ -558,6 +562,56 @@ output {
   border-top: 1px solid var(--line);
   color: var(--muted);
   line-height: 1.5;
+}
+
+.access-overlay {
+  z-index: 40;
+}
+
+.access-card {
+  display: grid;
+  gap: 12px;
+  width: min(430px, 100%);
+  padding: 24px;
+}
+
+.access-card h2 {
+  margin: 0;
+  font-size: 23px;
+}
+
+.access-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.access-card input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #394039;
+  border-radius: 8px;
+  background: #0c100e;
+  color: var(--text);
+  padding: 0 12px;
+}
+
+.access-card input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.access-error {
+  min-height: 20px;
+  color: var(--danger) !important;
+  font-size: 13px;
+}
+
+.access-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .welcome-panel {

@@ -187,3 +187,21 @@ http://127.0.0.1:8000/evaluation/dashboard?demo=1
 The main app also includes an `Aðferð` button with a short explanation of the
 retrieval, Gemini answer generation, citations, and disclaimer.
 Each source card includes a short reason for why that text was selected.
+
+## Deployment
+
+The app is deployable as a Python web service. The repository includes
+`render.yaml` for Render, which installs dependencies, regenerates the processed
+law chunks, and starts FastAPI with Uvicorn.
+
+Secrets are configured in the hosting dashboard, not in Git:
+
+```text
+GEMINI_API_KEY=...
+APP_ACCESS_TOKEN=...
+```
+
+`APP_ACCESS_TOKEN` is optional locally, but recommended for any public
+deployment. When it is set, the chat endpoint rejects questions unless the user
+enters the shared access token in the UI. This lets a teacher try the deployed
+LLM-backed app without exposing the Gemini key in the repository.
