@@ -1,3 +1,4 @@
+/* Floating checklist shared across the teacher-facing review pages. */
 .teacher-guide {
   position: fixed;
   top: 96px;
@@ -20,6 +21,7 @@
 
 .onboarding-active .teacher-guide,
 .onboarding-active .teacher-guide-bubble {
+  /* The welcome screen should stay focused; the checklist appears after entry. */
   display: none;
 }
 
@@ -28,6 +30,7 @@
 }
 
 .teacher-guide-head {
+  /* The header doubles as the drag handle for the expanded checklist. */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -129,6 +132,7 @@
 }
 
 .teacher-guide-bubble {
+  /* Compact state keeps the checklist reachable without covering page content. */
   position: fixed;
   top: 96px;
   left: 24px;
@@ -172,6 +176,7 @@
 }
 
 @media (max-width: 720px) {
+  /* Keep the floating guide within the visible viewport on small screens. */
   .teacher-guide,
   .teacher-guide-bubble {
     top: 76px;

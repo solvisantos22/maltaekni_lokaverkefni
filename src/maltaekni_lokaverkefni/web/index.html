@@ -11,6 +11,7 @@
     <script src="/static/app.js" defer></script>
   </head>
   <body>
+    <!-- Intro layer shown on first visit; app.js can skip it with query params. -->
     <div id="welcomeOverlay" class="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
       <section class="welcome-panel">
         <div class="welcome-orbit" aria-hidden="true">
@@ -67,6 +68,7 @@
       </section>
     </div>
 
+    <!-- Guided tour overlay; app.js positions the spotlight over live controls. -->
     <div id="tourOverlay" class="tour-overlay hidden" aria-hidden="true">
       <div id="tourSpotlight" class="tour-spotlight"></div>
       <section id="tourCard" class="tour-card" role="dialog" aria-live="polite">
@@ -80,6 +82,7 @@
       </section>
     </div>
 
+    <!-- Methodology modal explains the RAG flow without leaving the chat page. -->
     <div id="methodologyOverlay" class="methodology-overlay hidden" aria-hidden="true">
       <section class="methodology-card" role="dialog" aria-modal="true" aria-labelledby="methodologyTitle">
         <button id="methodologyCloseButton" class="icon-button methodology-close" type="button" aria-label="Loka">
@@ -97,6 +100,7 @@
       </section>
     </div>
 
+    <!-- Main app surface: retrieval settings, chat, and cited source evidence. -->
     <div class="shell">
       <aside id="settingsPanel" class="rail" aria-label="Stillingar" data-tour="settings">
         <div class="brand">

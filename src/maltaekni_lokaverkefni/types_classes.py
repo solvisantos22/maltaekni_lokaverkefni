@@ -29,6 +29,7 @@ class Chunk:
     section: str
 
     def to_dict(self) -> dict[str, str]:
+        """Serialize the chunk for JSON artifacts and API responses."""
         return asdict(self)
     
 @dataclass(frozen=True)

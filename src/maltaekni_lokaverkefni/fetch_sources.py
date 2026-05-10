@@ -224,10 +224,12 @@ class _AlthingiParser(HTMLParser):
             self.__line.append(text)
 
     def __is_law_container(self, attrs):
+        """Return whether a div has the class pattern used by Lagasafn law text."""
         classes = set(attrs.get("class", "").split())
         return {"article", "box", "login"}.issubset(classes)
 
     def __new_line(self):
+        """Flush the current parser line into the output when it has text."""
         line = " ".join(self.__line).strip()
         if line:
             self.parts.append(line)

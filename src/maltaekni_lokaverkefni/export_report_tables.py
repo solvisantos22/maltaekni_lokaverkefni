@@ -34,6 +34,7 @@ SCORE_FIELDS = [
 
 
 def main() -> None:
+    """Read latest evaluation artifacts and write all report table CSVs."""
     if load_dotenv is not None:
         load_dotenv(PROJECT_ROOT / ".env")
 
@@ -247,6 +248,7 @@ def build_qualitative_cases(
 
 
 def quality_score(item: tuple[dict[str, str], str, float | None]) -> tuple[float, float, float]:
+    """Rank cases by human score first, then automatic retrieval evidence."""
     row, _, human_avg = item
     if human_avg is not None:
         return (human_avg, float_or_none(row.get("source_coverage_ratio")) or 0, 0)
@@ -258,6 +260,7 @@ def quality_score(item: tuple[dict[str, str], str, float | None]) -> tuple[float
 
 
 def build_review_score_index(review_rows: list[dict[str, str]]) -> dict[str, float]:
+    """Map each question-method pair to its average manual review score."""
     scores: dict[str, list[float]] = defaultdict(list)
     for review in review_rows:
         key = row_key(review.get("question_id", ""), review.get("retrieval_method", ""))
@@ -269,6 +272,7 @@ def build_review_score_index(review_rows: list[dict[str, str]]) -> dict[str, flo
 
 
 def pick_case(label: str, items: list[tuple[dict[str, str], str, float | None]], key, *, reverse: bool):
+    """Select one representative case from a scored candidate list."""
     if not items:
         return None
     row, row_key_value, human_avg = sorted(items, key=key, reverse=reverse)[0]
@@ -276,6 +280,7 @@ def pick_case(label: str, items: list[tuple[dict[str, str], str, float | None]],
 
 
 def format_case(case, details: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Flatten one selected qualitative case into a report-friendly row."""
     label, row, key, human_avg = case
     sources = details.get(key, {}).get("answer_result", {}).get("sources", [])
     return {
@@ -295,6 +300,7 @@ def format_case(case, details: dict[str, dict[str, Any]]) -> dict[str, Any]:
 
 
 def grouped(rows: list[dict[str, str]], field: str) -> dict[str, list[dict[str, str]]]:
+    """Group CSV rows by one field while keeping empty values explicit."""
     groups: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in rows:
         groups[row.get(field, "")].append(row)
@@ -302,6 +308,7 @@ def grouped(rows: list[dict[str, str]], field: str) -> dict[str, list[dict[str, 
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    """Write heterogeneous dictionaries to CSV using all observed columns."""
     if not rows:
         path.write_text("", encoding="utf-8")
         return
@@ -317,10 +324,12 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def row_key(question_id: str, method: str) -> str:
+    """Build the stable key shared by summary rows, details, and reviews."""
     return f"{question_id}::{method}"
 
 
 def is_true(value: Any) -> bool:
+    """Parse truthy CSV boolean values produced by the evaluation script."""
     return str(value).strip().lower() == "true"
 
 
@@ -330,6 +339,7 @@ def is_abstention(row: dict[str, str]) -> bool:
 
 
 def float_or_none(value: Any) -> float | None:
+    """Parse numeric CSV cells while treating blanks as missing values."""
     if value in (None, ""):
         return None
     try:
@@ -339,11 +349,13 @@ def float_or_none(value: Any) -> float | None:
 
 
 def avg(values: Any) -> float | str:
+    """Average numeric CSV values, returning blank when no values exist."""
     numbers = [value for value in (float_or_none(value) for value in values) if value is not None]
     return round(sum(numbers) / len(numbers), 4) if numbers else ""
 
 
 def total(values: Any) -> float | int | str:
+    """Sum numeric CSV values, returning blank when no values exist."""
     numbers = [value for value in (float_or_none(value) for value in values) if value is not None]
     if not numbers:
         return ""
@@ -375,10 +387,12 @@ def estimated_cost(row: dict[str, str]) -> float | str:
 
 
 def ratio(numerator: int, denominator: int) -> float | str:
+    """Return a rounded ratio or blank when the denominator is zero."""
     return round(numerator / denominator, 4) if denominator else ""
 
 
 def first_value(values: Any) -> str:
+    """Return the first non-empty value from grouped rows."""
     for value in values:
         if value:
             return str(value)
@@ -386,6 +400,7 @@ def first_value(values: Any) -> str:
 
 
 def slug(value: str) -> str:
+    """Convert Icelandic evaluator names into stable ASCII column prefixes."""
     return (
         value.casefold()
         .replace("ö", "o")
@@ -401,6 +416,7 @@ def slug(value: str) -> str:
 
 
 def excerpt(text: str, limit: int = 260) -> str:
+    """Shorten long answer/source text for qualitative report tables."""
     cleaned = " ".join(str(text).split())
     if len(cleaned) <= limit:
         return cleaned

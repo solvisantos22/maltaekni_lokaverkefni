@@ -35,6 +35,7 @@ DEFAULT_OUTPUT_DIR = Path("reports/evaluation")
 
 
 def main() -> None:
+    """Run the full evaluation loop and write timestamped plus latest artifacts."""
     args = parse_args()
     if load_dotenv is not None:
         load_dotenv()
@@ -151,6 +152,7 @@ def main() -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line options for method, model, prompt, and output choices."""
     parser = argparse.ArgumentParser(
         description="Evaluate retrieval methods and grounded answers on CSV questions.",
     )
@@ -398,6 +400,7 @@ def print_overview(rows: list[EvaluationRow]) -> None:
 
 
 def _sum_optional(values: Any) -> float | int | str:
+    """Sum numeric values while preserving blank cells when no numbers exist."""
     numeric_values = [value for value in values if isinstance(value, (int, float))]
     if not numeric_values:
         return ""
@@ -407,6 +410,7 @@ def _sum_optional(values: Any) -> float | int | str:
 
 
 def _round_optional(value: float | int | str) -> float | str:
+    """Round numeric summary values but leave blank strings unchanged."""
     if isinstance(value, (int, float)):
         return round(float(value), 8)
 
@@ -414,6 +418,7 @@ def _round_optional(value: float | int | str) -> float | str:
 
 
 def _avg_optional(values: Any) -> float | str:
+    """Average numeric values while preserving blank cells when no numbers exist."""
     numeric_values = [value for value in values if isinstance(value, (int, float))]
     if not numeric_values:
         return ""

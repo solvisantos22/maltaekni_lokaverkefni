@@ -1,3 +1,4 @@
+/* Main application styles for the chat, source panel, onboarding, and guided tour. */
 :root {
   color-scheme: dark;
   --bg: #080a09;
@@ -49,6 +50,7 @@ input {
 }
 
 .shell {
+  /* Desktop layout keeps settings, chat, and cited sources visible together. */
   display: grid;
   grid-template-columns: 280px minmax(420px, 1fr) 360px;
   height: 100vh;
@@ -58,6 +60,7 @@ input {
 
 .rail,
 .sources {
+  /* Shared side-panel treatment keeps controls and citations visually related. */
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 34%),
     var(--panel);
@@ -212,6 +215,7 @@ output {
 }
 
 .messages {
+  /* Chat history scrolls independently while the composer stays reachable. */
   overflow-y: auto;
   min-height: 0;
   padding: 28px clamp(20px, 4vw, 54px);
@@ -463,6 +467,7 @@ output {
 }
 
 .welcome-overlay {
+  /* Full-screen onboarding sits above the app until the user enters or skips it. */
   display: grid;
   place-items: center;
   padding: 22px;
@@ -748,6 +753,7 @@ output {
 }
 
 .tour-overlay {
+  /* The guided tour uses a spotlight layer instead of moving page content. */
   display: block;
   pointer-events: none;
 }
@@ -838,6 +844,7 @@ output {
 }
 
 @media (max-width: 1080px) {
+  /* Narrow screens move from three persistent columns to stacked panels. */
   body {
     overflow: auto;
   }

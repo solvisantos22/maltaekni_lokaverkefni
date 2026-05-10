@@ -66,6 +66,7 @@ Verkefni:
 
 
 def _format_chunk(index: int, chunk: dict[str, Any]) -> str:
+    """Format one retrieved chunk as a numbered source block for the LLM."""
     return f"""[{index}]
 Titill: {chunk.get("title", "Óþekktur titill")}
 Heimild: {chunk.get("source", "Óþekkt heimild")}

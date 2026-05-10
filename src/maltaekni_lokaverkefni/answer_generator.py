@@ -61,6 +61,7 @@ class AnswerResult:
     source_coverage: dict[str, Any]
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialize the answer result into the API/evaluation response shape."""
         return {
             "question": self.question,
             "answer": self.answer,
@@ -258,18 +259,22 @@ def _build_openai_answer(system_prompt: str, user_prompt: str) -> tuple[str, dic
 
 
 def _gemini_model() -> str:
+    """Return the configured Gemini model name or the project default."""
     return os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 
 
 def _openai_model() -> str:
+    """Return the configured OpenAI model name or the fallback default."""
     return os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
 
 def _llm_max_output_tokens() -> int:
+    """Return the maximum answer length used for provider calls."""
     return _positive_int_from_env("LLM_MAX_OUTPUT_TOKENS", default=4096)
 
 
 def _llm_timeout_seconds() -> float:
+    """Return a positive HTTP timeout for LLM calls."""
     try:
         timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
     except ValueError:
@@ -279,6 +284,7 @@ def _llm_timeout_seconds() -> float:
 
 
 def _positive_int_from_env(name: str, default: int) -> int:
+    """Read a positive integer environment setting with a safe default."""
     try:
         value = int(os.getenv(name, str(default)))
     except ValueError:
@@ -369,6 +375,7 @@ def _usage_payload(
     thought_tokens: int | None,
     total_tokens: int | None,
 ) -> dict[str, Any]:
+    """Build the shared usage dictionary stored by API and evaluation runs."""
     return {
         "provider": provider,
         "model": model,
@@ -425,6 +432,7 @@ def _ensure_source_line(answer: str, sources: list[SourceReference]) -> str:
 
 
 def _source_coverage(answer: str, sources: list[SourceReference]) -> dict[str, Any]:
+    """Measure how many retrieved sources are actually cited in the answer."""
     source_ids = {source.citation_id for source in sources}
     cited_ids = {
         int(match)
@@ -447,6 +455,7 @@ def _source_from_chunk(
     chunk: dict[str, Any],
     question_terms: set[str],
 ) -> SourceReference:
+    """Convert one retriever chunk dictionary into a cited source object."""
     text = str(chunk.get("text", ""))
     title = str(chunk.get("title", "Óþekktur titill"))
     section = str(chunk.get("section", "Ótilgreint"))
@@ -513,11 +522,13 @@ def _matching_terms(question_terms: set[str], source_terms: set[str]) -> list[st
 
 
 def _term_key(term: str) -> str:
+    """Build a short normalized key for lightweight Icelandic term matching."""
     normalized = term.translate(str.maketrans({"ö": "a", "ó": "o", "á": "a"}))
     return normalized[:4]
 
 
 def _build_extractive_answer(question: str, sources: list[SourceReference]) -> str:
+    """Build a deterministic fallback answer when no LLM provider is available."""
     question_terms = _content_terms(question)
     cited_sentences = []
 
@@ -545,6 +556,7 @@ def _build_extractive_answer(question: str, sources: list[SourceReference]) -> s
 
 
 def _extract_remedy_list(text: str) -> str:
+    """Extract enumerated consumer remedies from article text when present."""
     lines = [" ".join(line.split()) for line in text.splitlines() if line.strip()]
     if not any("getur neytandi:" in line.lower() for line in lines):
         return ""
@@ -564,11 +576,13 @@ def _extract_remedy_list(text: str) -> str:
 
 
 def _best_sentence(text: str, question_terms: set[str]) -> str:
+    """Choose the sentence with the strongest direct overlap with the question."""
     sentences = _split_sentences(text)
     if not sentences:
         return ""
 
     def score(sentence: str) -> tuple[int, int]:
+        """Prefer overlap first, then more informative longer sentences."""
         sentence_terms = _content_terms(sentence)
         return (len(question_terms & sentence_terms), len(sentence_terms))
 
@@ -577,6 +591,7 @@ def _best_sentence(text: str, question_terms: set[str]) -> str:
 
 
 def _split_sentences(text: str) -> list[str]:
+    """Split source text into sentence-sized snippets suitable for fallback answers."""
     normalized = " ".join(text.split())
     sentence_candidates = re.split(r"(?<=[.!?])\s+", normalized)
     return [
@@ -587,6 +602,7 @@ def _split_sentences(text: str) -> list[str]:
 
 
 def _content_terms(text: str) -> set[str]:
+    """Return lowercase non-stopword terms for simple overlap heuristics."""
     stopwords = _load_stop_words()
     return {
         token
@@ -614,6 +630,7 @@ def _estimate_confidence(
     answer: str,
     method: str,
 ) -> tuple[str, str]:
+    """Assign a coarse confidence label from citations and retrieval scores."""
     if not sources:
         return "low", "Engar heimildir fundust."
 
@@ -650,6 +667,7 @@ def _estimate_confidence(
 
 
 def _optional_float(value: Any) -> float | None:
+    """Parse a float-like value, returning None for missing or invalid input."""
     try:
         return float(value)
     except (TypeError, ValueError):
@@ -657,6 +675,7 @@ def _optional_float(value: Any) -> float | None:
 
 
 def _optional_int(value: Any) -> int | None:
+    """Parse an integer-like value, returning None for missing or invalid input."""
     try:
         return int(value)
     except (TypeError, ValueError):
