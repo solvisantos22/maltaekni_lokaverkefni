@@ -121,6 +121,11 @@ optional estimated cost.
 - `/api/evaluation/review`: saves human review scores to evaluator-specific CSVs.
 - `/api/evaluation/dashboard`: aggregate metrics for the dashboard.
 
+For public deployments, `APP_ACCESS_TOKEN` can be set as an environment
+variable. When it is present, `/api/ask` requires the matching
+`X-App-Access-Token` header before any retrieval or LLM call is made. The web UI
+stores the shared token in browser local storage after the reviewer enters it.
+
 Static UI files live in `src/maltaekni_lokaverkefni/web/`:
 
 - `index.html`, `app.js`, `styles.css`: main chat experience.
@@ -186,6 +191,16 @@ Export report tables:
 ```powershell
 python -m src.maltaekni_lokaverkefni.export_report_tables
 ```
+
+Deploy on Render:
+
+```text
+render.yaml
+```
+
+The Render blueprint installs dependencies, regenerates source chunks, and
+starts Uvicorn. `GEMINI_API_KEY` and `APP_ACCESS_TOKEN` are marked as secret
+values and are entered in Render rather than committed to the repository.
 
 ## Design Notes
 

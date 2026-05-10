@@ -149,3 +149,7 @@ This writes CSV files to `reports/evaluation/report_tables/`:
 - `table_human_scores.csv`: average 1-5 human scores by method
 - `table_inter_reviewer.csv`: Sölvi/Jóhannes comparison
 - `qualitative_cases.csv`: suggested examples for the error-analysis section
+
+The main app also includes an `Aðferð` button with a short explanation of the
+retrieval, Gemini answer generation, citations, and disclaimer.
+Each source card includes a short reason for why that text was selected.

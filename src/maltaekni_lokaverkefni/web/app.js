@@ -28,10 +28,16 @@ const tourSkipButton = document.querySelector("#tourSkipButton");
 const methodologyButton = document.querySelector("#methodologyButton");
 const methodologyOverlay = document.querySelector("#methodologyOverlay");
 const methodologyCloseButton = document.querySelector("#methodologyCloseButton");
+const accessOverlay = document.querySelector("#accessOverlay");
+const accessForm = document.querySelector("#accessForm");
+const accessTokenInput = document.querySelector("#accessToken");
+const accessError = document.querySelector("#accessError");
+const accessCancelButton = document.querySelector("#accessCancelButton");
 const pageParams = new URLSearchParams(window.location.search);
 const skipWelcome = pageParams.get("skipWelcome") === "1";
 const forceWelcome = pageParams.get("welcome") === "1";
 const openMethodologyOnLoad = pageParams.get("methodology") === "1";
+const accessTokenStorageKey = "rettarvisir_access_token";
 
 const introText =
   "Spurðu um neytendarétt. Ég svara með heimildum og sýni textabrotin sem styðja niðurstöðuna.";
@@ -61,6 +67,7 @@ const tourSteps = [
 
 let activeTourIndex = 0;
 let welcomeFrame = null;
+let accessRequired = false;
 
 topKInput.addEventListener("input", () => {
   topKValue.textContent = topKInput.value;
@@ -120,6 +127,21 @@ methodologyOverlay.addEventListener("click", (event) => {
   if (event.target === methodologyOverlay) closeMethodology();
 });
 
+accessForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const token = accessTokenInput.value.trim();
+  if (!token) {
+    accessError.textContent = "Aðgangslykill vantar.";
+    return;
+  }
+
+  localStorage.setItem(accessTokenStorageKey, token);
+  closeAccessPrompt();
+  questionInput.focus();
+});
+
+accessCancelButton.addEventListener("click", closeAccessPrompt);
+
 tourNextButton.addEventListener("click", () => {
   if (activeTourIndex >= tourSteps.length - 1) {
     endTour();
@@ -139,6 +161,10 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const question = questionInput.value.trim();
   if (!question) return;
+  if (accessRequired && !getAccessToken()) {
+    openAccessPrompt();
+    return;
+  }
 
   appendMessage("user", question);
   questionInput.value = "";
@@ -150,7 +176,7 @@ form.addEventListener("submit", async (event) => {
     // confidence metadata, retrieval method, and optional token/cost usage.
     const response = await fetch("/api/ask", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: requestHeaders(),
       body: JSON.stringify({
         question,
         method: methodInput.value,
@@ -160,6 +186,10 @@ form.addEventListener("submit", async (event) => {
 
     if (!response.ok) {
       const error = await response.json();
+      if (response.status === 401) {
+        localStorage.removeItem(accessTokenStorageKey);
+        openAccessPrompt("Aðgangslykillinn var ekki réttur.");
+      }
       throw new Error(error.detail || "Villa kom upp.");
     }
 
@@ -183,13 +213,40 @@ async function checkStatus() {
     const status = await response.json();
     statusEl.classList.toggle("ready", status.ready);
     statusEl.classList.toggle("error", !status.ready);
+    accessRequired = Boolean(status.access_required);
     statusEl.querySelector("span:last-child").textContent = status.ready
-      ? "Tilbúið"
+      ? (accessRequired ? "Tilbúið · læst" : "Tilbúið")
       : "Vantar gögn";
   } catch {
     statusEl.classList.add("error");
     statusEl.querySelector("span:last-child").textContent = "Nær ekki sambandi";
   }
+}
+
+function requestHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  const accessToken = getAccessToken();
+  if (accessToken) headers["X-App-Access-Token"] = accessToken;
+  return headers;
+}
+
+function getAccessToken() {
+  return localStorage.getItem(accessTokenStorageKey) || "";
+}
+
+function openAccessPrompt(message = "") {
+  closeWelcome();
+  accessError.textContent = message;
+  accessOverlay.classList.remove("hidden");
+  accessOverlay.setAttribute("aria-hidden", "false");
+  accessTokenInput.value = "";
+  window.setTimeout(() => accessTokenInput.focus(), 0);
+}
+
+function closeAccessPrompt() {
+  accessOverlay.classList.add("hidden");
+  accessOverlay.setAttribute("aria-hidden", "true");
+  accessError.textContent = "";
 }
 
 function appendMessage(role, text) {
