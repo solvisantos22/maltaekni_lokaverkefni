@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1778431618.64224 "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" "main.pdf" "main" 1778431619.25751 0
-  "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" 1778431617.74462 7831 4cfe68c2a6c4135fe4b055c93c385631 ""
+["pdflatex"] 1778434397.54368 "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" "main.pdf" "main" 1778434398.17121 0
+  "/Users/johannesreykdal/Documents/maltaekni_lokaverkefni/reports/main.tex" 1778434396.61028 10861 0618b2b20dc7e75dd1c7f6add6303033 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf-pc.enc" 1698694482 3136 bbe665bd0bb471a2da1e8fd326cff9fa ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -248,10 +248,10 @@
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1763913718 3345743 7d8e66f3a9904ad31548cbd34e2ee214 ""
   "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
   "img/Tákn blátt.pdf" 1778194593.21054 52233 dadb42e903d74ac2adde0a188eb5e17e ""
-  "main.aux" 1778431619.18462 2622 e8de0d894c9238db976f7a9223d921e3 "pdflatex"
-  "main.out" 1778431619.1853 1273 cf9961ff6f4328bd0730e8d4eaafcad9 "pdflatex"
-  "main.tex" 1778431617.74462 7831 4cfe68c2a6c4135fe4b055c93c385631 ""
-  "main.toc" 1778431619.18544 678 048787fc6bceef4aabd6771710867f9e "pdflatex"
+  "main.aux" 1778434398.10009 3183 1f012ff8b76cb33b6c3529fef4bfbdc2 "pdflatex"
+  "main.out" 1778434398.10082 1273 cf9961ff6f4328bd0730e8d4eaafcad9 "pdflatex"
+  "main.tex" 1778434396.61028 10861 0618b2b20dc7e75dd1c7f6add6303033 ""
+  "main.toc" 1778434398.10099 678 048787fc6bceef4aabd6771710867f9e "pdflatex"
   (generated)
   "main.aux"
   "main.log"
