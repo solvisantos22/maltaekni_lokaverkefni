@@ -28,6 +28,10 @@ Thumbs.db
 *.docx
 *.pptx
 *.zip
+Inngangur_*.pdf
+lokaverkefni.pdf
+docs/kennara_leidbeiningar.md
+docs/kennara_leidbeiningar.pdf
 
 # Local planning notes that are no longer part of the final submission docs
 docs/answer_prompt.md
@@ -41,3 +45,6 @@ data/processed/embedding_cache/*
 !data/raw/.gitkeep
 
 reports/main.*
+reports/evaluation/evaluation_details_*.jsonl
+reports/evaluation/evaluation_summary_*.csv
+reports/evaluation/evaluation_method_summary_*.csv

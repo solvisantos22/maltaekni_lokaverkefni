@@ -1,40 +1,67 @@
-# Máltækni lokaverkefni
+# Réttarvísir
 
-Final NLP project for TÖL025M Inngangur að máltækni.
+Réttarvísir is a local Icelandic consumer-rights RAG prototype built for the
+University of Iceland course TÖL025M, Introduction to Language Technology.
 
-Authors: Sölvi and Jóhannes
+The system answers Icelandic questions about consumer law by retrieving relevant
+legal source chunks, generating a grounded answer, and showing the exact
+citations used. It also includes an evaluation dashboard and a manual review UI
+used to compare retrieval methods.
 
-## Overview
+Authors: Sölvi Santos and Jóhannes Reykdal Einarsson.
 
-Réttarvísir is a local Icelandic consumer-rights RAG prototype. It retrieves
-legal source chunks, generates grounded Icelandic answers with citations, and
-includes saved-results evaluation and review screens that do not trigger new
-LLM calls.
+## What This Project Demonstrates
 
-## Structure
+- Retrieval-augmented generation for a low-resource language domain.
+- Icelandic legal text processing, including tokenization and lemmatization.
+- Retrieval comparison across TF-IDF, BM25, embedding search, reciprocal rank
+  fusion, and reranking.
+- Source-grounded answer generation with Gemini/OpenAI support and a local
+  extractive fallback.
+- Human evaluation workflow for checking answer quality, source support, and
+  clarity.
+- Report-ready exports for tables, cost/latency, and qualitative examples.
 
-- `src/maltaekni_lokaverkefni/`: application, retrieval, answer generation,
+The goal was not to build production legal advice software. The project is an
+educational prototype for understanding how retrieval choices, legal language,
+Icelandic morphology, and source grounding affect answer quality.
+
+## Demo Flow
+
+For a quick local demo:
+
+1. Open the chat UI.
+2. Ask: `Hvaða úrræði hefur neytandi ef söluhlutur reynist gallaður?`
+3. Read the answer citations and source cards.
+4. Switch between `BM25`, `TF-IDF`, and one RRF method.
+5. Open the evaluation dashboard at `/evaluation/dashboard`.
+6. Open the manual review UI at `/evaluation`.
+
+The UI is in Icelandic because the domain, data, and evaluation questions are in
+Icelandic.
+
+## Repository Structure
+
+- `src/maltaekni_lokaverkefni/`: backend, retrieval, answer generation,
   evaluation, and report-export code.
-- `src/maltaekni_lokaverkefni/web/`: static HTML, CSS, and JavaScript for the
-  chat UI, evaluation dashboard, and manual review screens.
-- `docs/`: final technical documentation, evaluation protocol, evaluation
-  questions, methodology notes, and teacher-facing run instructions.
-- `reports/evaluation/`: saved automatic evaluation outputs, human review CSVs,
-  and exported report tables.
-- `data/processed/`: regenerated source documents, chunks, lemma caches, and
-  embedding caches.
-- `data/raw`: list containing icelandic stopwords
+- `src/maltaekni_lokaverkefni/web/`: HTML, CSS, and JavaScript for the chat,
+  teacher guide, evaluation dashboard, and review screens.
+- `docs/`: technical documentation, methodology notes, evaluation protocol, and
+  evaluation questions.
+- `reports/evaluation/`: saved evaluation outputs, human review CSVs, and
+  exported report tables.
+- `reports/final_report.pdf`: final Icelandic project report.
+- `data/raw/`: raw supporting data such as Icelandic stop words.
+- `data/processed/`: generated local data artifacts. These are intentionally not
+  committed by default.
 
-## Documentation
+## Quick Start
 
-The main technical documentation is in `docs/codebase_documentation.md`. It
-explains the full pipeline, module responsibilities, generated artifacts,
-retrieval methods, answer generation, web endpoints, and evaluation workflow.
+Python 3.11 or 3.12 is recommended.
 
-Teacher-facing local run instructions can be generated locally from the
-maintainers' Markdown handout and shared outside Git as a PDF.
+### 1. Create an Environment
 
-## Environment
+Windows PowerShell:
 
 ```powershell
 python -m venv .venv
@@ -43,139 +70,151 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Local App
+macOS/Linux:
 
-```powershell
-python -m uvicorn src.maltaekni_lokaverkefni.app:app --host 127.0.0.1 --port 8000
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-Main URL:
+### 2. Generate Local Data
 
-```text
-http://127.0.0.1:8000
-```
-
-Direct chat URL without the welcome screen:
-
-```text
-http://127.0.0.1:8000/?skipWelcome=1
-```
-
-The main app sidebar links to the evaluation dashboard and human review screens.
-There you can see the evaluated cases.
-
-```text
-http://127.0.0.1:8000/evaluation
-http://127.0.0.1:8000/evaluation/dashboard
-```
-
-Live retrieval requires `data/processed/chunks.json`. The source and chunk files
-are regenerated with:
+The live app needs processed legal chunks:
 
 ```powershell
 python -m src.maltaekni_lokaverkefni.fetch_sources
 python -m src.maltaekni_lokaverkefni.chunking
 ```
 
-The chunking step also writes `data/processed/chunk_lemmas.json`. Lexical
-methods such as TF-IDF and BM25 use that cache at startup. If the cache is
-missing or was produced from older chunk text, the first run can spend a long
-time lemmatizing every chunk again. Regenerate the cache after changing
-chunking or searchable-text logic. Reynir/Greynir is used for proper Icelandic
-lemmatization when installed; otherwise the app falls back to simple lowercase
-tokens so local demos still start.
+The second command also writes `data/processed/chunk_lemmas.json`. TF-IDF and
+BM25 use that cache at startup. If the cache is missing or stale, startup can be
+slow because the app has to analyze every chunk again.
 
-## LLM Answer Generation
+### 3. Configure Optional LLM Access
 
-The app can use Gemini or OpenAI to construct grounded answers from retrieved
-source chunks. Gemini is the recommended provider for this project because
-Gemini 3 performs strongly on Icelandic benchmarks and Flash is cost-oriented.
+The app runs without an API key by using a local extractive fallback:
 
-The local `.env` file follows `.env.example`:
+```text
+LLM_PROVIDER=none
+```
 
-```powershell
+For grounded generated answers, create a local `.env` file based on
+`.env.example`:
+
+```text
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-3-flash-preview
 LLM_MAX_OUTPUT_TOKENS=4096
 ```
 
-`LLM_PROVIDER=auto` tries Gemini first and then OpenAI. If no provider key is set,
-the app falls back to the local extractive answer generator so the demo still runs
-without credentials.
+Secrets are never committed to Git.
 
-The app records LLM usage metadata when the provider returns it. Evaluation rows
-include input, output, thinking, and total token counts. Dollar estimates are only
-calculated when optional per-million-token rates are set in `.env`, so the code
-does not depend on hardcoded pricing.
+### 4. Run the App
+
+```powershell
+python -m uvicorn src.maltaekni_lokaverkefni.app:app --host 127.0.0.1 --port 8000
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000/?skipWelcome=1
+```
+
+Useful local URLs:
+
+```text
+http://127.0.0.1:8000
+http://127.0.0.1:8000/evaluation/dashboard
+http://127.0.0.1:8000/evaluation
+```
+
+## Architecture
+
+The pipeline has seven main stages:
+
+1. `fetch_sources.py` downloads curated Althingi law pages.
+2. `chunking.py` splits laws into article-level chunks and writes the lemma
+   cache.
+3. `retriever.py` ranks chunks for a question using the selected retrieval
+   method.
+4. `prompts.py` builds a grounded answer prompt from the top chunks.
+5. `answer_generator.py` calls Gemini/OpenAI when configured, or uses the local
+   fallback.
+6. `app.py` exposes the FastAPI routes and static web UI.
+7. `evaluate_methods.py` and `export_report_tables.py` produce evaluation and
+   report artifacts.
+
+The lexical retrievers and the cache writer share the same searchable-text
+function. This matters: if the cached text and runtime text differ, the SHA256
+hashes do not match and the app has to reprocess all chunks.
+
+## Retrieval Methods
+
+Supported methods:
+
+- `tfidf`: lexical TF-IDF over analyzed Icelandic tokens.
+- `bm25`: BM25 over analyzed Icelandic tokens.
+- `icebert`: direct embedding retrieval with IceBERT.
+- `bge-m3`: direct embedding retrieval with BGE-M3.
+- `rrf-icebert-bm25`: reciprocal rank fusion between BM25 and IceBERT.
+- `rrf-bge-m3-bm25`: reciprocal rank fusion between BM25 and BGE-M3.
+- `rrf-bge-m3-bm25-rerank`: BGE-M3/BM25 fusion followed by BGE reranking.
+
+The embedding and reranking methods download Hugging Face models on first use
+and can be heavy on a normal laptop. For a fast demo, start with `BM25` or
+`TF-IDF`.
 
 ## Evaluation
 
-The evaluation script runs the fixed question set across retrieval methods
-without using the UI:
+The fixed evaluation dataset is in `docs/evaluation_questions.csv`, and the
+protocol is documented in `docs/evaluation_protocol.md`.
 
-```powershell
-python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25
-```
-
-The fixed evaluation plan is documented in `docs/evaluation_protocol.md`.
-The `--no-llm` flag tests retrieval without spending LLM calls. Results are
-written to `reports/evaluation/` as CSV and JSONL files.
-The summary includes `expected_relevant_section` and
-`expected_section_in_top_3` for the automatic retrieval check.
-It also stores `confidence_reason`, which explains the answer confidence in
-terms of source strength and citation coverage.
-`source_coverage_ratio` records how many retrieved source chunks were actually
-cited in the generated answer.
-Each run also writes `evaluation_method_summary_latest.csv`, an aggregate table
-by retrieval method for the report.
-
-No-token smoke test:
+Run a no-token smoke test:
 
 ```powershell
 python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --no-llm --limit 2
 ```
 
-Model or prompt comparison runs can override settings from the command line:
+Run selected methods:
 
 ```powershell
-python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 --run-label gemini-strict --llm-provider gemini --gemini-model gemini-3-flash-preview --prompt-profile strict
+python -m src.maltaekni_lokaverkefni.evaluate_methods --methods tfidf bm25 rrf-bge-m3-bm25
 ```
 
-Manual review UI:
-
-```text
-http://127.0.0.1:8000/evaluation
-```
-
-Report-table export:
+Export report tables:
 
 ```powershell
 python -m src.maltaekni_lokaverkefni.export_report_tables
 ```
 
-This writes CSV files to `reports/evaluation/report_tables/`:
+The dashboard reads saved evaluation artifacts only. It does not start new LLM
+calls.
 
-- `table_retrieval_methods.csv`: top-3 retrieval score, source coverage, errors
-- `table_cost_latency.csv`: latency, token counts, and estimated cost
-- `table_human_scores.csv`: average 1-5 human scores by method
-- `table_inter_reviewer.csv`: Sölvi/Jóhannes comparison
-- `qualitative_cases.csv`: suggested examples for the error-analysis section
+## Documentation
 
-The main app also includes an `Aðferð` button with a short explanation of the
-retrieval, Gemini answer generation, citations, and disclaimer.
-Each source card includes a short reason for why that text was selected.
+Start here:
 
-## External Review
+- `docs/codebase_documentation.md`: full technical overview.
+- `docs/evaluation_protocol.md`: evaluation setup and scoring criteria.
+- `docs/methodology_summary.md`: short methodology explanation.
+- `reports/final_report.pdf`: final report in Icelandic.
 
-The project is designed to run locally from the repository. For teacher review,
-the Gemini key is provided privately as a temporary demo key and is never
-committed to Git. The local `.env` file contains:
+The codebase also includes module docstrings and inline comments for the main
+pipeline decisions.
 
-```text
-GEMINI_API_KEY=...
-```
+## Known Limitations
 
-After review, the temporary key is revoked. The repository keeps only
-`.env.example`, which documents the required environment variables without
-including secrets.
+- The app is not legal advice.
+- The source corpus is intentionally limited to selected consumer-rights legal
+  sources.
+- Icelandic legal terms often differ from everyday language, which is one of the
+  core limitations studied in the project.
+- Neural retrieval and reranking can be slow or memory-heavy on first use because
+  model weights need to be downloaded and loaded.
+- If `Reynir` is unavailable, the tokenizer falls back to simpler regex tokens
+  so the app can still run locally, but proper Icelandic lemmatization is the
+  intended setup.
