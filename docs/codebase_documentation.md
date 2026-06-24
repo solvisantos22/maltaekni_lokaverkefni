@@ -14,7 +14,8 @@ web UI, and records evaluation results for the final report.
    `data/processed/chunks.json`. It also writes `chunk_lemmas.json`, a cache of
    Icelandic lemmas used by lexical retrieval.
 3. `retriever.py` loads chunks and ranks them for a user question with one of
-   the supported retrieval methods.
+   the supported retrieval methods. It uses the same searchable-text helper as
+   `chunking.py` so the lemma-cache hashes match the text used at runtime.
 4. `answer_generator.py` builds a grounded prompt from the top chunks and uses
    Gemini/OpenAI when configured. If no LLM key is available, it uses a local
    extractive fallback.
@@ -89,7 +90,11 @@ Supported methods:
   reranking.
 
 `ice_tokenizer.py` wraps `tokenizer` and Reynir so lexical methods can compare
-lemmatized forms instead of relying only on exact surface words.
+lemmatized forms instead of relying only on exact surface words. If Reynir is
+not installed, it falls back to simple lowercase regex tokens so the local app
+still starts; the intended evaluation setup uses Reynir. The generated
+`chunk_lemmas.json` cache should be regenerated after any change to chunking or
+searchable-text logic.
 
 ## Answer Generation
 

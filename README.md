@@ -77,6 +77,14 @@ python -m src.maltaekni_lokaverkefni.fetch_sources
 python -m src.maltaekni_lokaverkefni.chunking
 ```
 
+The chunking step also writes `data/processed/chunk_lemmas.json`. Lexical
+methods such as TF-IDF and BM25 use that cache at startup. If the cache is
+missing or was produced from older chunk text, the first run can spend a long
+time lemmatizing every chunk again. Regenerate the cache after changing
+chunking or searchable-text logic. Reynir/Greynir is used for proper Icelandic
+lemmatization when installed; otherwise the app falls back to simple lowercase
+tokens so local demos still start.
+
 ## LLM Answer Generation
 
 The app can use Gemini or OpenAI to construct grounded answers from retrieved

@@ -21,6 +21,7 @@ from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from .chunking import searchable_text_for_chunk
 from .embeddings import Embeddings
 from .reranker import Reranker
 from .types_classes import Chunk
@@ -340,14 +341,8 @@ class Retriever:
     
 
     def _searchable_text(self, chunk: Chunk) -> str:
-        """Weight titles/sections a little more than body text."""
-        return "\n".join(
-            [
-                chunk.title,
-                chunk.section,
-                chunk.text,
-            ]
-        )
+        """Use the exact same searchable text as the lemma-cache writer."""
+        return searchable_text_for_chunk(chunk)
 
     def __analyze(self, text: str) -> list[str]:
         """Analyze text into lowercase Icelandic tokens for retrieval."""
