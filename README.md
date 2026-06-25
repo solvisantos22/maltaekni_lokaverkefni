@@ -1,7 +1,7 @@
 # Réttarvísir
 
 Réttarvísir is a local Icelandic consumer-rights RAG prototype built for the
-University of Iceland course TÖL025M, Introduction to Language Technology.
+University of Iceland course TÖL025M, Introduction to NLP.
 
 The system answers Icelandic questions about consumer law by retrieving relevant
 legal source chunks, generating a grounded answer, and showing the exact
